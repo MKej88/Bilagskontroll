@@ -56,6 +56,13 @@ def export_pdf(app):
     sum_a = app._calc_sum_net_all()
     pct = (sum_k / sum_a * 100.0) if sum_a else 0.0
 
+    def _header_footer(canvas, doc):
+        canvas.saveState()
+        canvas.setFont("Helvetica", 8)
+        canvas.drawCentredString(doc.pagesize[0] / 2, doc.pagesize[1] - 20, "Bilagskontroll – Rapport")
+        canvas.drawRightString(doc.pagesize[0] - 36, 20, f"Side {doc.page}")
+        canvas.restoreState()
+
     flow = []
     flow.append(Paragraph("Bilagskontroll – Rapport", title))
     flow.append(Paragraph(datetime.now().strftime("%d.%m.%Y %H:%M"), body))
@@ -181,8 +188,6 @@ def export_pdf(app):
         flow.append(Spacer(1, 6))
         flow.append(ledger_table_for_invoice(inv))
         if i < total - 1:
-            flow.append(Spacer(1, 10))
-        if (i + 1) % 2 == 0 and i < total - 1:
             flow.append(PageBreak())
 
     doc = SimpleDocTemplate(
@@ -194,7 +199,7 @@ def export_pdf(app):
         bottomMargin=36,
     )
     try:
-        doc.build(flow)
+        doc.build(flow, onFirstPage=_header_footer, onLaterPages=_header_footer)
         app._show_inline(f"Lagret PDF: {os.path.basename(save)}", ok=True)
     except Exception as e:
         app._show_inline(f"Feil ved PDF-generering: {e}", ok=False)
