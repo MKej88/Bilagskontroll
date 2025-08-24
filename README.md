@@ -2,6 +2,8 @@
 
 Bilagskontroll er et skrivebordverktøy for å kontrollere leverandørbilag. Programmet gir et grafisk brukergrensesnitt for å trekke tilfeldige bilagsutvalg, gjennomgå hvert bilag og generere en rapport.
 
+Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel‑data, `customtkinter` for et moderne og responsivt grensesnitt og `reportlab` for å lage PDF‑rapporter.
+
 ## Funksjoner
 
 - Moderne GUI basert på CustomTkinter og Tkinter
@@ -12,10 +14,10 @@ Bilagskontroll er et skrivebordverktøy for å kontrollere leverandørbilag. Pro
 
 ## Avhengigheter
 
-- Python 3.x  
-- [pandas](https://pypi.org/project/pandas/)  
-- [customtkinter](https://pypi.org/project/customtkinter/)  
-- [reportlab](https://pypi.org/project/reportlab/) (for PDF‑eksport)
+- Python 3.x
+- [pandas](https://pypi.org/project/pandas/) – leser og håndterer Excel‑data
+- [customtkinter](https://pypi.org/project/customtkinter/) – gir et moderne brukergrensesnitt
+- [reportlab](https://pypi.org/project/reportlab/) – genererer PDF‑rapporten
 
 ## Installasjon
 
