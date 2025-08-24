@@ -40,7 +40,7 @@ pip install pandas customtkinter reportlab
 
 1. Start programmet:
    ```bash
-   python "Bilagskontroll v1.py"
+   python bilagskontroll.py
    ```
 2. Velg Excel-fil(er) for bilag og hovedbok.
 3. Angi størrelse på utvalg og år, og trykk **🎲 Lag utvalg**.
