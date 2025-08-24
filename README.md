@@ -4,6 +4,15 @@ Bilagskontroll er et skrivebordverktøy for å kontrollere leverandørbilag. Pro
 
 Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel‑data, `customtkinter` for et moderne og responsivt grensesnitt og `reportlab` for å lage PDF‑rapporter.
 
+## Struktur
+
+| Fil | Beskrivelse |
+| --- | ----------- |
+| `Bilagskontroll v1.py` | Startfil som åpner GUI‑applikasjonen |
+| `gui.py`              | All GUI‑logikk og `App`‑klassen |
+| `helpers.py`          | Hjelpefunksjoner for tekst, tall og kolonnevalg |
+| `report.py`           | Generering av PDF‑rapport |
+
 ## Funksjoner
 
 - Moderne GUI basert på CustomTkinter og Tkinter
