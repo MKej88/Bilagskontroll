@@ -18,8 +18,16 @@ def apply_treeview_theme(app):
         bg = "#1e1e1e"; fg = "#e6e6e6"; hb = "#2a2a2a"; sel_bg = "#3a3a3a"; sel_fg = "#ffffff"
     else:
         bg = "#ffffff"; fg = "#000000"; hb = "#f0f0f0"; sel_bg = "#d0d0ff"; sel_fg = "#000000"
-    style.configure("Custom.Treeview",
-                    background=bg, fieldbackground=bg, foreground=fg, rowheight=24, borderwidth=0)
+    font = app.detail_box.cget("font") if hasattr(app, "detail_box") else ctk.CTkFont(size=14)
+    style.configure(
+        "Custom.Treeview",
+        background=bg,
+        fieldbackground=bg,
+        foreground=fg,
+        rowheight=24,
+        borderwidth=0,
+        font=font,
+    )
     style.configure("Custom.Treeview.Heading",
                     background=hb, foreground=fg, borderwidth=0)
     style.map("Custom.Treeview",
