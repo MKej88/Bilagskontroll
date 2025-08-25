@@ -9,15 +9,19 @@ Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel�
 | Fil | Beskrivelse |
 | --- | ----------- |
 | `bilagskontroll.py` | Startfil som åpner GUI‑applikasjonen |
-| `gui.py`              | All GUI‑logikk og `App`‑klassen |
-| `helpers.py`          | Hjelpefunksjoner for tekst, tall og kolonnevalg |
-| `report.py`           | Generering av PDF‑rapport |
+| `gui/__init__.py`    | `App`‑klassen og sammensetting av grensesnittet |
+| `gui/sidebar.py`     | Sidepanel med filvalg og innstillinger |
+| `gui/mainview.py`    | Hovedvisning for kontroll av bilag |
+| `gui/ledger.py`      | Viser bilagslinjer fra hovedboken |
+| `helpers.py`         | Hjelpefunksjoner for tekst, tall og kolonnevalg |
+| `report.py`          | Generering av PDF‑rapport |
 
 ## Funksjoner
 
 - Moderne GUI basert på CustomTkinter og Tkinter
 - Vindustittel “Bilagskontroll BETA v4” for enkel identifikasjon
 - Trekker et tilfeldig utvalg av bilag og registrerer antall bilag i datakilden
+- Viser bilagslinjer fra hovedboken for valgt faktura
 - Hurtiglenke som åpner fakturaen i PowerOffice direkte fra appen
 - Eksport av en PDF‑rapport med status og detaljert informasjon for hvert bilag
 
