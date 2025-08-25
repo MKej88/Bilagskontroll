@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-import re, os, webbrowser
+import webbrowser
 from datetime import datetime
 
-import pandas as pd
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 
@@ -11,13 +10,19 @@ from helpers import (
     resource_path,
     to_str,
     only_digits,
-    parse_amount,
     fmt_money,
     format_number_with_thousands,
     guess_invoice_col,
     guess_col,
     guess_net_amount_col,
     fmt_pct,
+)
+from data_utils import (
+    load_invoice_df,
+    load_gl_df,
+    extract_customer_from_invoice_file,
+    calc_sum_kontrollert,
+    calc_sum_net_all,
 )
 import report
 from .sidebar import build_sidebar
@@ -109,7 +114,7 @@ class App(ctk.CTk):
         if not path: return
         header_idx = 4
         try:
-            df = pd.read_excel(path, engine="openpyxl", header=header_idx)
+            df = load_invoice_df(path, header_idx)
             self.antall_bilag = len(df.dropna(how="all"))
             self.df = df
         except Exception as e:
@@ -124,7 +129,7 @@ class App(ctk.CTk):
         self.net_amount_col = guess_net_amount_col(self.df.columns)
         # Hent kundenavn automatisk fra fakturaliste (linje 2)
         try:
-            cust = self._extract_customer_from_invoice_file(path)
+            cust = extract_customer_from_invoice_file(path)
             if cust:
                 self.kunde_var.set(cust)
             if hasattr(self, "kunde_entry"):
@@ -139,9 +144,7 @@ class App(ctk.CTk):
         path = self.gl_path_var.get()
         if not path: return
         try:
-            gl = pd.read_excel(path, engine="openpyxl", header=0)
-            if sum(str(c).lower().startswith("unnamed") for c in gl.columns) > len(gl.columns)/2:
-                gl = pd.read_excel(path, engine="openpyxl", header=4)
+            gl = load_gl_df(path)
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
             return
@@ -162,43 +165,6 @@ class App(ctk.CTk):
         self.gl_postedby_col    = guess_col(cols, r"postert\s*av", r"bokf(ø|o)rt\s*av", r"registrert\s*av", r"posted\s*by", r"created\s*by")
 
         self.render()
-
-    
-    def _extract_customer_from_invoice_file(self, path: str):
-        """
-        Leser rad 2 i fakturalista og prøver å hente ut kundenavn.
-        Strategi:
-          - Søk etter mønster "Kunde: <navn>" eller "Customer: <navn>" i rad 2
-          - Hvis ikke funn, velg lengste ikke-numeriske tekstcelle i rad 2
-        """
-        try:
-            raw = pd.read_excel(path, engine="openpyxl", header=None, nrows=2)
-        except Exception:
-            return None
-        if raw is None or len(raw) < 2:
-            return None
-        row2 = raw.iloc[1].fillna("")
-        # Direkte mønster "Kunde: X"
-        for v in row2.values:
-            s = str(v).strip()
-            m = re.match(r"^\s*(Kunde|Customer)\s*[:\-]\s*(.+)$", s, flags=re.IGNORECASE)
-            if m:
-                return m.group(2).strip()
-        # Velg den lengste tekstcellen som ikke ser ut som tall/dato
-        candidates = []
-        for v in row2.values:
-            s = str(v).strip()
-            if not s:
-                continue
-            if re.fullmatch(r"[\d\s\.,:/-]+", s):
-                continue
-            # unngå typiske etiketter
-            if re.search(r"faktura|liste|dato|org|orgnr|organisasjonsnummer|periode|rapport|utvalg", s, re.IGNORECASE):
-                continue
-            candidates.append(s)
-        if candidates:
-            return max(candidates, key=len)
-        return None
 # Sampling / nav
     def _update_counts_labels(self):
         self.lbl_filecount.configure(text=f"Antall bilag: {self.antall_bilag}")
@@ -259,49 +225,9 @@ class App(ctk.CTk):
 
     # Ledger
     # Summary / status
-    def _calc_sum_kontrollert(self):
-        if self.sample_df is None: return 0.0
-        total = 0.0
-        for i, d in enumerate(self.decisions):
-            if d is None: continue
-            row = self.sample_df.iloc[i]
-            val = None
-            if self.net_amount_col and self.net_amount_col in self.sample_df.columns:
-                val = parse_amount(row.get(self.net_amount_col))
-            if val is None:
-                for fb in ["Beløp","Belop","Total","Sum","Nettobeløp","Netto beløp","Beløp eks mva"]:
-                    if fb in self.sample_df.columns:
-                        val = parse_amount(row.get(fb)); 
-                        if val is not None: break
-            if val is not None: total += val
-        return total
-
-    def _row_has_sum_word(self, row: pd.Series) -> bool:
-        for v in row.values:
-            if isinstance(v, str) and re.search(r"\bsum\b", v, re.IGNORECASE):
-                return True
-        return False
-
-    def _calc_sum_net_all(self):
-        if self.df is None or self.df.dropna(how="all").empty: return 0.0
-        df_eff = self.df.dropna(how="all").copy()
-        if len(df_eff) > 0: df_eff = df_eff.iloc[:-1]
-        df_eff = df_eff.loc[~df_eff.apply(self._row_has_sum_word, axis=1)]
-        col = self.net_amount_col if (self.net_amount_col in df_eff.columns) else None
-        total = 0.0
-        for _, r in df_eff.iterrows():
-            v = parse_amount(r.get(col)) if col else None
-            if v is None:
-                for fb in ["Beløp","Belop","Total","Sum","Nettobeløp","Netto beløp","Beløp eks mva"]:
-                    if fb in df_eff.columns:
-                        v = parse_amount(r.get(fb)); 
-                        if v is not None: break
-            if v is not None: total += v
-        return total
-
     def _update_status_card(self):
-        sum_k = self._calc_sum_kontrollert()
-        sum_a = self._calc_sum_net_all()
+        sum_k = calc_sum_kontrollert(self.sample_df, self.decisions, self.net_amount_col)
+        sum_a = calc_sum_net_all(self.df, self.net_amount_col)
         pct = (sum_k / sum_a * 100.0) if sum_a else 0.0
         self.lbl_st_sum_kontrollert.configure(text=f"Sum kontrollert: {fmt_money(sum_k)} kr")
         self.lbl_st_sum_alle.configure(text=f"Sum alle bilag: {fmt_money(sum_a)} kr")
