@@ -56,6 +56,41 @@ def export_pdf(app):
     sum_a = app._calc_sum_net_all()
     pct = (sum_k / sum_a * 100.0) if sum_a else 0.0
 
+    def _sum_for_decision(dec_value):
+        total = 0.0
+        for i, d in enumerate(app.decisions):
+            if dec_value == "Godkjent" and d != "Godkjent":
+                continue
+            if dec_value == "Ikke godkjent" and d != "Ikke godkjent":
+                continue
+            if dec_value is None and d is not None:
+                continue
+            row = app.sample_df.iloc[i]
+            val = None
+            if app.net_amount_col and app.net_amount_col in app.sample_df.columns:
+                val = parse_amount(row.get(app.net_amount_col))
+            if val is None:
+                for fb in [
+                    "Beløp",
+                    "Belop",
+                    "Total",
+                    "Sum",
+                    "Nettobeløp",
+                    "Netto beløp",
+                    "Beløp eks mva",
+                ]:
+                    if fb in app.sample_df.columns:
+                        val = parse_amount(row.get(fb))
+                        if val is not None:
+                            break
+            if val is not None:
+                total += val
+        return total
+
+    sum_approved = _sum_for_decision("Godkjent")
+    sum_rejected = _sum_for_decision("Ikke godkjent")
+    sum_remaining = _sum_for_decision(None)
+
     flow = []
     flow.append(Paragraph("Bilagskontroll – Rapport", title))
     flow.append(Paragraph(datetime.now().strftime("%d.%m.%Y %H:%M"), body))
@@ -92,11 +127,33 @@ def export_pdf(app):
         Paragraph(
             f"<b>Status</b>: Sum kontrollert: {fmt_money(sum_k)} kr  •  "
             f"Sum alle bilag: {fmt_money(sum_a)} kr  •  "
-            f"% kontrollert: {fmt_pct(pct)}  •  "
-            f"Godkjent: {approved}  •  Ikke godkjent: {rejected}  •  Gjenstår: {remaining}",
+            f"% kontrollert: {fmt_pct(pct)}",
             body,
         )
     )
+    flow.append(Spacer(1, 4))
+    status_rows = [
+        ["Status", "Antall", "Beløp"],
+        ["Godkjent", approved, fmt_money(sum_approved)],
+        ["Ikke godkjent", rejected, fmt_money(sum_rejected)],
+        ["Gjenstår", remaining, fmt_money(sum_remaining)],
+    ]
+    status_tbl = Table(status_rows, colWidths=[120, 60, 80], hAlign="LEFT")
+    status_tbl.setStyle(
+        TableStyle(
+            [
+                ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+                ("ALIGN", (1, 1), (-1, -1), "RIGHT"),
+                ("BACKGROUND", (0, 1), (-1, 1), colors.whitesmoke),
+                ("BACKGROUND", (0, 2), (-1, 2), colors.white),
+                ("BACKGROUND", (0, 3), (-1, 3), colors.whitesmoke),
+            ]
+        )
+    )
+    flow.append(status_tbl)
     flow.append(Spacer(1, 8))
 
     def ledger_table_for_invoice(invoice_value: str):
