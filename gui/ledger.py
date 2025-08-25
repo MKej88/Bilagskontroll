@@ -39,17 +39,18 @@ def update_treeview_stripes(app):
 
 
 def ledger_rows(app, invoice_value: str):
+    """Hent bilagslinjer for gitt bilagsnummer uten å endre ``gl_df``."""
     if app.gl_df is None or app.gl_invoice_col not in (app.gl_df.columns if app.gl_df is not None else []):
         return []
     key = only_digits(invoice_value)
     if not key:
         return []
-    df = app.gl_df.copy()
+    # Funksjonen muterer ikke app.gl_df, så kopi er unødvendig
     try:
-        mask = df[app.gl_invoice_col].astype(str).map(only_digits) == key
+        mask = app.gl_df[app.gl_invoice_col].astype(str).map(only_digits) == key
     except Exception:
-        mask = df[app.gl_invoice_col].astype(str) == invoice_value
-    hits = df.loc[mask]
+        mask = app.gl_df[app.gl_invoice_col].astype(str) == invoice_value
+    hits = app.gl_df.loc[mask]
     rows = []
     for _, r in hits.iterrows():
         konto_nr = to_str(r.get(app.gl_accountno_col, ""))
