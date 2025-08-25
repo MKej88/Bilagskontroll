@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 import customtkinter as ctk
 
 
@@ -25,10 +24,10 @@ def build_sidebar(app):
     row_utv = ctk.CTkFrame(card)
     row_utv.grid(row=5, column=0, padx=14, pady=(4, 0), sticky="ew")
     ctk.CTkLabel(row_utv, text="Antall tilfeldig utvalg").grid(row=0, column=0, sticky="w")
-    app.sample_size_var = ctk.IntVar(master=app, value=10)
+    app.sample_size_var = ctk.StringVar(master=app, value="")
     ctk.CTkEntry(row_utv, width=80, textvariable=app.sample_size_var).grid(row=0, column=1, padx=(8, 0))
     ctk.CTkLabel(row_utv, text="År").grid(row=1, column=0, pady=(6, 0), sticky="w")
-    app.year_var = ctk.IntVar(master=app, value=datetime.now().year)
+    app.year_var = ctk.StringVar(master=app, value="")
     ctk.CTkEntry(row_utv, width=80, textvariable=app.year_var).grid(row=1, column=1, padx=(8, 0), pady=(6, 0))
 
     ctk.CTkButton(card, text="🎲 Lag utvalg", command=app.make_sample)\
