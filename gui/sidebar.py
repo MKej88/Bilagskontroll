@@ -10,13 +10,13 @@ def build_sidebar(app):
         .grid(row=0, column=0, padx=14, pady=(14, 6), sticky="w")
 
     app.file_path_var = ctk.StringVar(master=app, value="")
-    ctk.CTkButton(card, text="Velg Excel (fakturaliste)…", command=app.choose_file)\
+    ctk.CTkButton(card, text="Velg leverandørfakturaer (Excel)…", command=app.choose_file)\
         .grid(row=1, column=0, padx=14, pady=(4, 2), sticky="ew")
     ctk.CTkLabel(card, textvariable=app.file_path_var, wraplength=260, anchor="w", justify="left")\
         .grid(row=2, column=0, padx=14, pady=(0, 6), sticky="ew")
 
     app.gl_path_var = ctk.StringVar(master=app, value="")
-    ctk.CTkButton(card, text="Velg Hovedbok (Excel)…", command=app.choose_gl_file)\
+    ctk.CTkButton(card, text="Velg hovedbok (Excel)…", command=app.choose_gl_file)\
         .grid(row=3, column=0, padx=14, pady=(2, 2), sticky="ew")
     ctk.CTkLabel(card, textvariable=app.gl_path_var, wraplength=260, anchor="w", justify="left")\
         .grid(row=4, column=0, padx=14, pady=(0, 6), sticky="ew")
