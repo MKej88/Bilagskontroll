@@ -100,7 +100,8 @@ def export_pdf(app):
     flow.append(Spacer(1, 8))
 
     def ledger_table_for_invoice(invoice_value: str):
-        rows = app._ledger_rows(invoice_value)
+        from gui.ledger import ledger_rows
+        rows = ledger_rows(app, invoice_value)
         if not rows:
             return Paragraph("Ingen bokføringslinjer for dette fakturanummeret.", small)
         data = [["Kontonr", "Konto", "MVA", "MVA-beløp", "Beløp", "Postert av"]]
