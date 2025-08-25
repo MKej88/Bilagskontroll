@@ -640,5 +640,5 @@ class App(ctk.CTk):
 
         self._update_status_card_safe()
 
-if __name__ == "__main__":
-    App().mainloop()
+# if __name__ == "__main__":
+#     App().mainloop()

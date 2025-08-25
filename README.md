@@ -8,7 +8,7 @@ Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel�
 
 | Fil | Beskrivelse |
 | --- | ----------- |
-| `Bilagskontroll v1.py` | Startfil som åpner GUI‑applikasjonen |
+| `bilagskontroll.py` | Startfil som åpner GUI‑applikasjonen |
 | `gui.py`              | All GUI‑logikk og `App`‑klassen |
 | `helpers.py`          | Hjelpefunksjoner for tekst, tall og kolonnevalg |
 | `report.py`           | Generering av PDF‑rapport |
