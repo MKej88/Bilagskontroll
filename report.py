@@ -12,6 +12,7 @@ from helpers import (
 )
 
 from report_utils import build_ledger_table
+from data_utils import calc_sum_kontrollert, calc_sum_net_all
 
 
 def export_pdf(app):
@@ -54,8 +55,8 @@ def export_pdf(app):
     approved = sum(1 for d in app.decisions if d == "Godkjent")
     rejected = sum(1 for d in app.decisions if d == "Ikke godkjent")
     remaining = sum(1 for d in app.decisions if d is None)
-    sum_k = app._calc_sum_kontrollert()
-    sum_a = app._calc_sum_net_all()
+    sum_k = calc_sum_kontrollert(app.sample_df, app.decisions, app.net_amount_col)
+    sum_a = calc_sum_net_all(app.df, app.net_amount_col)
     pct = (sum_k / sum_a * 100.0) if sum_a else 0.0
 
     def _sum_for_decision(dec_value):
