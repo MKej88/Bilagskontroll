@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.0.1
+
+### Dokumentasjon
+- Oppdatert README med lisensinformasjon og oversikt over `data_utils.py` og `report_utils.py`.
+
 ## 2.0
 
 ### Viktige endringer
