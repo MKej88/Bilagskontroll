@@ -240,7 +240,7 @@ def export_pdf(app):
         flow.append(ledger_table_for_invoice(inv))
         if i < total - 1:
             flow.append(Spacer(1, 10))
-        if (i + 1) % 2 == 0 and i < total - 1:
+        if i < total - 1:
             flow.append(PageBreak())
 
     doc = SimpleDocTemplate(
