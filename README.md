@@ -13,8 +13,10 @@ Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel�
 | `gui/sidebar.py`     | Sidepanel med filvalg og innstillinger |
 | `gui/mainview.py`    | Hovedvisning for kontroll av bilag |
 | `gui/ledger.py`      | Viser bilagslinjer fra hovedboken |
+| `data_utils.py`      | Data- og beregningslogikk |
 | `helpers.py`         | Hjelpefunksjoner for tekst, tall og kolonnevalg |
 | `report.py`          | Generering av PDF‑rapport |
+| `report_utils.py`    | Hjelpefunksjoner for PDF‑rapporten |
 
 ## Funksjoner
 
@@ -56,5 +58,4 @@ pip install pandas customtkinter reportlab
 Bidrag og forslag til forbedringer er velkomne. Lag gjerne en pull request med en kort beskrivelse av endringen.
 
 ## Lisens
-
-(Angi gjeldende lisens for prosjektet)
+Prosjektet er lisensiert under MIT-lisensen.
