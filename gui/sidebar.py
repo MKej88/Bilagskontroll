@@ -52,7 +52,12 @@ def build_sidebar(app):
     app.utfort_av_var = ctk.StringVar(master=app, value=default_user)
 
     ctk.CTkLabel(opp, text="Kunde").grid(row=0, column=0, padx=(8,8), pady=(8,4), sticky="w")
-    app.kunde_entry = ctk.CTkEntry(opp, textvariable=app.kunde_var, placeholder_text="Hentes fra fakturaliste", state="disabled")
+    app.kunde_entry = ctk.CTkEntry(
+        opp,
+        textvariable=app.kunde_var,
+        placeholder_text="Hentes automatisk..",
+        state="disabled",
+    )
     app.kunde_entry.grid(row=0, column=1, padx=(0,8), pady=(8,4), sticky="ew")
     ctk.CTkLabel(opp, text="Kundenr").grid(row=1, column=0, padx=(8,8), pady=(4,4), sticky="w")
     ctk.CTkEntry(opp, textvariable=app.kundenr_var).grid(row=1, column=1, padx=(0,8), pady=(4,4), sticky="ew")
