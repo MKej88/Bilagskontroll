@@ -4,6 +4,17 @@ import re
 import sys
 import pandas as pd
 
+# Forhåndskompiler regex som brukes hyppig
+_RE_DIGITS = re.compile(r"\D+")
+_RE_FLOAT_SUFFIX = re.compile(r"\d+\.0")
+_RE_NUMBER = re.compile(r"-?\d+(?:[.,]\d+)?")
+_INVOICE_PATS = [
+    re.compile(r"^faktura\.?nr\.?$"),
+    re.compile(r"^fakturanr\.?$"),
+    re.compile(r"^faktura[ \._-]*nummer$"),
+    re.compile(r"^invoice.*(no|number)$"),
+]
+
 
 def resource_path(relpath: str) -> str:
     base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
@@ -16,13 +27,13 @@ def to_str(v):
     if isinstance(v, pd.Timestamp):
         return v.strftime("%Y-%m-%d")
     s = str(v).strip()
-    if re.fullmatch(r"\d+\.0", s):
+    if _RE_FLOAT_SUFFIX.fullmatch(s):
         return s[:-2]
     return s
 
 
 def only_digits(s: str) -> str:
-    return re.sub(r"\D+", "", to_str(s))
+    return _RE_DIGITS.sub("", to_str(s))
 
 
 def parse_amount(x):
@@ -52,7 +63,7 @@ def format_number_with_thousands(s):
     if not s:
         return ""
     core = s.replace(" ", "").replace("\xa0", "")
-    m = re.fullmatch(r"-?\d+(?:[.,]\d+)?", core)
+    m = _RE_NUMBER.fullmatch(core)
     if not m:
         return s
     if "," in core and "." in core:
@@ -73,15 +84,9 @@ def format_number_with_thousands(s):
 
 
 def guess_invoice_col(cols):
-    pats = [
-        r"^faktura\.?nr\.?$",
-        r"^fakturanr\.?$",
-        r"^faktura[ \._-]*nummer$",
-        r"^invoice.*(no|number)$",
-    ]
     for c in map(str, cols):
         lc = c.lower().strip()
-        if any(re.search(p, lc) for p in pats):
+        if any(p.search(lc) for p in _INVOICE_PATS):
             return c
     return cols[1] if len(cols) > 1 else cols[0]
 
