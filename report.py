@@ -11,6 +11,8 @@ from helpers import (
     format_number_with_thousands,
 )
 
+from report_utils import build_ledger_table
+
 
 def export_pdf(app):
     if app.sample_df is None:
@@ -156,47 +158,6 @@ def export_pdf(app):
     flow.append(status_tbl)
     flow.append(Spacer(1, 8))
 
-    def ledger_table_for_invoice(invoice_value: str):
-        from gui.ledger import ledger_rows
-        rows = ledger_rows(app, invoice_value)
-        if not rows:
-            return Paragraph("Ingen bokføringslinjer for dette fakturanummeret.", small)
-        data = [["Kontonr", "Konto", "MVA", "MVA-beløp", "Beløp", "Postert av"]]
-        total = 0.0
-        for r in rows:
-            v = parse_amount(r["Beløp"])
-            total += v or 0.0
-            data.append(
-                [
-                    r["Kontonr"],
-                    r["Konto"],
-                    r["MVA"],
-                    r["MVA-beløp"],
-                    r["Beløp"],
-                    r["Postert av"],
-                ]
-            )
-        data.append(["", "", "", "Sum:", fmt_money(total), ""])
-        colw = [60, 200, 35, 70, 70, 88]
-        tbl = Table(data, colWidths=colw, repeatRows=1, hAlign="LEFT")
-        tbl.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                    ("FONTSIZE", (0, 0), (-1, -1), 8),
-                    ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ("ALIGN", (4, 1), (5, -2), "RIGHT"),
-                    ("ALIGN", (4, -1), (5, -1), "RIGHT"),
-                    ("SPAN", (0, -1), (3, -1)),
-                    ("BACKGROUND", (0, 1), (-1, -1), colors.whitesmoke),
-                    ("BACKGROUND", (0, 2), (-1, 2), colors.white),
-                ]
-            )
-        )
-        return tbl
-
     total = len(app.sample_df)
     for i in range(total):
         r = app.sample_df.iloc[i]
@@ -237,7 +198,7 @@ def export_pdf(app):
         )
         flow.append(det_tbl)
         flow.append(Spacer(1, 6))
-        flow.append(ledger_table_for_invoice(inv))
+        flow.append(build_ledger_table(app, inv, small))
         if i < total - 1:
             flow.append(Spacer(1, 10))
         if i < total - 1:
