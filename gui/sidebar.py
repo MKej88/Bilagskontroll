@@ -24,11 +24,40 @@ def build_sidebar(app):
     row_utv = ctk.CTkFrame(card)
     row_utv.grid(row=5, column=0, padx=14, pady=(4, 0), sticky="ew")
     ctk.CTkLabel(row_utv, text="Antall tilfeldig utvalg").grid(row=0, column=0, sticky="w")
+
+    def _validate_int(P: str) -> bool:
+        return P.isdigit() or P == ""
+
+    vcmd_int = app.register(_validate_int)
     app.sample_size_var = ctk.StringVar(master=app, value="")
-    ctk.CTkEntry(row_utv, width=80, textvariable=app.sample_size_var).grid(row=0, column=1, padx=(8, 0))
+    ctk.CTkEntry(
+        row_utv,
+        width=80,
+        textvariable=app.sample_size_var,
+        validate="key",
+        validatecommand=(vcmd_int, "%P"),
+    ).grid(row=0, column=1, padx=(8, 0))
+
     ctk.CTkLabel(row_utv, text="År").grid(row=1, column=0, pady=(6, 0), sticky="w")
+
+    def _validate_year(P: str) -> bool:
+        if P == "":
+            return True
+        if not P.isdigit() or len(P) > 4:
+            return False
+        if len(P) == 4 and not 1900 <= int(P) <= 2100:
+            return False
+        return True
+
+    vcmd_year = app.register(_validate_year)
     app.year_var = ctk.StringVar(master=app, value="")
-    ctk.CTkEntry(row_utv, width=80, textvariable=app.year_var).grid(row=1, column=1, padx=(8, 0), pady=(6, 0))
+    ctk.CTkEntry(
+        row_utv,
+        width=80,
+        textvariable=app.year_var,
+        validate="key",
+        validatecommand=(vcmd_year, "%P"),
+    ).grid(row=1, column=1, padx=(8, 0), pady=(6, 0))
 
     ctk.CTkButton(card, text="🎲 Lag utvalg", command=app.make_sample)\
         .grid(row=6, column=0, padx=14, pady=(8, 6), sticky="ew")
