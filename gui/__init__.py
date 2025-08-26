@@ -290,6 +290,13 @@ class App(ctk.CTk):
             self.ledger_sum.configure(text="Last gjerne også inn en hovedbok for å se bilagslinjene.")
             self.comment_box.delete("0.0","end")
 
+        if self.sample_df is None or len(self.sample_df) == 0:
+            self.btn_prev.configure(state="disabled")
+            self.btn_next.configure(state="disabled")
+        else:
+            self.btn_prev.configure(state="normal" if self.idx > 0 else "disabled")
+            self.btn_next.configure(state="normal" if self.idx < len(self.sample_df) - 1 else "disabled")
+
         self._update_status_card_safe()
 
 if __name__ == "__main__":
