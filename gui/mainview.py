@@ -90,6 +90,8 @@ def build_main(app):
     bottom = ctk.CTkFrame(panel)
     bottom.grid(row=3, column=0, sticky="ew", padx=12, pady=(0, 0))
     ctk.CTkButton(bottom, text="📄 Eksporter PDF rapport", command=lambda: report.export_pdf(app)).pack(side="left")
+    app.progress = ttk.Progressbar(bottom, mode="indeterminate", length=180)
+    app.progress.pack(side="left", padx=(8, 0), pady=8)
     ctk.CTkLabel(bottom, text="").pack(side="left", expand=True, fill="x")
     if app.logo_img:
         ctk.CTkLabel(bottom, text="", image=app.logo_img).pack(side="right", padx=(8,0))

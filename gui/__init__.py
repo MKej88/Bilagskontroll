@@ -95,6 +95,22 @@ class App(ctk.CTk):
         update_treeview_stripes(self)
         self.render()
 
+    # Progress
+    def _start_progress(self):
+        try:
+            self.progress.start()
+        except Exception:
+            pass
+        self.update_idletasks()
+
+    def _stop_progress(self):
+        try:
+            self.progress.stop()
+            self.progress['value'] = 0
+        except Exception:
+            pass
+        self.update_idletasks()
+
     # Files
     def choose_file(self):
         p = filedialog.askopenfilename(title="Velg Excel (fakturaliste)", filetypes=[("Excel","*.xlsx *.xls")])
@@ -111,60 +127,66 @@ class App(ctk.CTk):
     # Read
     def _load_excel(self):
         path = self.file_path_var.get()
-        if not path: return
+        if not path:
+            return
+        self._start_progress()
         header_idx = 4
         try:
             df = load_invoice_df(path, header_idx)
             self.antall_bilag = len(df.dropna(how="all"))
             self.df = df
+            if self.df is None or self.df.dropna(how="all").empty:
+                messagebox.showwarning(APP_TITLE, "Excel-filen ser tom ut."); return
+
+            self.invoice_col = guess_invoice_col(self.df.columns)
+            self.net_amount_col = guess_net_amount_col(self.df.columns)
+            # Hent kundenavn automatisk fra fakturaliste (linje 2)
+            try:
+                cust = extract_customer_from_invoice_file(path)
+                if cust:
+                    self.kunde_var.set(cust)
+                if hasattr(self, "kunde_entry"):
+                    self.kunde_entry.configure(state="disabled")
+            except Exception:
+                pass
+
+            self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
+            self._update_counts_labels(); self.render()
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}")
             self.df = None
-            return
-
-        if self.df is None or self.df.dropna(how="all").empty:
-            messagebox.showwarning(APP_TITLE, "Excel-filen ser tom ut."); return
-
-        self.invoice_col = guess_invoice_col(self.df.columns)
-        self.net_amount_col = guess_net_amount_col(self.df.columns)
-        # Hent kundenavn automatisk fra fakturaliste (linje 2)
-        try:
-            cust = extract_customer_from_invoice_file(path)
-            if cust:
-                self.kunde_var.set(cust)
-            if hasattr(self, "kunde_entry"):
-                self.kunde_entry.configure(state="disabled")
-        except Exception:
-            pass
-
-        self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
-        self._update_counts_labels(); self.render()
+        finally:
+            self._stop_progress()
 
     def _load_gl_excel(self):
         path = self.gl_path_var.get()
-        if not path: return
+        if not path:
+            return
+        self._start_progress()
         try:
             gl = load_gl_df(path)
+            if gl is None or gl.dropna(how="all").empty:
+                messagebox.showwarning(APP_TITLE, "Hovedboken ser tom ut."); return
+
+            self.gl_df = gl; cols = [str(c) for c in gl.columns]
+            self.gl_invoice_col     = guess_invoice_col(cols)
+            self.gl_accountno_col   = guess_col(cols, r"^kontonr\.?$", r"konto.*nummer", r"account.*(number|no)", r"acct.*no")
+            self.gl_accountname_col = guess_col(cols, r"^kontonavn$", r"konto\s*navn", r"^konto$", r"account.*name", r"(?:^| )navn$")
+            self.gl_text_col        = guess_col(cols, r"^tekst$", r"text", r"posteringstekst")
+            self.gl_desc_col        = guess_col(cols, r"beskrivelse", r"description", r"forklaring")
+            self.gl_vatcode_col     = guess_col(cols, r"^mva(?!-)|mva[- ]?kode", r"^vat(?!.*amount)|tax code")
+            self.gl_vatamount_col   = guess_col(cols, r"mva[- ]?bel(ø|o)p", r"vat amount", r"tax amount")
+            self.gl_debit_col       = guess_col(cols, r"^debet$", r"debit")
+            self.gl_credit_col      = guess_col(cols, r"^kredit$", r"credit")
+            self.gl_amount_col      = guess_col(cols, r"^bel(ø|o)p$", r"amount", r"sum")
+            self.gl_postedby_col    = guess_col(cols, r"postert\s*av", r"bokf(ø|o)rt\s*av", r"registrert\s*av", r"posted\s*by", r"created\s*by")
+
+            self.render()
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
-            return
-        if gl is None or gl.dropna(how="all").empty:
-            messagebox.showwarning(APP_TITLE, "Hovedboken ser tom ut."); return
+        finally:
+            self._stop_progress()
 
-        self.gl_df = gl; cols = [str(c) for c in gl.columns]
-        self.gl_invoice_col     = guess_invoice_col(cols)
-        self.gl_accountno_col   = guess_col(cols, r"^kontonr\.?$", r"konto.*nummer", r"account.*(number|no)", r"acct.*no")
-        self.gl_accountname_col = guess_col(cols, r"^kontonavn$", r"konto\s*navn", r"^konto$", r"account.*name", r"(?:^| )navn$")
-        self.gl_text_col        = guess_col(cols, r"^tekst$", r"text", r"posteringstekst")
-        self.gl_desc_col        = guess_col(cols, r"beskrivelse", r"description", r"forklaring")
-        self.gl_vatcode_col     = guess_col(cols, r"^mva(?!-)|mva[- ]?kode", r"^vat(?!.*amount)|tax code")
-        self.gl_vatamount_col   = guess_col(cols, r"mva[- ]?bel(ø|o)p", r"vat amount", r"tax amount")
-        self.gl_debit_col       = guess_col(cols, r"^debet$", r"debit")
-        self.gl_credit_col      = guess_col(cols, r"^kredit$", r"credit")
-        self.gl_amount_col      = guess_col(cols, r"^bel(ø|o)p$", r"amount", r"sum")
-        self.gl_postedby_col    = guess_col(cols, r"postert\s*av", r"bokf(ø|o)rt\s*av", r"registrert\s*av", r"posted\s*by", r"created\s*by")
-
-        self.render()
 # Sampling / nav
     def _update_counts_labels(self):
         self.lbl_filecount.configure(text=f"Antall bilag: {self.antall_bilag}")
