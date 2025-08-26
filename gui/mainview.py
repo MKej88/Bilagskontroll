@@ -36,8 +36,10 @@ def build_main(app):
     ctk.CTkButton(btns, text="⛔ Ikke godkjent", fg_color="#e74c3c", hover_color="#cf4334",
                   command=lambda: app.set_decision_and_next("Ikke godkjent")).grid(row=0, column=1, padx=6, pady=6, sticky="ew")
     ctk.CTkButton(btns, text="🔗 Åpne i PowerOffice", command=app.open_in_po).grid(row=0, column=2, padx=6, pady=6, sticky="ew")
-    ctk.CTkButton(btns, text="⬅ Forrige", command=app.prev).grid(row=0, column=3, padx=6, pady=6, sticky="ew")
-    ctk.CTkButton(btns, text="➡ Neste", command=app.next).grid(row=0, column=4, padx=6, pady=6, sticky="ew")
+    app.btn_prev = ctk.CTkButton(btns, text="⬅ Forrige", command=app.prev)
+    app.btn_prev.grid(row=0, column=3, padx=6, pady=6, sticky="ew")
+    app.btn_next = ctk.CTkButton(btns, text="➡ Neste", command=app.next)
+    app.btn_next.grid(row=0, column=4, padx=6, pady=6, sticky="ew")
 
     paned = tk.PanedWindow(panel, orient="horizontal")
     paned.grid(row=2, column=0, sticky="nsew", padx=12, pady=(4, 6))
