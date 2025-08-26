@@ -35,11 +35,12 @@ def export_pdf(app):
         app._show_inline("Manglende modul: reportlab (py -m pip install reportlab)", ok=False)
         return
 
+    now = datetime.now()
     save = filedialog.asksaveasfilename(
         title="Lagre PDF-rapport",
         defaultextension=".pdf",
         filetypes=[("PDF", "*.pdf")],
-        initialfile=f"bilagskontroll_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+        initialfile=f"bilagskontroll_{now.strftime('%Y%m%d_%H%M%S')}.pdf",
     )
     if not save:
         app._show_inline("Avbrutt", ok=False)
@@ -96,7 +97,7 @@ def export_pdf(app):
 
     flow = []
     flow.append(Paragraph("Bilagskontroll – Rapport", title))
-    flow.append(Paragraph(datetime.now().strftime("%d.%m.%Y %H:%M"), body))
+    flow.append(Paragraph(now.strftime("%d.%m.%Y %H:%M"), body))
     flow.append(Spacer(1, 4))
     try:
         kunde = to_str(app.kunde_var.get()) if hasattr(app, "kunde_var") else ""
@@ -111,6 +112,7 @@ def export_pdf(app):
         info_rows.append(["Kundenr", kundenr])
     if utfort:
         info_rows.append(["Utført av", utfort])
+    info_rows.append(["Rapport laget", now.strftime("%d.%m.%Y %H:%M")])
     if info_rows:
         info_tbl = Table(info_rows, colWidths=[80, 440], hAlign="LEFT")
         info_tbl.setStyle(
