@@ -128,10 +128,12 @@ def export_pdf(app):
         flow.append(Spacer(1, 6))
     flow.append(
         Paragraph(
-            "<b>Status</b>:<br/>"
-            f"Sum kontrollert: {fmt_money(sum_k)} kr<br/>"
-            f"Sum alle bilag: {fmt_money(sum_a)} kr<br/>"
-            f"% kontrollert: {fmt_pct(pct)}",
+            (
+                "<b>Status</b>:<br/>"
+                f"Sum kontrollert: {fmt_money(sum_k)} kr<br/>"
+                f"Sum alle bilag: {fmt_money(sum_a)} kr<br/>"
+                f"% kontrollert: {fmt_pct(pct)}"
+            ),
             body,
         )
     )
