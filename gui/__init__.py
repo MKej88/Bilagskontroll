@@ -129,7 +129,7 @@ class App(ctk.CTk):
         self.net_amount_col = guess_net_amount_col(self.df.columns)
         # Hent kundenavn automatisk fra fakturaliste (linje 2)
         try:
-            cust = extract_customer_from_invoice_file(path)
+            cust = extract_customer_from_invoice_file(self.df)
             if cust:
                 self.kunde_var.set(cust)
             if hasattr(self, "kunde_entry"):

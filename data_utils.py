@@ -1,5 +1,5 @@
 import re
-from typing import Optional, List
+from typing import Optional, List, Union
 
 import pandas as pd
 
@@ -30,21 +30,25 @@ def load_gl_df(path: str) -> pd.DataFrame:
     return gl
 
 
-def extract_customer_from_invoice_file(path: str) -> Optional[str]:
+def extract_customer_from_invoice_file(data: Union[pd.DataFrame, pd.Series]) -> Optional[str]:
     """
     Leser rad 2 i fakturalista og prøver å hente ut kundenavn.
+
+    Parametere:
+      - data: enten hele DataFrame for fakturalista eller allerede hentet rad 2
 
     Strategi:
       - Søk etter mønster "Kunde: <navn>" eller "Customer: <navn>" i rad 2
       - Hvis ikke funn, velg lengste ikke-numeriske tekstcelle i rad 2
     """
-    try:
-        raw = pd.read_excel(path, engine="openpyxl", header=None, nrows=2)
-    except Exception:
+    if isinstance(data, pd.Series):
+        row2 = data.fillna("")
+    elif isinstance(data, pd.DataFrame):
+        if data is None or len(data) < 2:
+            return None
+        row2 = data.iloc[1].fillna("")
+    else:
         return None
-    if raw is None or len(raw) < 2:
-        return None
-    row2 = raw.iloc[1].fillna("")
     # Direkte mønster "Kunde: X"
     for v in row2.values:
         s = str(v).strip()
