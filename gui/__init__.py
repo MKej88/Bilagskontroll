@@ -2,6 +2,7 @@
 import webbrowser
 from datetime import datetime
 
+import tkinter as tk
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 
@@ -41,6 +42,14 @@ class App(ctk.CTk):
         self.title(APP_TITLE)
         self.geometry("1280x900")
         self.minsize(1180, 820)
+        try:
+            self.iconbitmap(resource_path("icons/bilagskontroll_logo.ico"))
+        except Exception:
+            try:
+                self.app_icon_img = tk.PhotoImage(file=resource_path("icons/bilagskontroll_logo_256.png"))
+                self.iconphoto(False, self.app_icon_img)
+            except Exception:
+                pass
 
         self.df = None
         self.sample_df = None
@@ -67,11 +76,11 @@ class App(ctk.CTk):
         self.logo_img = None
         try:
             from PIL import Image
-            img = Image.open(resource_path("Borev logo.png"))
+            img = Image.open(resource_path("icons/bilagskontroll_logo_256.png"))
             try:
-                self.logo_img = ctk.CTkImage(light_image=img, size=(140, 30))
+                self.logo_img = ctk.CTkImage(light_image=img, size=(32, 32))
             except TypeError:
-                self.logo_img = ctk.CTkImage(img, size=(140, 30))
+                self.logo_img = ctk.CTkImage(img, size=(32, 32))
         except Exception:
             pass
 
