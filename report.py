@@ -97,7 +97,6 @@ def export_pdf(app):
 
     flow = []
     flow.append(Paragraph("Bilagskontroll – Rapport", title))
-    flow.append(Paragraph(now.strftime("%d.%m.%Y %H:%M"), body))
     flow.append(Spacer(1, 4))
     try:
         kunde = to_str(app.kunde_var.get()) if hasattr(app, "kunde_var") else ""
