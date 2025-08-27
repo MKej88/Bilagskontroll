@@ -173,10 +173,12 @@ class App(ctk.CTk):
         if self.df is None:
             messagebox.showinfo(APP_TITLE, "Velg Excel først."); return
         try:
-            n = max(1, min(int(self.sample_size_var.get()), len(self.df)))
+            n = int(self.sample_size_var.get())
             year = int(self.year_var.get())
         except Exception:
-            n, year = min(len(self.df), 10), datetime.now().year
+            messagebox.showinfo(APP_TITLE, "Oppgi antall og år.")
+            return
+        n = max(1, min(n, len(self.df)))
         try:
             self.sample_df = self.df.sample(n=n, random_state=year).reset_index(drop=True)
         except Exception as e:

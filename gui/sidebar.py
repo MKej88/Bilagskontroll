@@ -59,8 +59,15 @@ def build_sidebar(app):
         validatecommand=(vcmd_year, "%P"),
     ).grid(row=1, column=1, padx=(8, 0), pady=(6, 0))
 
-    ctk.CTkButton(card, text="🎲 Lag utvalg", command=app.make_sample)\
-        .grid(row=6, column=0, padx=14, pady=(8, 6), sticky="ew")
+    app.sample_btn = ctk.CTkButton(card, text="🎲 Lag utvalg", command=app.make_sample, state="disabled")
+    app.sample_btn.grid(row=6, column=0, padx=14, pady=(8, 6), sticky="ew")
+
+    def _toggle_sample_btn(*_):
+        state = "normal" if app.sample_size_var.get() and app.year_var.get() else "disabled"
+        app.sample_btn.configure(state=state)
+
+    app.sample_size_var.trace_add("write", _toggle_sample_btn)
+    app.year_var.trace_add("write", _toggle_sample_btn)
 
     app.lbl_filecount = ctk.CTkLabel(card, text="Antall bilag: –", font=ctk.CTkFont(size=16, weight="bold"))
     app.lbl_filecount.grid(row=7, column=0, padx=14, pady=(2, 2), sticky="w")
