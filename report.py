@@ -164,6 +164,55 @@ def export_pdf(app):
     flow.append(status_tbl)
     flow.append(Spacer(1, 8))
 
+    rejected_rows = []
+    for i, d in enumerate(app.decisions):
+        if d != "Ikke godkjent":
+            continue
+        row = app.sample_df.iloc[i]
+        inv = to_str(row.get(app.invoice_col, ""))
+        val = None
+        if app.net_amount_col and app.net_amount_col in app.sample_df.columns:
+            val = parse_amount(row.get(app.net_amount_col))
+        if val is None:
+            for fb in [
+                "Beløp",
+                "Belop",
+                "Total",
+                "Sum",
+                "Nettobeløp",
+                "Netto beløp",
+                "Beløp eks mva",
+            ]:
+                if fb in app.sample_df.columns:
+                    val = parse_amount(row.get(fb))
+                    if val is not None:
+                        break
+        belop = fmt_money(val) if val is not None else ""
+        com = app.comments[i].strip() if i < len(app.comments) else ""
+        rejected_rows.append([inv, belop, com])
+
+    if rejected_rows:
+        flow.append(Paragraph("Ikke godkjent", styles["Heading3"]))
+        rej_tbl = Table(
+            [["Fakturanr", "Beløp", "Kommentar"]] + rejected_rows,
+            colWidths=[120, 80, 320],
+            hAlign="LEFT",
+        )
+        rej_tbl.setStyle(
+            TableStyle(
+                [
+                    ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8),
+                    ("ALIGN", (1, 1), (1, -1), "RIGHT"),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ]
+            )
+        )
+        flow.append(rej_tbl)
+        flow.append(Spacer(1, 8))
+
     total = len(app.sample_df)
     for i in range(total):
         r = app.sample_df.iloc[i]
