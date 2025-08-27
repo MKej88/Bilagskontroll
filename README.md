@@ -26,6 +26,9 @@ Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel�
 - Viser bilagslinjer fra hovedboken for valgt faktura
 - Hurtiglenke som åpner fakturaen i PowerOffice direkte fra appen
 - Eksport av en PDF‑rapport med status og detaljert informasjon for hvert bilag
+- Deaktiverer navigasjonsknappene ved første og siste bilag for å hindre ugyldig navigering
+- Validerer tallfelt i grensesnittet for å sikre gyldige inputverdier
+- PDF‑rapporten viser tidspunkt for når den ble generert
 
 ## Avhengigheter
 
