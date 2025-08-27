@@ -1,5 +1,10 @@
 # Bilagskontroll
 
+<p align="center">
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKUlEQVR4nO3NMQEAAAjDMMC/MGRhgn2pgKa3sk34DwAAAAAAAAAAAN46CP0BCMDA+XQAAAAASUVORK5CYII=" alt="Ikon" />
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIwAAAAeCAIAAABxDGEhAAABdElEQVR4nO3ZMWvCYBSF4ZvQRltLoUsrFIeCUFIQERrFTdz9EU4qgji4+j8cHNyym13i5hYQxclKi4OUiiLFqjWxQ4rgFB3SevE8U0wcDrz4CSoQtQiOm/jfA8AZIjGASAwgEgOIxAAiMeAcaT5XdF1uNp8MI5RK3RDRdPpsPwoEJMMI+f3n7m48eWeO71itNolEj4jC4ct6/VHTJvZ9r1dU1WAuNxiNvt3dePIOOO7a7fl6vdm+rFQearWPVuvThVWw44BIyeR1sfhqXxcK/sXCqlbf3VkFO5yPO0kSdF32eERF8TUaM02bSJKQz9/1el9/sA9on0+S/Z0Uj3cjkU40ekVEprlRlI7PJ2azt+4vhEOOu/F43e8viMg0aTYz0+mXcvleli9c2wa/9j3uLIuIKJMZbO8Ph6tS6U1Vg7FYd7m03JsIAv6qOH74xYEBRGIAkRhAJAYQiQFEYgCRGEAkBhCJAURiAJEYQCQGEIkBRGLgB064ZKDo/EQ8AAAAAElFTkSuQmCC" alt="Logo" />
+</p>
+
 Bilagskontroll er et skrivebordverktøy for å kontrollere leverandørbilag. Programmet gir et grafisk brukergrensesnitt for å trekke tilfeldige bilagsutvalg, gjennomgå hvert bilag og generere en rapport.
 
 Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel‑data, `customtkinter` for et moderne og responsivt grensesnitt og `reportlab` for å lage PDF‑rapporter.

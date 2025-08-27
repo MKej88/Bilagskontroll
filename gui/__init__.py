@@ -3,11 +3,10 @@ import webbrowser
 from datetime import datetime
 
 import customtkinter as ctk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, PhotoImage
 
 
 from helpers import (
-    resource_path,
     to_str,
     only_digits,
     fmt_money,
@@ -32,10 +31,18 @@ from .ledger import apply_treeview_theme, update_treeview_stripes, populate_ledg
 APP_TITLE = "Bilagskontroll BETA v2"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
+LOGO1_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKUlEQVR4nO3NMQEAAAjDMMC/MGRhgn2pgKa3sk34DwAAAAAAAAAAAN46CP0BCMDA+XQAAAAASUVORK5CYII="
+LOGO2_BASE64 = (
+    "iVBORw0KGgoAAAANSUhEUgAAAIwAAAAeCAIAAABxDGEhAAABdElEQVR4nO3ZMWvCYBSF4ZvQRltLoUsrFIeCUFIQERrFTdz9EU4qgji4+j8cHNyym13i5hYQxclKi4OUiiLFqjWxQ4rgFB3SevE8U0wcDrz4CSoQtQiOm/jfA8AZIjGASAwgEgOIxAAiMeAcaT5XdF1uNp8MI5RK3RDRdPpsPwoEJMMI+f3n7m48eWeO71itNolEj4jC4ct6/VHTJvZ9r1dU1WAuNxiNvt3dePIOOO7a7fl6vdm+rFQearWPVuvThVWw44BIyeR1sfhqXxcK/sXCqlbf3VkFO5yPO0kSdF32eERF8TUaM02bSJKQz9/1el9/sA9on0+S/Z0Uj3cjkU40ekVEprlRlI7PJ2azt+4vhEOOu/F43e8viMg0aTYz0+mXcvleli9c2wa/9j3uLIuIKJMZbO8Ph6tS6U1Vg7FYd7m03JsIAv6qOH74xYEBRGIAkRhAJAYQiQFEYgCRGEAkBhCJAURiAJEYQCQGEIkBRGLgB064ZKDo/EQ8AAAAAElFTkSuQmCC"
+)
+
 # ----------------- App -----------------
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
+        self.icon_img = PhotoImage(data=LOGO1_BASE64)
+        self.iconphoto(False, self.icon_img)
+        self.logo_img = ctk.CTkImage(data=LOGO2_BASE64)
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
         self.title(APP_TITLE)
@@ -63,17 +70,6 @@ class App(ctk.CTk):
         self.gl_credit_col = None
         self.gl_amount_col = None
         self.gl_postedby_col = None
-
-        self.logo_img = None
-        try:
-            from PIL import Image
-            img = Image.open(resource_path("Borev logo.png"))
-            try:
-                self.logo_img = ctk.CTkImage(light_image=img, size=(140, 30))
-            except TypeError:
-                self.logo_img = ctk.CTkImage(img, size=(140, 30))
-        except Exception:
-            pass
 
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
