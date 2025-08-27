@@ -9,7 +9,7 @@ def build_main(app):
     panel = ctk.CTkFrame(app, corner_radius=16)
     panel.grid(row=0, column=1, sticky="nsew", padx=(0, 14), pady=14)
     panel.grid_columnconfigure(0, weight=1)
-    panel.grid_rowconfigure(2, weight=1)
+    panel.grid_rowconfigure(2, weight=1, minsize=300)
 
     head = ctk.CTkFrame(panel)
     head.grid(row=0, column=0, sticky="ew", padx=12, pady=8)
@@ -47,18 +47,22 @@ def build_main(app):
     right = ctk.CTkFrame(paned)
     paned.add(left,  minsize=420)
     paned.add(right, minsize=420)
+    paned.paneconfigure(left, stretch="always")
+    paned.paneconfigure(right, stretch="always")
 
     ctk.CTkLabel(left, text="Detaljer for bilag", font=ctk.CTkFont(size=15, weight="bold"))\
         .grid(row=0, column=0, sticky="w", padx=8, pady=(4,4))
     left.grid_columnconfigure(0, weight=1)
-    left.grid_rowconfigure(1, weight=1)
+    left.grid_rowconfigure(1, weight=1, minsize=120)
     app.detail_box = ctk.CTkTextbox(left, height=360, font=ctk.CTkFont(size=14))
     app.detail_box.grid(row=1, column=0, sticky="nsew", padx=(8,6), pady=(0,8))
 
     ctk.CTkLabel(right, text="Hovedbok (bilagslinjer)", font=ctk.CTkFont(size=15, weight="bold"))\
         .grid(row=0, column=0, sticky="w", padx=8, pady=(4,4))
     right.grid_columnconfigure(0, weight=1)
-    right.grid_rowconfigure(1, weight=1)
+    right.grid_columnconfigure(1, weight=0)
+    right.grid_rowconfigure(1, weight=3, minsize=150)
+    right.grid_rowconfigure(5, weight=1, minsize=80)
 
     app.ledger_cols = LEDGER_COLS
     app.ledger_tree = ttk.Treeview(right, columns=LEDGER_COLS, show="headings", height=10, style="Custom.Treeview")
