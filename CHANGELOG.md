@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.0.2
+
+### Dokumentasjon
+- Lagt til seksjon om versjonsnotater i README som viser til `CHANGELOG.md`.
+
 ## 2.0.1
 
 ### Dokumentasjon
