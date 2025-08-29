@@ -56,6 +56,10 @@ pip install pandas customtkinter reportlab
 4. Gå gjennom hvert bilag, marker status og legg inn eventuelle kommentarer.
 5. Eksporter PDF-rapport når kontrollen er ferdig.
 
+## Versjonsnotater
+
+Se `CHANGELOG.md` for en detaljert oversikt over endringer mellom versjoner.
+
 ## Bidra
 
 Bidrag og forslag til forbedringer er velkomne. Lag gjerne en pull request med en kort beskrivelse av endringen.
