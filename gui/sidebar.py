@@ -108,11 +108,12 @@ def build_sidebar(app):
     )
     info_lbl.grid(row=3, column=0, columnspan=2, padx=(8,8), pady=(0,8), sticky="ew")
 
-    def _update_info_wrap(event):
-        # Trekk fra litt ekstra margin for å unngå at teksten klippes i høyre kant
-        info_lbl.configure(wraplength=max(event.width - 16, 0))
+    def _update_info_wrap(event=None):
+        # Juster linjebryting basert på bredden til foreldrerammen
+        info_lbl.configure(wraplength=max(opp.winfo_width() - 24, 0))
 
-    info_lbl.bind("<Configure>", _update_info_wrap)
+    opp.bind("<Configure>", _update_info_wrap)
+    _update_info_wrap()
 
     card.grid_rowconfigure(20, weight=1)
 
