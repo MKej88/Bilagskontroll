@@ -30,7 +30,7 @@ from .sidebar import build_sidebar
 from .mainview import build_main
 from .ledger import apply_treeview_theme, update_treeview_stripes, populate_ledger_table
 
-APP_TITLE = "Bilagskontroll BETA v2"
+APP_TITLE = "Bilagskontroll v1"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
 # ----------------- App -----------------
