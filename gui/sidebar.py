@@ -99,16 +99,15 @@ def build_sidebar(app):
     ctk.CTkEntry(opp, textvariable=app.kundenr_var).grid(row=1, column=1, padx=(0,8), pady=(4,4), sticky="ew")
     ctk.CTkLabel(opp, text="Utført av").grid(row=2, column=0, padx=(8,8), pady=(4,8), sticky="w")
     ctk.CTkEntry(opp, textvariable=app.utfort_av_var).grid(row=2, column=1, padx=(0,8), pady=(4,8), sticky="ew")
-    info_txt = ctk.CTkTextbox(
+    info_lbl = ctk.CTkLabel(
         opp,
-        width=0,
-        height=32,
-        fg_color="transparent",
-        border_width=0,
+        text="Kundenavn hentes automatisk fra excelfil",
+        font=ctk.CTkFont(size=12, slant="italic"),
+        anchor="w",
+        justify="left",
+        wraplength=240,
     )
-    info_txt.insert("1.0", "Kundenavn hentes automatisk fra excelfil")
-    info_txt.configure(state="disabled", wrap="word")
-    info_txt.grid(row=3, column=0, columnspan=2, padx=(8,8), pady=(0,8), sticky="ew")
+    info_lbl.grid(row=3, column=0, columnspan=2, padx=(8,8), pady=(0,8), sticky="w")
 
     card.grid_rowconfigure(20, weight=1)
 
