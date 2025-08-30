@@ -103,7 +103,10 @@ def build_sidebar(app):
         opp,
         text="Kundenavn hentes automatisk fra excelfil",
         font=ctk.CTkFont(size=12, slant="italic"),
-    ).grid(row=3, column=0, columnspan=2, padx=(8,8), pady=(0,8), sticky="w")
+        anchor="w",
+        justify="left",
+        wraplength=260,
+    ).grid(row=3, column=0, columnspan=2, padx=(8,8), pady=(0,8), sticky="ew")
 
     card.grid_rowconfigure(20, weight=1)
 
