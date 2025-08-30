@@ -75,6 +75,20 @@ def row_has_sum_word(row: pd.Series) -> bool:
     return False
 
 
+def _net_amount_from_row(row: pd.Series, net_amount_col: Optional[str]) -> Optional[float]:
+    """Hent netto beløp fra raden ved å sjekke prioriterte kolonner."""
+    cols = []
+    if net_amount_col:
+        cols.append(net_amount_col)
+    cols.extend(c for c in FALLBACK_NET_COLUMNS if c != net_amount_col)
+    for col in cols:
+        if col in row:
+            val = parse_amount(row.get(col))
+            if val is not None:
+                return val
+    return None
+
+
 def calc_sum_kontrollert(sample_df: Optional[pd.DataFrame], decisions: list, net_amount_col: Optional[str]) -> float:
     if sample_df is None:
         return 0.0
@@ -83,15 +97,7 @@ def calc_sum_kontrollert(sample_df: Optional[pd.DataFrame], decisions: list, net
         if d is None:
             continue
         row = sample_df.iloc[i]
-        val = None
-        if net_amount_col and net_amount_col in sample_df.columns:
-            val = parse_amount(row.get(net_amount_col))
-        if val is None:
-            for fb in FALLBACK_NET_COLUMNS:
-                if fb in sample_df.columns:
-                    val = parse_amount(row.get(fb))
-                    if val is not None:
-                        break
+        val = _net_amount_from_row(row, net_amount_col)
         if val is not None:
             total += val
     return total
@@ -104,16 +110,9 @@ def calc_sum_net_all(df: Optional[pd.DataFrame], net_amount_col: Optional[str]) 
     if len(df_eff) > 0:
         df_eff = df_eff.iloc[:-1]
     df_eff = df_eff.loc[~df_eff.apply(row_has_sum_word, axis=1)]
-    col = net_amount_col if (net_amount_col in df_eff.columns) else None
     total = 0.0
     for _, r in df_eff.iterrows():
-        v = parse_amount(r.get(col)) if col else None
-        if v is None:
-            for fb in FALLBACK_NET_COLUMNS:
-                if fb in df_eff.columns:
-                    v = parse_amount(r.get(fb))
-                    if v is not None:
-                        break
+        v = _net_amount_from_row(r, net_amount_col)
         if v is not None:
             total += v
     return total
