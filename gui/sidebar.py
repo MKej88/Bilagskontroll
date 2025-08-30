@@ -109,9 +109,8 @@ def build_sidebar(app):
     info_lbl.grid(row=3, column=0, columnspan=2, padx=(8,8), pady=(0,8), sticky="ew")
 
     def _update_info_wrap(event):
-        """Tilpass linjebryting til etikettens faktiske bredde med margin."""
-        wrap_len = max(event.width - 16, 0)
-        info_lbl.configure(wraplength=wrap_len)
+        """Tilpass linjebryting til etikettens fulle bredde."""
+        info_lbl.configure(wraplength=event.width)
 
     info_lbl.bind("<Configure>", _update_info_wrap)
 
