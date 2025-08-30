@@ -91,7 +91,7 @@ def build_sidebar(app):
     app.kunde_entry = ctk.CTkEntry(
         opp,
         textvariable=app.kunde_var,
-        placeholder_text="Hentes automatisk..",
+        placeholder_text="Hentes automatisk",
         state="disabled",
     )
     app.kunde_entry.grid(row=0, column=1, padx=(0,8), pady=(8,4), sticky="ew")
@@ -101,7 +101,7 @@ def build_sidebar(app):
     ctk.CTkEntry(opp, textvariable=app.utfort_av_var).grid(row=2, column=1, padx=(0,8), pady=(4,8), sticky="ew")
     info_lbl = ctk.CTkLabel(
         opp,
-        text="Kundenavn hentes automatisk fra excelfil",
+        text="Kundenavn hentes automatisk",
         font=ctk.CTkFont(size=12, slant="italic"),
         anchor="w",
         justify="left",
