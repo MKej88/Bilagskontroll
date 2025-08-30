@@ -42,14 +42,8 @@ class App(ctk.CTk):
         self.title(APP_TITLE)
         self.geometry("1280x900")
         self.minsize(1180, 820)
-        try:
-            self.iconbitmap(resource_path("icons/bilagskontroll_logo.ico"))
-        except Exception:
-            try:
-                self.app_icon_img = tk.PhotoImage(file=resource_path("icons/bilagskontroll_logo_256.png"))
-                self.iconphoto(False, self.app_icon_img)
-            except Exception:
-                pass
+        self.app_icon_img = None
+        self._update_icon()
 
         self.df = None
         self.sample_df = None
@@ -76,11 +70,18 @@ class App(ctk.CTk):
         self.logo_img = None
         try:
             from PIL import Image
-            img = Image.open(resource_path("icons/bilagskontroll_logo_256.png"))
+            img_light = Image.open(resource_path("icons/bilagskontroll_logo_256.png"))
             try:
-                self.logo_img = ctk.CTkImage(light_image=img, size=(32, 32))
+                img_dark = Image.open(resource_path("icons/bilagskontroll_icon_darkmode_256.png"))
+            except Exception:
+                img_dark = None
+            try:
+                if img_dark:
+                    self.logo_img = ctk.CTkImage(light_image=img_light, dark_image=img_dark, size=(32, 32))
+                else:
+                    self.logo_img = ctk.CTkImage(light_image=img_light, size=(32, 32))
             except TypeError:
-                self.logo_img = ctk.CTkImage(img, size=(32, 32))
+                self.logo_img = ctk.CTkImage(img_light, size=(32, 32))
         except Exception:
             pass
 
@@ -100,9 +101,27 @@ class App(ctk.CTk):
     # Theme
     def _switch_theme(self, mode):
         ctk.set_appearance_mode("light" if mode.lower()=="light" else "dark" if mode.lower()=="dark" else "system")
+        self._update_icon()
         apply_treeview_theme(self)
         update_treeview_stripes(self)
         self.render()
+
+    def _update_icon(self):
+        try:
+            dark = ctk.get_appearance_mode().lower() == "dark"
+        except Exception:
+            dark = False
+        ico = "icons/bilagskontroll_icon_darkmode.ico" if dark else "icons/bilagskontroll_logo.ico"
+        png = "icons/bilagskontroll_icon_darkmode_256.png" if dark else "icons/bilagskontroll_logo_256.png"
+        try:
+            self.iconbitmap(resource_path(ico))
+        except Exception:
+            pass
+        try:
+            self.app_icon_img = tk.PhotoImage(file=resource_path(png))
+            self.iconphoto(False, self.app_icon_img)
+        except Exception:
+            pass
 
     # Files
     def choose_file(self):
