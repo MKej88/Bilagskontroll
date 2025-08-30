@@ -109,7 +109,7 @@ def build_sidebar(app):
     info_lbl.grid(row=3, column=0, columnspan=2, padx=(8,8), pady=(0,8), sticky="ew")
 
     def _update_info_wrap(event):
-        info_lbl.configure(wraplength=info_lbl.winfo_width())
+        info_lbl.configure(wraplength=event.width - 4)
 
     info_lbl.bind("<Configure>", _update_info_wrap)
 
