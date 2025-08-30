@@ -54,8 +54,11 @@ def build_main(app):
         .grid(row=0, column=0, sticky="w", padx=8, pady=(4,4))
     left.grid_columnconfigure(0, weight=1)
     left.grid_rowconfigure(1, weight=1, minsize=120)
-    app.detail_box = ctk.CTkTextbox(left, height=360, font=ctk.CTkFont(size=14))
-    app.detail_box.grid(row=1, column=0, sticky="nsew", padx=(8,6), pady=(0,8))
+    app.detail_box = ctk.CTkTextbox(
+        left, height=360, font=ctk.CTkFont(size=14), wrap="word"
+    )
+    app.detail_box.grid(row=1, column=0, sticky="nsew", padx=(8, 6), pady=(0, 8))
+    app.detail_box.configure(padx=6, pady=6)
 
     ctk.CTkLabel(right, text="Hovedbok (bilagslinjer)", font=ctk.CTkFont(size=15, weight="bold"))\
         .grid(row=0, column=0, sticky="w", padx=8, pady=(4,4))
@@ -89,9 +92,12 @@ def build_main(app):
     app.ledger_sum.grid(row=3, column=0, columnspan=2, sticky="ew", padx=(0, 12), pady=(6, 10))
 
     ctk.CTkLabel(right, text="Kommentar", font=ctk.CTkFont(size=15, weight="bold"))\
-        .grid(row=4, column=0, columnspan=2, sticky="w", padx=0, pady=(8,4))
-    app.comment_box = ctk.CTkTextbox(right, height=110, font=ctk.CTkFont(size=13))
-    app.comment_box.grid(row=5, column=0, columnspan=2, sticky="nsew", padx=0, pady=(0,0))
+        .grid(row=4, column=0, columnspan=2, sticky="w", padx=0, pady=(8, 4))
+    app.comment_box = ctk.CTkTextbox(
+        right, height=110, font=ctk.CTkFont(size=13), wrap="word"
+    )
+    app.comment_box.grid(row=5, column=0, columnspan=2, sticky="nsew", padx=(0, 12), pady=(0, 0))
+    app.comment_box.configure(padx=6, pady=6)
 
     bottom = ctk.CTkFrame(panel)
     bottom.grid(row=3, column=0, sticky="ew", padx=12, pady=(0, 0))
