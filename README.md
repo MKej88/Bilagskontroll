@@ -2,7 +2,7 @@
 
 Bilagskontroll v1 er et skrivebordverktøy for å kontrollere leverandørbilag. Programmet gir et grafisk brukergrensesnitt for å trekke tilfeldige bilagsutvalg, gjennomgå hvert bilag og generere en rapport.
 
-Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel‑data, `customtkinter` for et moderne og responsivt grensesnitt og `reportlab` for å lage PDF‑rapporter.
+Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel‑data, `customtkinter` for et moderne og responsivt grensesnitt, `tkinterdnd2` for dra‑og‑slipp av filer og `reportlab` for å lage PDF‑rapporter.
 
 ## Struktur
 
@@ -35,6 +35,7 @@ Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel�
 - Python 3.x
 - [pandas](https://pypi.org/project/pandas/) – leser og håndterer Excel‑data
 - [customtkinter](https://pypi.org/project/customtkinter/) – gir et moderne brukergrensesnitt
+- [tkinterdnd2](https://pypi.org/project/tkinterdnd2/) – muliggjør dra‑og‑slipp av filer
 - [reportlab](https://pypi.org/project/reportlab/) – genererer PDF‑rapporten
 
 ## Installasjon
@@ -42,7 +43,7 @@ Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel�
 ```bash
 python -m venv venv
 source venv/bin/activate  # venv\Scripts\activate på Windows
-pip install pandas customtkinter reportlab
+pip install pandas customtkinter tkinterdnd2 reportlab
 ```
 
 ## Bruk

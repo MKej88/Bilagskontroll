@@ -6,6 +6,7 @@ import os
 import tkinter as tk
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
+from tkinterdnd2 import DND_FILES, TkinterDnD
 
 
 from helpers import (
@@ -27,9 +28,10 @@ APP_TITLE = "Bilagskontroll v1"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
 # ----------------- App -----------------
-class App(ctk.CTk):
+class App(TkinterDnD.Tk, ctk.CTk):
     def __init__(self):
-        super().__init__()
+        TkinterDnD.Tk.__init__(self)
+        ctk.CTk.__init__(self)
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
         self.title(APP_TITLE)
@@ -69,6 +71,11 @@ class App(ctk.CTk):
         self.sample_size_var.set("")
         self.year_var.set("")
         self.main = build_main(self)
+
+        self.drop_target_register(DND_FILES)
+        self.dnd_bind("<<Drop>>", self._on_file_drop)
+        self.gl_path_lbl.drop_target_register(DND_FILES)
+        self.gl_path_lbl.dnd_bind("<<Drop>>", self._on_gl_drop)
 
         self.bind("<Left>", lambda e: self.prev())
         self.bind("<Right>", lambda e: self.next())
@@ -136,6 +143,18 @@ class App(ctk.CTk):
         if not p: return
         self.gl_path_var.set(p)
         self._load_gl_excel()
+
+    def _on_file_drop(self, event):
+        files = self.tk.splitlist(event.data)
+        if files:
+            self.file_path_var.set(files[0])
+            self._load_excel()
+
+    def _on_gl_drop(self, event):
+        files = self.tk.splitlist(event.data)
+        if files:
+            self.gl_path_var.set(files[0])
+            self._load_gl_excel()
 
     # Read
     def _load_excel(self):
