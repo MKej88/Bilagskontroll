@@ -41,16 +41,16 @@ Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel�
 ## Installasjon
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # venv\Scripts\activate på Windows
-pip install pandas customtkinter tkinterdnd2 reportlab
+py -m venv venv
+venv\Scripts\activate  # source venv/bin/activate på macOS/Linux
+py -m pip install pandas customtkinter tkinterdnd2 reportlab
 ```
 
 ## Bruk
 
 1. Start programmet:
    ```bash
-   python bilagskontroll.py
+   py bilagskontroll.py
    ```
 2. Velg Excel-fil(er) for bilag og hovedbok.
 3. Angi størrelse på utvalg og år, og trykk **🎲 Lag utvalg**.
