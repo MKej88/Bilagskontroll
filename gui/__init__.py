@@ -6,6 +6,7 @@ import os
 import tkinter as tk
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
+from tkinterdnd2 import TkinterDnD
 
 
 from helpers import (
@@ -27,9 +28,10 @@ APP_TITLE = "Bilagskontroll v1"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
 # ----------------- App -----------------
-class App(ctk.CTk):
+class App(ctk.CTk, TkinterDnD.Tk):
     def __init__(self):
-        super().__init__()
+        ctk.CTk.__init__(self)
+        TkinterDnD.Tk.__init__(self)
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
         self.title(APP_TITLE)
