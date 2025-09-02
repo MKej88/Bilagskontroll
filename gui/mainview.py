@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 import customtkinter as ctk
-import report
 from .ledger import LEDGER_COLS, apply_treeview_theme, update_treeview_stripes
 
 
@@ -95,7 +94,11 @@ def build_main(app):
 
     bottom = ctk.CTkFrame(panel)
     bottom.grid(row=3, column=0, sticky="ew", padx=12, pady=(0, 0))
-    ctk.CTkButton(bottom, text="📄 Eksporter PDF rapport", command=lambda: report.export_pdf(app)).pack(side="left")
+    def _export_pdf():
+        import report
+        report.export_pdf(app)
+
+    ctk.CTkButton(bottom, text="📄 Eksporter PDF rapport", command=_export_pdf).pack(side="left")
     ctk.CTkLabel(bottom, text="").pack(side="left", expand=True, fill="x")
     if app.logo_img:
         ctk.CTkLabel(bottom, text="", image=app.logo_img).pack(side="right", padx=(8,0))

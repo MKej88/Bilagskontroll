@@ -18,14 +18,6 @@ from helpers import (
     guess_net_amount_col,
     fmt_pct,
 )
-from data_utils import (
-    load_invoice_df,
-    load_gl_df,
-    extract_customer_from_invoice_file,
-    calc_sum_kontrollert,
-    calc_sum_net_all,
-)
-import report
 from .sidebar import build_sidebar
 from .mainview import build_main
 from .ledger import apply_treeview_theme, update_treeview_stripes, populate_ledger_table
@@ -128,21 +120,12 @@ class App(ctk.CTk):
         p = filedialog.askopenfilename(title="Velg Excel (fakturaliste)", filetypes=[("Excel","*.xlsx *.xls")])
         if not p: return
         self.file_path_var.set(p)
-        self._load_excel()
-
-    def choose_gl_file(self):
-        p = filedialog.askopenfilename(title="Velg Hovedbok (Excel)", filetypes=[("Excel","*.xlsx *.xls")])
-        if not p: return
-        self.gl_path_var.set(p)
-        self._load_gl_excel()
-
-    # Read
-    def _load_excel(self):
+        import data_utils
         path = self.file_path_var.get()
         if not path: return
         header_idx = 4
         try:
-            df = load_invoice_df(path, header_idx)
+            df = data_utils.load_invoice_df(path, header_idx)
             self.antall_bilag = len(df.dropna(how="all"))
             self.df = df
         except Exception as e:
@@ -157,7 +140,7 @@ class App(ctk.CTk):
         self.net_amount_col = guess_net_amount_col(self.df.columns)
         # Hent kundenavn automatisk fra fakturaliste (linje 2)
         try:
-            cust = extract_customer_from_invoice_file(path)
+            cust = data_utils.extract_customer_from_invoice_file(path)
             if cust:
                 self.kunde_var.set(cust)
             if hasattr(self, "kunde_entry"):
@@ -168,11 +151,15 @@ class App(ctk.CTk):
         self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
         self._update_counts_labels(); self.render()
 
-    def _load_gl_excel(self):
+    def choose_gl_file(self):
+        p = filedialog.askopenfilename(title="Velg Hovedbok (Excel)", filetypes=[("Excel","*.xlsx *.xls")])
+        if not p: return
+        self.gl_path_var.set(p)
+        import data_utils
         path = self.gl_path_var.get()
         if not path: return
         try:
-            gl = load_gl_df(path)
+            gl = data_utils.load_gl_df(path)
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
             return
@@ -193,6 +180,7 @@ class App(ctk.CTk):
         self.gl_postedby_col    = guess_col(cols, r"postert\s*av", r"bokf(ø|o)rt\s*av", r"registrert\s*av", r"posted\s*by", r"created\s*by")
 
         self.render()
+
 # Sampling / nav
     def _update_counts_labels(self):
         self.lbl_filecount.configure(text=f"Antall bilag: {self.antall_bilag}")
@@ -256,8 +244,9 @@ class App(ctk.CTk):
     # Ledger
     # Summary / status
     def _update_status_card(self):
-        sum_k = calc_sum_kontrollert(self.sample_df, self.decisions, self.net_amount_col)
-        sum_a = calc_sum_net_all(self.df, self.net_amount_col)
+        import data_utils
+        sum_k = data_utils.calc_sum_kontrollert(self.sample_df, self.decisions, self.net_amount_col)
+        sum_a = data_utils.calc_sum_net_all(self.df, self.net_amount_col)
         pct = (sum_k / sum_a * 100.0) if sum_a else 0.0
         self.lbl_st_sum_kontrollert.configure(text=f"Sum kontrollert: {fmt_money(sum_k)} kr")
         self.lbl_st_sum_alle.configure(text=f"Sum alle bilag: {fmt_money(sum_a)} kr")
