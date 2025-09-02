@@ -63,6 +63,7 @@ class App(ctk.CTk, TkinterDnD.Tk):
         self.gl_postedby_col = None
 
         self.logo_img = None
+        self._after_jobs = []
 
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
@@ -76,7 +77,14 @@ class App(ctk.CTk, TkinterDnD.Tk):
         self.bind("<Right>", lambda e: self.next())
         self.bind("<Control-o>", lambda e: self.open_in_po())
         self.render()
-        self.after(0, self.load_logo_images)
+        self._after_jobs.append(self.after(0, self.load_logo_images))
+
+        # Drag og slipp
+        self.drop_target_register("DND_Files")
+        self.dnd_bind("<<Drop>>", self._on_drop)
+
+        # Sørg for ryddig nedstenging
+        self.protocol("WM_DELETE_WINDOW", self.destroy)
 
     # Theme
     def _switch_theme(self, mode):
@@ -126,6 +134,17 @@ class App(ctk.CTk, TkinterDnD.Tk):
         if hasattr(self, "bottom_frame"):
             ctk.CTkLabel(self.bottom_frame, text="", image=self.logo_img).pack(side="right", padx=(8,0))
 
+    def _on_drop(self, event):
+        path = event.data.strip("{}").strip()
+        if not path.lower().endswith((".xlsx", ".xls")):
+            return
+        if "hovedbok" in os.path.basename(path).lower():
+            self.gl_path_var.set(path)
+            self._load_gl_excel()
+        else:
+            self.file_path_var.set(path)
+            self._load_excel()
+
     # Files
     def choose_file(self):
         p = filedialog.askopenfilename(title="Velg Excel (fakturaliste)", filetypes=[("Excel","*.xlsx *.xls")])
@@ -138,6 +157,22 @@ class App(ctk.CTk, TkinterDnD.Tk):
         if not p: return
         self.gl_path_var.set(p)
         self._load_gl_excel()
+
+    def destroy(self):
+        for job in getattr(self, "_after_jobs", []):
+            try:
+                self.after_cancel(job)
+            except Exception:
+                pass
+        self._after_jobs.clear()
+        try:
+            ctk.ScalingTracker.remove_window(self.destroy, self)
+        except Exception:
+            pass
+        try:
+            TkinterDnD.Tk.destroy(self)
+        except Exception:
+            pass
 
     # Read
     def _load_excel(self):
@@ -279,7 +314,7 @@ class App(ctk.CTk, TkinterDnD.Tk):
         digits = only_digits(inv_val)
         self.clipboard_clear(); self.clipboard_append(digits if digits else inv_val)
         self.copy_feedback.configure(text="Kopiert")
-        self.after(1500, lambda: self.copy_feedback.configure(text=""))
+        self._after_jobs.append(self.after(1500, lambda: self.copy_feedback.configure(text="")))
 
     # Ledger
     # Summary / status
@@ -309,7 +344,7 @@ class App(ctk.CTk, TkinterDnD.Tk):
     def _show_inline(self, msg: str, ok=True):
         self.inline_status.configure(text_color=("#2ecc71" if ok else "#e74c3c"))
         self.inline_status.configure(text=msg)
-        self.after(3500, lambda: self.inline_status.configure(text=""))
+        self._after_jobs.append(self.after(3500, lambda: self.inline_status.configure(text="")))
 
     # Details + render
     def _details_text_for_row(self, row_dict):
