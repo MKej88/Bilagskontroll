@@ -9,6 +9,7 @@ from helpers import (
     fmt_money,
     fmt_pct,
     format_number_with_thousands,
+    logger,
 )
 
 from data_utils import calc_sum_kontrollert, calc_sum_net_all
@@ -43,6 +44,7 @@ def export_pdf(app):
         initialfile=f"bilagskontroll_{now.strftime('%Y%m%d_%H%M%S')}.pdf",
     )
     if not save:
+        logger.info("PDF-eksport avbrutt")
         app._show_inline("Avbrutt", ok=False)
         return
 
@@ -268,6 +270,7 @@ def export_pdf(app):
     )
     try:
         doc.build(flow)
+        logger.info(f"PDF-rapport lagret til {save}")
         app._show_inline(f"Lagret PDF: {os.path.basename(save)}", ok=True)
     except Exception as e:
         app._show_inline(f"Feil ved PDF-generering: {e}", ok=False)

@@ -18,6 +18,7 @@ from helpers import (
     guess_col,
     guess_net_amount_col,
     fmt_pct,
+    logger,
 )
 from .sidebar import build_sidebar
 from .mainview import build_main
@@ -143,6 +144,7 @@ class App(ctk.CTk):
         path = self.file_path_var.get()
         if not path:
             return
+        logger.info(f"Laster fakturaliste fra {path}")
         header_idx = 4
         big = os.path.getsize(path) > 5 * 1024 * 1024
         if big and hasattr(self, "inline_status"):
@@ -184,6 +186,7 @@ class App(ctk.CTk):
         path = self.gl_path_var.get()
         if not path:
             return
+        logger.info(f"Laster hovedbok fra {path}")
         big = os.path.getsize(path) > 5 * 1024 * 1024
         if big and hasattr(self, "inline_status"):
             self.inline_status.configure(text="laster inn fil...")
@@ -227,6 +230,7 @@ class App(ctk.CTk):
             messagebox.showinfo(APP_TITLE, "Oppgi antall og år.")
             return
         n = max(1, min(n, len(self.df)))
+        logger.info(f"Trekker utvalg på {n} bilag for år {year}")
         try:
             self.sample_df = self.df.sample(n=n, random_state=year).reset_index(drop=True)
         except Exception as e:
