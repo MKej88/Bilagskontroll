@@ -68,22 +68,6 @@ class App(ctk.CTk):
         self.gl_postedby_col = None
 
         self.logo_img = None
-        try:
-            from PIL import Image
-            img_light = Image.open(resource_path("icons/bilagskontroll_logo_256.png"))
-            try:
-                img_dark = Image.open(resource_path("icons/bilagskontroll_icon_darkmode_256.png"))
-            except Exception:
-                img_dark = None
-            try:
-                if img_dark:
-                    self.logo_img = ctk.CTkImage(light_image=img_light, dark_image=img_dark, size=(32, 32))
-                else:
-                    self.logo_img = ctk.CTkImage(light_image=img_light, size=(32, 32))
-            except TypeError:
-                self.logo_img = ctk.CTkImage(img_light, size=(32, 32))
-        except Exception:
-            pass
 
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
@@ -97,6 +81,7 @@ class App(ctk.CTk):
         self.bind("<Right>", lambda e: self.next())
         self.bind("<Control-o>", lambda e: self.open_in_po())
         self.render()
+        self.after(0, self.load_logo_images)
 
     # Theme
     def _switch_theme(self, mode):
@@ -122,6 +107,27 @@ class App(ctk.CTk):
             self.iconphoto(False, self.app_icon_img)
         except Exception:
             pass
+
+    def load_logo_images(self):
+        try:
+            from PIL import Image
+            img_light = Image.open(resource_path("icons/bilagskontroll_logo_256.png"))
+            try:
+                img_dark = Image.open(resource_path("icons/bilagskontroll_icon_darkmode_256.png"))
+            except Exception:
+                img_dark = None
+            try:
+                if img_dark:
+                    self.logo_img = ctk.CTkImage(light_image=img_light, dark_image=img_dark, size=(32, 32))
+                else:
+                    self.logo_img = ctk.CTkImage(light_image=img_light, size=(32, 32))
+            except TypeError:
+                self.logo_img = ctk.CTkImage(img_light, size=(32, 32))
+        except Exception:
+            self.logo_img = None
+            return
+        if hasattr(self, "bottom_frame"):
+            ctk.CTkLabel(self.bottom_frame, text="", image=self.logo_img).pack(side="right", padx=(8,0))
 
     # Files
     def choose_file(self):
