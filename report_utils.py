@@ -1,10 +1,10 @@
-from reportlab.platypus import Table, TableStyle, Paragraph
-from reportlab.lib import colors
 from helpers import parse_amount, fmt_money
 from gui.ledger import ledger_rows
 
 
 def build_ledger_table(app, invoice_value: str, style_small):
+    from reportlab.platypus import Table, TableStyle, Paragraph
+    from reportlab.lib import colors
     rows = ledger_rows(app, invoice_value)
     if not rows:
         return Paragraph("Ingen bokføringslinjer for dette fakturanummeret.", style_small)

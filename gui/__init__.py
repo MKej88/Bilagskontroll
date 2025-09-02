@@ -26,7 +26,6 @@ from data_utils import (
     calc_sum_kontrollert,
     calc_sum_net_all,
 )
-import report
 from .sidebar import build_sidebar
 from .mainview import build_main
 from .ledger import apply_treeview_theme, update_treeview_stripes, populate_ledger_table

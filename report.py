@@ -11,7 +11,6 @@ from helpers import (
     format_number_with_thousands,
 )
 
-from report_utils import build_ledger_table
 from data_utils import calc_sum_kontrollert, calc_sum_net_all
 
 
@@ -35,6 +34,7 @@ def export_pdf(app):
         app._show_inline("Manglende modul: reportlab (py -m pip install reportlab)", ok=False)
         return
 
+    from report_utils import build_ledger_table
     now = datetime.now()
     save = filedialog.asksaveasfilename(
         title="Lagre PDF-rapport",
