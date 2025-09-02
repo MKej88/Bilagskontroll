@@ -2,7 +2,10 @@
 import os
 import re
 import sys
-import pandas as pd
+
+def _pd():
+    import pandas as pd
+    return pd
 
 # Forhåndskompiler regex som brukes hyppig
 _RE_DIGITS = re.compile(r"\D+")
@@ -22,6 +25,7 @@ def resource_path(relpath: str) -> str:
 
 
 def to_str(v):
+    pd = _pd()
     if pd.isna(v):
         return ""
     if isinstance(v, pd.Timestamp):
