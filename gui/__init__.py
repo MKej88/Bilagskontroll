@@ -78,6 +78,13 @@ class App(ctk.CTk, TkinterDnD.Tk):
         self.render()
         self.after(0, self.load_logo_images)
 
+        # Drag og slipp
+        self.drop_target_register("DND_Files")
+        self.dnd_bind("<<Drop>>", self._on_drop)
+
+        # Sørg for ryddig nedstenging
+        self.protocol("WM_DELETE_WINDOW", self.destroy)
+
     # Theme
     def _switch_theme(self, mode):
         ctk.set_appearance_mode("light" if mode.lower()=="light" else "dark" if mode.lower()=="dark" else "system")
@@ -126,6 +133,17 @@ class App(ctk.CTk, TkinterDnD.Tk):
         if hasattr(self, "bottom_frame"):
             ctk.CTkLabel(self.bottom_frame, text="", image=self.logo_img).pack(side="right", padx=(8,0))
 
+    def _on_drop(self, event):
+        path = event.data.strip("{}").strip()
+        if not path.lower().endswith((".xlsx", ".xls")):
+            return
+        if "hovedbok" in os.path.basename(path).lower():
+            self.gl_path_var.set(path)
+            self._load_gl_excel()
+        else:
+            self.file_path_var.set(path)
+            self._load_excel()
+
     # Files
     def choose_file(self):
         p = filedialog.askopenfilename(title="Velg Excel (fakturaliste)", filetypes=[("Excel","*.xlsx *.xls")])
@@ -138,6 +156,16 @@ class App(ctk.CTk, TkinterDnD.Tk):
         if not p: return
         self.gl_path_var.set(p)
         self._load_gl_excel()
+
+    def destroy(self):
+        try:
+            ctk.ScalingTracker.remove_window(self.destroy, self)
+        except Exception:
+            pass
+        try:
+            TkinterDnD.Tk.destroy(self)
+        except Exception:
+            pass
 
     # Read
     def _load_excel(self):
