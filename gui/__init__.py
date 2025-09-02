@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import webbrowser
 from datetime import datetime
+import os
 
 import tkinter as tk
 import customtkinter as ctk
@@ -141,6 +142,10 @@ class App(ctk.CTk):
         path = self.file_path_var.get()
         if not path: return
         header_idx = 4
+        big = os.path.getsize(path) > 5 * 1024 * 1024
+        if big and hasattr(self, "inline_status"):
+            self.inline_status.configure(text="laster inn fil...")
+            self.inline_status.update_idletasks()
         try:
             df = load_invoice_df(path, header_idx)
             self.antall_bilag = len(df.dropna(how="all"))
@@ -149,6 +154,9 @@ class App(ctk.CTk):
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}")
             self.df = None
             return
+        finally:
+            if big and hasattr(self, "inline_status"):
+                self.inline_status.configure(text="")
 
         if self.df is None or self.df.dropna(how="all").empty:
             messagebox.showwarning(APP_TITLE, "Excel-filen ser tom ut."); return
@@ -171,11 +179,18 @@ class App(ctk.CTk):
     def _load_gl_excel(self):
         path = self.gl_path_var.get()
         if not path: return
+        big = os.path.getsize(path) > 5 * 1024 * 1024
+        if big and hasattr(self, "inline_status"):
+            self.inline_status.configure(text="laster inn fil...")
+            self.inline_status.update_idletasks()
         try:
             gl = load_gl_df(path)
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
             return
+        finally:
+            if big and hasattr(self, "inline_status"):
+                self.inline_status.configure(text="")
         if gl is None or gl.dropna(how="all").empty:
             messagebox.showwarning(APP_TITLE, "Hovedboken ser tom ut."); return
 
