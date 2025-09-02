@@ -2,6 +2,14 @@
 import os
 import re
 import sys
+import logging
+
+logger = logging.getLogger("bilagskontroll")
+if not logger.handlers:
+    handler = logging.FileHandler("bilagskontroll.log", encoding="utf-8")
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+    logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 def _pd():
     import pandas as pd

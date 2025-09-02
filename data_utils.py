@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Optional, List
 
-from helpers import parse_amount
+from helpers import parse_amount, logger
 
 
 FALLBACK_NET_COLUMNS: List[str] = [
@@ -24,12 +24,14 @@ def _pd():
 
 def load_invoice_df(path: str, header_idx: int = 4) -> pd.DataFrame:
     """Leser fakturalisten fra Excel."""
+    logger.info(f"Laster fakturaliste fra {path}")
     pd = _pd()
     return pd.read_excel(path, engine="openpyxl", header=header_idx)
 
 
 def load_gl_df(path: str) -> pd.DataFrame:
     """Leser hovedboken fra Excel."""
+    logger.info(f"Laster hovedbok fra {path}")
     pd = _pd()
     gl = pd.read_excel(path, engine="openpyxl", header=0)
     if sum(str(c).lower().startswith("unnamed") for c in gl.columns) > len(gl.columns) / 2:
@@ -45,6 +47,7 @@ def extract_customer_from_invoice_file(path: str) -> Optional[str]:
       - Søk etter mønster "Kunde: <navn>" eller "Customer: <navn>" i rad 2
       - Hvis ikke funn, velg lengste ikke-numeriske tekstcelle i rad 2
     """
+    logger.info(f"Henter kundenavn fra {path}")
     try:
         pd = _pd()
         raw = pd.read_excel(path, engine="openpyxl", header=None, nrows=2)
