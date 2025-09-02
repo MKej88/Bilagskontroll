@@ -28,10 +28,10 @@ APP_TITLE = "Bilagskontroll v1"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
 # ----------------- App -----------------
-class App(ctk.CTk, TkinterDnD.Tk):
+class App(ctk.CTk, TkinterDnD.DnDWrapper):
     def __init__(self):
         ctk.CTk.__init__(self)
-        TkinterDnD.Tk.__init__(self)
+        TkinterDnD._require(self)
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
         self.title(APP_TITLE)
