@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import webbrowser
-from datetime import datetime
+"""GUI-moduler for Bilagskontroll."""
+
 import os
 
 import tkinter as tk
@@ -19,16 +19,8 @@ from helpers import (
     guess_net_amount_col,
     fmt_pct,
 )
-from data_utils import (
-    load_invoice_df,
-    load_gl_df,
-    extract_customer_from_invoice_file,
-    calc_sum_kontrollert,
-    calc_sum_net_all,
-)
 from .sidebar import build_sidebar
 from .mainview import build_main
-from .ledger import apply_treeview_theme, update_treeview_stripes, populate_ledger_table
 
 APP_TITLE = "Bilagskontroll v1"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
@@ -87,6 +79,8 @@ class App(ctk.CTk):
     def _switch_theme(self, mode):
         ctk.set_appearance_mode("light" if mode.lower()=="light" else "dark" if mode.lower()=="dark" else "system")
         self._update_icon()
+        from .ledger import apply_treeview_theme, update_treeview_stripes
+
         apply_treeview_theme(self)
         update_treeview_stripes(self)
         self.render()
@@ -144,8 +138,11 @@ class App(ctk.CTk):
 
     # Read
     def _load_excel(self):
+        from data_utils import load_invoice_df, extract_customer_from_invoice_file
+
         path = self.file_path_var.get()
-        if not path: return
+        if not path:
+            return
         header_idx = 4
         big = os.path.getsize(path) > 5 * 1024 * 1024
         if big and hasattr(self, "inline_status"):
@@ -182,8 +179,11 @@ class App(ctk.CTk):
         self._update_counts_labels(); self.render()
 
     def _load_gl_excel(self):
+        from data_utils import load_gl_df
+
         path = self.gl_path_var.get()
-        if not path: return
+        if not path:
+            return
         big = os.path.getsize(path) > 5 * 1024 * 1024
         if big and hasattr(self, "inline_status"):
             self.inline_status.configure(text="laster inn fil...")
@@ -262,6 +262,8 @@ class App(ctk.CTk):
     
     def open_in_po(self):
         # Åpner alltid standard PowerOffice-rapport (uten å lete etter lenker i data)
+        import webbrowser
+
         webbrowser.open(OPEN_PO_URL)
         self._show_inline("Åpner PowerOffice")
     
@@ -276,6 +278,8 @@ class App(ctk.CTk):
     # Ledger
     # Summary / status
     def _update_status_card(self):
+        from data_utils import calc_sum_kontrollert, calc_sum_net_all
+
         sum_k = calc_sum_kontrollert(self.sample_df, self.decisions, self.net_amount_col)
         sum_a = calc_sum_net_all(self.df, self.net_amount_col)
         pct = (sum_k / sum_a * 100.0) if sum_a else 0.0
@@ -327,6 +331,8 @@ class App(ctk.CTk):
             row_dict = self._current_row_dict()
             self.detail_box.configure(state="normal"); self.detail_box.delete("0.0","end")
             self.detail_box.insert("0.0", self._details_text_for_row(row_dict)); self.detail_box.configure(state="disabled")
+
+            from .ledger import populate_ledger_table
 
             populate_ledger_table(self, inv_val)
 
