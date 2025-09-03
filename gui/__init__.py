@@ -7,7 +7,6 @@ import re
 import tkinter as tk
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
-from tkinterdnd2 import TkinterDnD
 
 
 from helpers import (
@@ -21,17 +20,26 @@ from helpers import (
     fmt_pct,
     logger,
 )
-from .sidebar import build_sidebar
-from .mainview import build_main
 
 APP_TITLE = "Bilagskontroll v1"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
 # ----------------- App -----------------
-class App(ctk.CTk, TkinterDnD.DnDWrapper):
+class App(ctk.CTk):
     def __init__(self):
         ctk.CTk.__init__(self)
+
+        # Utsett import til vi faktisk trenger modulene
+        from tkinterdnd2 import TkinterDnD
+        from .sidebar import build_sidebar
+        from .mainview import build_main
+
+        # Legg til dra-og-slipp-støtte dynamisk
+        self.__class__ = type(self.__class__.__name__, (self.__class__, TkinterDnD.DnDWrapper), {})
+        TkinterDnD.DnDWrapper.__init__(self)
         TkinterDnD._require(self)
+        self._dnd = TkinterDnD
+
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
         self.title(APP_TITLE)
@@ -170,7 +178,7 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
         except Exception:
             pass
         try:
-            TkinterDnD.Tk.destroy(self)
+            self._dnd.Tk.destroy(self)
         except Exception:
             pass
 
