@@ -79,11 +79,6 @@ def extract_customer_from_invoice_file(path: str) -> Optional[str]:
     return None
 
 
-def row_has_sum_word(row: pd.Series) -> bool:
-    for v in row.values:
-        if isinstance(v, str) and re.search(r"\bsum\b", v, re.IGNORECASE):
-            return True
-    return False
 
 
 def _net_amount_from_row(row: pd.Series, net_amount_col: Optional[str]) -> Optional[float]:
@@ -120,7 +115,8 @@ def calc_sum_net_all(df: Optional[pd.DataFrame], net_amount_col: Optional[str]) 
     df_eff = df.dropna(how="all").copy()
     if len(df_eff) > 0:
         df_eff = df_eff.iloc[:-1]
-    df_eff = df_eff.loc[~df_eff.apply(row_has_sum_word, axis=1)]
+    mask = ~df_eff.astype(str).apply(lambda c: c.str.contains(r"\bsum\b", case=False)).any(axis=1)
+    df_eff = df_eff.loc[mask]
     total = 0.0
     for _, r in df_eff.iterrows():
         v = _net_amount_from_row(r, net_amount_col)
