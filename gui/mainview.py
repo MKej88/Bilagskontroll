@@ -88,9 +88,9 @@ def build_main(app):
     app.ledger_sum.grid(row=3, column=0, columnspan=2, sticky="ew", padx=(0, 12), pady=(6, 10))
 
     ctk.CTkLabel(right, text="Kommentar", font=ctk.CTkFont(size=15, weight="bold"))\
-        .grid(row=4, column=0, columnspan=2, sticky="w", padx=0, pady=(8,4))
+        .grid(row=4, column=0, columnspan=2, sticky="w", padx=(8, 6), pady=(8, 4))
     app.comment_box = ctk.CTkTextbox(right, height=110, font=ctk.CTkFont(size=13))
-    app.comment_box.grid(row=5, column=0, columnspan=2, sticky="nsew", padx=0, pady=(0,0))
+    app.comment_box.grid(row=5, column=0, columnspan=2, sticky="nsew", padx=(8, 6), pady=(0, 0))
 
     bottom = ctk.CTkFrame(panel)
     bottom.grid(row=3, column=0, sticky="ew", padx=12, pady=(0, 0))
