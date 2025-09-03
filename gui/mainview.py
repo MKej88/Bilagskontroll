@@ -18,9 +18,13 @@ def build_main(app):
     head = ctk.CTkFrame(panel)
     head.grid(row=0, column=0, sticky="ew", padx=12, pady=8)
     head.grid_columnconfigure(6, weight=1)
-    app.lbl_count = ctk.CTkLabel(head, text="Bilag: –/–", font=ctk.CTkFont(size=16, weight="bold"))
-    app.lbl_status = ctk.CTkLabel(head, text="Status: –")
-    app.lbl_invoice = ctk.CTkLabel(head, text="Fakturanr: –")
+
+    bold_font = ctk.CTkFont(size=16, weight="bold")
+    head_font = ctk.CTkFont(size=16)
+
+    app.lbl_count = ctk.CTkLabel(head, text="Bilag: –/–", font=bold_font)
+    app.lbl_status = ctk.CTkLabel(head, text="Status: –", font=head_font)
+    app.lbl_invoice = ctk.CTkLabel(head, text="Fakturanr: –", font=head_font)
     app.lbl_count.grid(row=0, column=0, padx=(4, 12))
     app.lbl_status.grid(row=0, column=1, padx=8)
     app.lbl_invoice.grid(row=0, column=2, padx=8)
