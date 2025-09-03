@@ -3,13 +3,37 @@ import os
 import re
 import sys
 import logging
+from logging.handlers import RotatingFileHandler
 
-logger = logging.getLogger("bilagskontroll")
-if not logger.handlers:
-    handler = logging.FileHandler("bilagskontroll.log", encoding="utf-8")
-    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
-    logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+
+def setup_logger(log_path: str = "bilagskontroll.log") -> logging.Logger:
+    """Sett opp logger med roterende filhåndtering.
+
+    Parametere
+    ----------
+    log_path : str, optional
+        Sti til loggfilen. Standard er ``bilagskontroll.log``.
+
+    Returnerer
+    ----------
+    logging.Logger
+        Konfigurert logger for applikasjonen.
+    """
+
+    logger = logging.getLogger("bilagskontroll")
+    if not logger.handlers:
+        handler = RotatingFileHandler(
+            log_path, encoding="utf-8", maxBytes=1_000_000, backupCount=3
+        )
+        handler.setFormatter(
+            logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+        )
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+    return logger
+
+
+logger = setup_logger()
 
 def _pd():
     import pandas as pd
