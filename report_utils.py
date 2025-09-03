@@ -39,3 +39,23 @@ def build_ledger_table(app, invoice_value: str, style_small):
         ])
     )
     return tbl
+
+
+def save_pdf(flow, output_path: str):
+    """
+    Lagre en PDF-rapport til en angitt filsti.
+
+    :param output_path: Full sti til filen PDF-en skal lagres som.
+    """
+    from reportlab.lib.pagesizes import A4
+    from reportlab.platypus import SimpleDocTemplate
+
+    doc = SimpleDocTemplate(
+        output_path,
+        pagesize=A4,
+        leftMargin=36,
+        rightMargin=36,
+        topMargin=36,
+        bottomMargin=36,
+    )
+    doc.build(flow)
