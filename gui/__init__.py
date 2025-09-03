@@ -21,7 +21,7 @@ from helpers import (
     logger,
 )
 
-APP_TITLE = "Bilagskontroll v1"
+APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
 # ----------------- App -----------------

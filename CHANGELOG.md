@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 1.0.3
+
+### Endringer
+- Programmet heter nå "Bilagskontroll" (tidligere "Bilagskontroll v1").
+- Vindustittel oppdatert til det nye navnet.
+
+### Dokumentasjon
+- README oppdatert med nytt programnavn.
+
 ## 1.0.2
 
 ### Dokumentasjon
