@@ -2,6 +2,7 @@
 """GUI-moduler for Bilagskontroll."""
 
 import os
+import re
 
 import tkinter as tk
 import customtkinter as ctk
@@ -12,7 +13,6 @@ from tkinterdnd2 import TkinterDnD
 from helpers import (
     resource_path,
     to_str,
-    only_digits,
     fmt_money,
     format_number_with_thousands,
     guess_invoice_col,
@@ -311,8 +311,8 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
     def copy_invoice(self):
         if self.sample_df is None: return
         inv_val = to_str(self.sample_df.iloc[self.idx].get(self.invoice_col, ""))
-        digits = only_digits(inv_val)
-        self.clipboard_clear(); self.clipboard_append(digits if digits else inv_val)
+        cleaned = re.sub(r"[^\d-]", "", inv_val)
+        self.clipboard_clear(); self.clipboard_append(cleaned if cleaned else inv_val)
         self.copy_feedback.configure(text="Kopiert")
         self._after_jobs.append(self.after(1500, lambda: self.copy_feedback.configure(text="")))
 
