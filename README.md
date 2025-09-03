@@ -1,6 +1,6 @@
-# Bilagskontroll v1
+# Bilagskontroll
 
-Bilagskontroll v1 er et skrivebordverktøy for å kontrollere leverandørbilag. Programmet gir et grafisk brukergrensesnitt for å trekke tilfeldige bilagsutvalg, gjennomgå hvert bilag og generere en rapport.
+Bilagskontroll er et skrivebordverktøy for å kontrollere leverandørbilag. Programmet gir et grafisk brukergrensesnitt for å trekke tilfeldige bilagsutvalg, gjennomgå hvert bilag og generere en rapport.
 
 Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel‑data, `customtkinter` for et moderne og responsivt grensesnitt og `reportlab` for å lage PDF‑rapporter.
 
@@ -21,7 +21,7 @@ Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel�
 ## Funksjoner
 
 - Moderne GUI basert på CustomTkinter og Tkinter
-- Vindustittel "Bilagskontroll v1" for enkel identifikasjon
+- Vindustittel "Bilagskontroll" for enkel identifikasjon
 - Trekker et tilfeldig utvalg av bilag og registrerer antall bilag i datakilden
 - Viser bilagslinjer fra hovedboken for valgt faktura
 - Hurtiglenke som åpner fakturaen i PowerOffice direkte fra appen
