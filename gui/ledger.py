@@ -46,7 +46,7 @@ def update_treeview_stripes(app):
     app.ledger_tree.tag_configure("even", background=even)
 
 
-def sort_treeview(tree, col, reverse):
+def sort_treeview(tree, col, reverse, app):
     """Sorter rader i ``tree`` etter valgt kolonne."""
     data = []
     for iid in tree.get_children(""):
@@ -60,12 +60,8 @@ def sort_treeview(tree, col, reverse):
     for idx, iid in enumerate(tree.get_children("")):
         tag = "even" if idx % 2 == 0 else "odd"
         tree.item(iid, tags=(tag,))
-    tree.heading(col, command=lambda: sort_treeview(tree, col, not reverse))
-    app = tree
-    while app is not None and not hasattr(app, "ledger_tree"):
-        app = getattr(app, "master", None)
-    if app is not None:
-        update_treeview_stripes(app)
+    tree.heading(col, command=lambda: sort_treeview(tree, col, not reverse, app))
+    update_treeview_stripes(app)
 
 
 def ledger_rows(app, invoice_value: str):

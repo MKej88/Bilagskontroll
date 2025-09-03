@@ -79,7 +79,7 @@ def build_main(app):
         app.ledger_tree.heading(
             col,
             text=col,
-            command=lambda c=col: sort_treeview(app.ledger_tree, c, False),
+            command=lambda c=col: sort_treeview(app.ledger_tree, c, False, app),
         )
         app.ledger_tree.column(col, width=w, minwidth=60, anchor=anchor, stretch=True)
 
