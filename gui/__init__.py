@@ -223,7 +223,8 @@ class App(ctk.CTk):
             pass
 
         self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
-        self._update_counts_labels(); self.render()
+        self._update_counts_labels()
+        self.render()
 
     def _load_gl_excel(self):
         from data_utils import load_gl_df
@@ -260,7 +261,11 @@ class App(ctk.CTk):
         self.gl_amount_col      = guess_col(cols, r"^bel(ø|o)p$", r"amount", r"sum")
         self.gl_postedby_col    = guess_col(cols, r"postert\s*av", r"bokf(ø|o)rt\s*av", r"registrert\s*av", r"posted\s*by", r"created\s*by")
 
-        self.render()
+        from .ledger import populate_ledger_table
+        self.populate_ledger_table = populate_ledger_table
+
+        if self.sample_df is not None:
+            self.render()
 # Sampling / nav
     def _update_counts_labels(self):
         self.lbl_filecount.configure(text=f"Antall bilag: {self.antall_bilag}")
@@ -381,9 +386,11 @@ class App(ctk.CTk):
             self.detail_box.configure(state="normal"); self.detail_box.delete("0.0","end")
             self.detail_box.insert("0.0", self._details_text_for_row(row_dict)); self.detail_box.configure(state="disabled")
 
-            from .ledger import populate_ledger_table
-
-            populate_ledger_table(self, inv_val)
+            if hasattr(self, "populate_ledger_table"):
+                self.populate_ledger_table(self, inv_val)
+            else:
+                for item in self.ledger_tree.get_children(): self.ledger_tree.delete(item)
+                self.ledger_sum.configure(text="Last gjerne også inn en hovedbok for å se bilagslinjene.")
 
             self.comment_box.delete("0.0","end")
             if self.comments and self.idx < len(self.comments) and self.comments[self.idx]:
