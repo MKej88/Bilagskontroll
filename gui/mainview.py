@@ -1,7 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 import customtkinter as ctk
-from .ledger import LEDGER_COLS, apply_treeview_theme, update_treeview_stripes
+from .ledger import (
+    LEDGER_COLS,
+    apply_treeview_theme,
+    update_treeview_stripes,
+    sort_treeview,
+)
 
 
 def build_main(app):
@@ -71,7 +76,11 @@ def build_main(app):
         ("MVA-beløp", 110, "e"), ("Beløp", 110, "e"),
         ("Postert av", 140, "w")
     ]:
-        app.ledger_tree.heading(col, text=col)
+        app.ledger_tree.heading(
+            col,
+            text=col,
+            command=lambda c=col: sort_treeview(app.ledger_tree, c, False),
+        )
         app.ledger_tree.column(col, width=w, minwidth=60, anchor=anchor, stretch=True)
 
     yscroll = ctk.CTkScrollbar(right, orientation="vertical", command=app.ledger_tree.yview)
