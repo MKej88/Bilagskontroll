@@ -46,6 +46,28 @@ def update_treeview_stripes(app):
     app.ledger_tree.tag_configure("even", background=even)
 
 
+def sort_treeview(tree, col, reverse):
+    """Sorter rader i ``tree`` etter valgt kolonne."""
+    data = []
+    for iid in tree.get_children(""):
+        cell = tree.set(iid, col)
+        num = parse_amount(cell)
+        sort_val = num if num is not None else str(cell).lower()
+        data.append((sort_val, iid))
+    data.sort(reverse=reverse)
+    for idx, (_, iid) in enumerate(data):
+        tree.move(iid, "", idx)
+    for idx, iid in enumerate(tree.get_children("")):
+        tag = "even" if idx % 2 == 0 else "odd"
+        tree.item(iid, tags=(tag,))
+    tree.heading(col, command=lambda: sort_treeview(tree, col, not reverse))
+    app = tree
+    while app is not None and not hasattr(app, "ledger_tree"):
+        app = getattr(app, "master", None)
+    if app is not None:
+        update_treeview_stripes(app)
+
+
 def ledger_rows(app, invoice_value: str):
     """Hent bilagslinjer for gitt bilagsnummer uten å endre ``gl_df``."""
     if app.gl_df is None or app.gl_invoice_col not in (app.gl_df.columns if app.gl_df is not None else []):
