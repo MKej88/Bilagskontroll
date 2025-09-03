@@ -83,6 +83,9 @@ def build_main(app):
 
     apply_treeview_theme(app)
     update_treeview_stripes(app)
+    # Farger for radene basert på beslutning
+    app.ledger_tree.tag_configure("approved", foreground="#2ecc71")
+    app.ledger_tree.tag_configure("rejected", foreground="#e74c3c")
 
     app.ledger_sum = ctk.CTkLabel(right, text=" ", anchor="e", justify="right")
     app.ledger_sum.grid(row=3, column=0, columnspan=2, sticky="ew", padx=(0, 12), pady=(6, 10))
@@ -103,3 +106,20 @@ def build_main(app):
     ctk.CTkButton(bottom, text="📄 Eksporter PDF rapport", command=_export_pdf).pack(side="left")
     ctk.CTkLabel(bottom, text="").pack(side="left", expand=True, fill="x")
     return panel
+
+
+def update_decision_colors(app):
+    """Oppdater radfarger i hovedboktabellen etter beslutning."""
+    decision = None
+    if getattr(app, "decisions", None) and app.idx < len(app.decisions):
+        decision = app.decisions[app.idx]
+    tag = None
+    if decision == "Godkjent":
+        tag = "approved"
+    elif decision == "Ikke godkjent":
+        tag = "rejected"
+    for item in app.ledger_tree.get_children():
+        tags = [t for t in app.ledger_tree.item(item, "tags") if t not in ("approved", "rejected")]
+        if tag:
+            tags.append(tag)
+        app.ledger_tree.item(item, tags=tags)

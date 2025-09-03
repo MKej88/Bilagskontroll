@@ -22,7 +22,7 @@ from helpers import (
     logger,
 )
 from .sidebar import build_sidebar
-from .mainview import build_main
+from .mainview import build_main, update_decision_colors
 
 APP_TITLE = "Bilagskontroll v1"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
@@ -376,6 +376,7 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
             from .ledger import populate_ledger_table
 
             populate_ledger_table(self, inv_val)
+            update_decision_colors(self)
 
             self.comment_box.delete("0.0","end")
             if self.comments and self.idx < len(self.comments) and self.comments[self.idx]:
@@ -386,6 +387,7 @@ class App(ctk.CTk, TkinterDnD.DnDWrapper):
             for item in self.ledger_tree.get_children(): self.ledger_tree.delete(item)
             self.ledger_sum.configure(text="Last gjerne også inn en hovedbok for å se bilagslinjene.")
             self.comment_box.delete("0.0","end")
+            update_decision_colors(self)
 
         if self.sample_df is None or len(self.sample_df) == 0:
             self.btn_prev.configure(state="disabled")
