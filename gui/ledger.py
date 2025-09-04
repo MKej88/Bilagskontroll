@@ -1,13 +1,10 @@
-import re
-import customtkinter as ctk
-from tkinter import ttk
-import tkinter.font as tkfont
-from helpers import to_str, only_digits, parse_amount, fmt_money
-
 LEDGER_COLS = ["Kontonr", "Konto", "Beskrivelse", "MVA", "MVA-beløp", "Beløp", "Postert av"]
 
 
 def apply_treeview_theme(app):
+    from tkinter import ttk
+    import customtkinter as ctk
+
     style = ttk.Style()
     try:
         style.theme_use("clam")
@@ -37,6 +34,8 @@ def apply_treeview_theme(app):
 
 
 def update_treeview_stripes(app):
+    import customtkinter as ctk
+
     mode = ctk.get_appearance_mode().lower()
     if mode == "dark":
         odd = "#232323"; even = "#1e1e1e"
@@ -48,6 +47,8 @@ def update_treeview_stripes(app):
 
 def sort_treeview(tree, col, reverse, app):
     """Sorter rader i ``tree`` etter valgt kolonne."""
+    from helpers import parse_amount
+
     data = []
     for iid in tree.get_children(""):
         cell = tree.set(iid, col)
@@ -66,6 +67,9 @@ def sort_treeview(tree, col, reverse, app):
 
 def ledger_rows(app, invoice_value: str):
     """Hent bilagslinjer for gitt bilagsnummer uten å endre ``gl_df``."""
+    import re
+    from helpers import to_str, only_digits, parse_amount, fmt_money
+
     if app.gl_df is None or app.gl_invoice_col not in (app.gl_df.columns if app.gl_df is not None else []):
         return []
     key = only_digits(invoice_value)
@@ -115,7 +119,9 @@ def ledger_rows(app, invoice_value: str):
     return rows
 
 
-def autofit_tree_columns(tree: ttk.Treeview, cols):
+def autofit_tree_columns(tree, cols):
+    import tkinter.font as tkfont
+
     body_font = tkfont.nametofont("TkDefaultFont")
     try:
         head_font = tkfont.nametofont("TkHeadingFont")
@@ -133,6 +139,8 @@ def autofit_tree_columns(tree: ttk.Treeview, cols):
 
 
 def populate_ledger_table(app, invoice_value: str):
+    from helpers import parse_amount, fmt_money
+
     for item in app.ledger_tree.get_children():
         app.ledger_tree.delete(item)
     rows = ledger_rows(app, invoice_value)

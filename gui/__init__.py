@@ -6,19 +6,6 @@ import re
 
 # Tkinter og CustomTkinter importeres lazily for raskere oppstart.
 
-
-from helpers import (
-    resource_path,
-    to_str,
-    fmt_money,
-    format_number_with_thousands,
-    guess_invoice_col,
-    guess_col,
-    guess_net_amount_col,
-    fmt_pct,
-    logger,
-)
-
 APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
@@ -31,14 +18,34 @@ class App:
 
         globals().update(tk=tk, ctk=ctk, filedialog=filedialog, messagebox=messagebox)
 
+        from helpers import (
+            resource_path,
+            to_str,
+            fmt_money,
+            format_number_with_thousands,
+            guess_invoice_col,
+            guess_col,
+            guess_net_amount_col,
+            fmt_pct,
+            logger,
+        )
+        globals().update(
+            resource_path=resource_path,
+            to_str=to_str,
+            fmt_money=fmt_money,
+            format_number_with_thousands=format_number_with_thousands,
+            guess_invoice_col=guess_invoice_col,
+            guess_col=guess_col,
+            guess_net_amount_col=guess_net_amount_col,
+            fmt_pct=fmt_pct,
+            logger=logger,
+        )
+
         self.__class__ = type(self.__class__.__name__, (ctk.CTk, self.__class__), {})
         ctk.CTk.__init__(self)
 
         self._dnd_ready = False
         self._icon_ready = False
-
-        ctk.set_appearance_mode("system")
-        ctk.set_default_color_theme("blue")
         self.title(APP_TITLE)
         self.geometry("1280x900")
         self.minsize(1180, 820)
@@ -68,6 +75,7 @@ class App:
 
         self.logo_img = None
         self._after_jobs = []
+        self._after_jobs.append(self.after_idle(self._init_theme))
 
         self.after(0, self._init_ui)
 
@@ -119,6 +127,10 @@ class App:
         self._icon_ready = True
 
     # Theme
+    def _init_theme(self):
+        ctk.set_appearance_mode("system")
+        ctk.set_default_color_theme("blue")
+
     def _switch_theme(self, mode):
         ctk.set_appearance_mode("light" if mode.lower()=="light" else "dark" if mode.lower()=="dark" else "system")
         if self._icon_ready:

@@ -1,5 +1,4 @@
 import os
-import customtkinter as ctk
 
 
 def _toggle_sample_btn(app, *_):
@@ -8,6 +7,8 @@ def _toggle_sample_btn(app, *_):
 
 
 def build_sidebar(app):
+    import customtkinter as ctk
+
     card = ctk.CTkFrame(app, corner_radius=16)
     card.grid(row=0, column=0, sticky="nsw", padx=14, pady=14)
 
