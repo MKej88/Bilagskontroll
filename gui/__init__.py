@@ -28,18 +28,6 @@ OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 class App(ctk.CTk):
     def __init__(self):
         ctk.CTk.__init__(self)
-
-        # Utsett import til vi faktisk trenger modulene
-        from tkinterdnd2 import TkinterDnD
-        from .sidebar import build_sidebar
-        from .mainview import build_main
-
-        # Legg til dra-og-slipp-støtte dynamisk
-        self.__class__ = type(self.__class__.__name__, (self.__class__, TkinterDnD.DnDWrapper), {})
-        TkinterDnD.DnDWrapper.__init__(self)
-        TkinterDnD._require(self)
-        self._dnd = TkinterDnD
-
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
         self.title(APP_TITLE)
@@ -72,6 +60,24 @@ class App(ctk.CTk):
 
         self.logo_img = None
         self._after_jobs = []
+        self._dnd = None
+        self.sample_size_var = None
+        self.year_var = None
+
+        # Utsett bygging av UI til etter at hovedloopen starter
+        self.after(0, self._init_ui)
+
+    def _init_ui(self):
+        # Utsett import til vi faktisk trenger modulene
+        from tkinterdnd2 import TkinterDnD
+        from .sidebar import build_sidebar
+        from .mainview import build_main
+
+        # Legg til dra-og-slipp-støtte dynamisk
+        self.__class__ = type(self.__class__.__name__, (self.__class__, TkinterDnD.DnDWrapper), {})
+        TkinterDnD.DnDWrapper.__init__(self)
+        TkinterDnD._require(self)
+        self._dnd = TkinterDnD
 
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
