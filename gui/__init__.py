@@ -74,10 +74,9 @@ class App:
         self.gl_postedby_col = None
 
         self.logo_img = None
-        self._after_jobs = []
-        self._after_jobs.append(self.after_idle(self._init_theme))
-
-        self.after(0, self._init_ui)
+        self._init_theme()
+        self._init_ui()
+        self._post_init()
 
     def _init_ui(self):
         try:
@@ -101,11 +100,13 @@ class App:
         self.bind("<Right>", lambda e: self.next())
         self.bind("<Control-o>", lambda e: self.open_in_po())
         self.render()
-        self._after_jobs.append(self.after_idle(self.load_logo_images))
-        self._after_jobs.append(self.after_idle(self._init_dnd))
-        self._after_jobs.append(self.after_idle(self._init_icon))
 
         self.protocol("WM_DELETE_WINDOW", self.destroy)
+
+    def _post_init(self):
+        self.load_logo_images()
+        self._init_dnd()
+        self._init_icon()
 
     def _init_dnd(self):
         TkinterDnD = getattr(self, "_TkinterDnD", None)
@@ -204,12 +205,6 @@ class App:
         self._load_gl_excel()
 
     def destroy(self):
-        for job in getattr(self, "_after_jobs", []):
-            try:
-                self.after_cancel(job)
-            except Exception:
-                pass
-        self._after_jobs.clear()
         try:
             ctk.ScalingTracker.remove_window(self.destroy, self)
         except Exception:
@@ -365,7 +360,7 @@ class App:
         cleaned = re.sub(r"[^\d-]", "", inv_val)
         self.clipboard_clear(); self.clipboard_append(cleaned if cleaned else inv_val)
         self.copy_feedback.configure(text="Kopiert")
-        self._after_jobs.append(self.after(1500, lambda: self.copy_feedback.configure(text="")))
+        self.after(1500, lambda: self.copy_feedback.configure(text=""))
 
     # Ledger
     # Summary / status
@@ -395,7 +390,7 @@ class App:
     def _show_inline(self, msg: str, ok=True):
         self.inline_status.configure(text_color=("#2ecc71" if ok else "#e74c3c"))
         self.inline_status.configure(text=msg)
-        self._after_jobs.append(self.after(3500, lambda: self.inline_status.configure(text="")))
+        self.after(3500, lambda: self.inline_status.configure(text=""))
 
     # Details + render
     def _details_text_for_row(self, row_dict):
