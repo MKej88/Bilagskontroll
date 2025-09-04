@@ -4,9 +4,7 @@
 import os
 import re
 
-import tkinter as tk
-import customtkinter as ctk
-from tkinter import filedialog, messagebox
+# Tkinter og CustomTkinter importeres lazily for raskere oppstart.
 
 
 from helpers import (
@@ -25,8 +23,13 @@ APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
 # ----------------- App -----------------
-class App(ctk.CTk):
+class App:
     def __init__(self):
+        import tkinter as tk
+        import customtkinter as ctk
+        globals().update(tk=tk, ctk=ctk)
+
+        self.__class__ = type(self.__class__.__name__, (ctk.CTk, self.__class__), {})
         ctk.CTk.__init__(self)
 
         self._dnd_ready = False
@@ -65,6 +68,14 @@ class App(ctk.CTk):
         self._after_jobs = []
 
         self.after(0, self._init_ui)
+
+    def _filedialog(self):
+        from tkinter import filedialog
+        return filedialog
+
+    def _messagebox(self):
+        from tkinter import messagebox
+        return messagebox
 
     def _init_ui(self):
         try:
@@ -175,13 +186,13 @@ class App(ctk.CTk):
 
     # Files
     def choose_file(self):
-        p = filedialog.askopenfilename(title="Velg Excel (fakturaliste)", filetypes=[("Excel","*.xlsx *.xls")])
+        p = self._filedialog().askopenfilename(title="Velg Excel (fakturaliste)", filetypes=[("Excel","*.xlsx *.xls")])
         if not p: return
         self.file_path_var.set(p)
         self._load_excel()
 
     def choose_gl_file(self):
-        p = filedialog.askopenfilename(title="Velg Hovedbok (Excel)", filetypes=[("Excel","*.xlsx *.xls")])
+        p = self._filedialog().askopenfilename(title="Velg Hovedbok (Excel)", filetypes=[("Excel","*.xlsx *.xls")])
         if not p: return
         self.gl_path_var.set(p)
         self._load_gl_excel()
@@ -221,7 +232,7 @@ class App(ctk.CTk):
             self.antall_bilag = len(df.dropna(how="all"))
             self.df = df
         except Exception as e:
-            messagebox.showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}")
+            self._messagebox().showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}")
             self.df = None
             return
         finally:
@@ -229,7 +240,7 @@ class App(ctk.CTk):
                 self.inline_status.configure(text="")
 
         if self.df is None or self.df.dropna(how="all").empty:
-            messagebox.showwarning(APP_TITLE, "Excel-filen ser tom ut."); return
+            self._messagebox().showwarning(APP_TITLE, "Excel-filen ser tom ut."); return
 
         self.invoice_col = guess_invoice_col(self.df.columns)
         self.net_amount_col = guess_net_amount_col(self.df.columns)
@@ -261,13 +272,13 @@ class App(ctk.CTk):
         try:
             gl = load_gl_df(path)
         except Exception as e:
-            messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
+            self._messagebox().showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
             return
         finally:
             if big and hasattr(self, "inline_status"):
                 self.inline_status.configure(text="")
         if gl is None or gl.dropna(how="all").empty:
-            messagebox.showwarning(APP_TITLE, "Hovedboken ser tom ut."); return
+            self._messagebox().showwarning(APP_TITLE, "Hovedboken ser tom ut."); return
 
         self.gl_df = gl; cols = [str(c) for c in gl.columns]
         self.gl_invoice_col     = guess_invoice_col(cols)
@@ -293,19 +304,19 @@ class App(ctk.CTk):
         
     def make_sample(self):
         if self.df is None:
-            messagebox.showinfo(APP_TITLE, "Velg Excel først."); return
+            self._messagebox().showinfo(APP_TITLE, "Velg Excel først."); return
         try:
             n = int(self.sample_size_var.get())
             year = int(self.year_var.get())
         except Exception:
-            messagebox.showinfo(APP_TITLE, "Oppgi antall og år.")
+            self._messagebox().showinfo(APP_TITLE, "Oppgi antall og år.")
             return
         n = max(1, min(n, len(self.df)))
         logger.info(f"Trekker utvalg på {n} bilag for år {year}")
         try:
             self.sample_df = self.df.sample(n=n, random_state=year).reset_index(drop=True)
         except Exception as e:
-            messagebox.showerror(APP_TITLE, f"Feil ved trekking av utvalg:\n{e}"); return
+            self._messagebox().showerror(APP_TITLE, f"Feil ved trekking av utvalg:\n{e}"); return
         self.decisions = [None]*len(self.sample_df); self.comments=[""]*len(self.sample_df); self.idx=0
         self.render()
 

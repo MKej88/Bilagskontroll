@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 from datetime import datetime
-from tkinter import filedialog
 
 from helpers import (
     to_str,
@@ -37,6 +36,8 @@ def export_pdf(app):
 
     from report_utils import build_ledger_table
     now = datetime.now()
+    from tkinter import filedialog
+
     save = filedialog.asksaveasfilename(
         title="Lagre PDF-rapport",
         defaultextension=".pdf",
