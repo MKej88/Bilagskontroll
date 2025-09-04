@@ -29,10 +29,6 @@ class App(ctk.CTk):
     def __init__(self):
         ctk.CTk.__init__(self)
 
-        # Utsett import til vi faktisk trenger modulene
-        from .sidebar import build_sidebar
-        from .mainview import build_main
-
         self._dnd_ready = False
         self._icon_ready = False
 
@@ -68,6 +64,18 @@ class App(ctk.CTk):
         self.logo_img = None
         self._after_jobs = []
 
+        self.after(0, self._init_ui)
+
+    def _init_ui(self):
+        try:
+            from tkinterdnd2 import TkinterDnD
+        except Exception:
+            TkinterDnD = None
+        from .sidebar import build_sidebar
+        from .mainview import build_main
+
+        self._TkinterDnD = TkinterDnD
+
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -84,11 +92,12 @@ class App(ctk.CTk):
         self._after_jobs.append(self.after_idle(self._init_dnd))
         self._after_jobs.append(self.after_idle(self._init_icon))
 
-        # Sørg for ryddig nedstenging
         self.protocol("WM_DELETE_WINDOW", self.destroy)
 
     def _init_dnd(self):
-        from tkinterdnd2 import TkinterDnD
+        TkinterDnD = getattr(self, "_TkinterDnD", None)
+        if not TkinterDnD:
+            return
 
         self.__class__ = type(
             self.__class__.__name__, (self.__class__, TkinterDnD.DnDWrapper), {}
