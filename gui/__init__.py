@@ -36,9 +36,6 @@ class App:
 
         self._dnd_ready = False
         self._icon_ready = False
-
-        ctk.set_appearance_mode("system")
-        ctk.set_default_color_theme("blue")
         self.title(APP_TITLE)
         self.geometry("1280x900")
         self.minsize(1180, 820)
@@ -68,6 +65,7 @@ class App:
 
         self.logo_img = None
         self._after_jobs = []
+        self._after_jobs.append(self.after_idle(self._init_theme))
 
         self.after(0, self._init_ui)
 
@@ -119,6 +117,10 @@ class App:
         self._icon_ready = True
 
     # Theme
+    def _init_theme(self):
+        ctk.set_appearance_mode("system")
+        ctk.set_default_color_theme("blue")
+
     def _switch_theme(self, mode):
         ctk.set_appearance_mode("light" if mode.lower()=="light" else "dark" if mode.lower()=="dark" else "system")
         if self._icon_ready:
