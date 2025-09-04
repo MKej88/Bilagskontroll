@@ -30,15 +30,11 @@ class App(ctk.CTk):
         ctk.CTk.__init__(self)
 
         # Utsett import til vi faktisk trenger modulene
-        from tkinterdnd2 import TkinterDnD
         from .sidebar import build_sidebar
         from .mainview import build_main
 
-        # Legg til dra-og-slipp-støtte dynamisk
-        self.__class__ = type(self.__class__.__name__, (self.__class__, TkinterDnD.DnDWrapper), {})
-        TkinterDnD.DnDWrapper.__init__(self)
-        TkinterDnD._require(self)
-        self._dnd = TkinterDnD
+        self._dnd_ready = False
+        self._icon_ready = False
 
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
@@ -46,7 +42,6 @@ class App(ctk.CTk):
         self.geometry("1280x900")
         self.minsize(1180, 820)
         self.app_icon_img = None
-        self._update_icon()
 
         self.df = None
         self.sample_df = None
@@ -86,18 +81,34 @@ class App(ctk.CTk):
         self.bind("<Control-o>", lambda e: self.open_in_po())
         self.render()
         self._after_jobs.append(self.after(0, self.load_logo_images))
-
-        # Drag og slipp
-        self.drop_target_register("DND_Files")
-        self.dnd_bind("<<Drop>>", self._on_drop)
+        self._after_jobs.append(self.after_idle(self._init_dnd))
+        self._after_jobs.append(self.after_idle(self._init_icon))
 
         # Sørg for ryddig nedstenging
         self.protocol("WM_DELETE_WINDOW", self.destroy)
 
+    def _init_dnd(self):
+        from tkinterdnd2 import TkinterDnD
+
+        self.__class__ = type(
+            self.__class__.__name__, (self.__class__, TkinterDnD.DnDWrapper), {}
+        )
+        TkinterDnD.DnDWrapper.__init__(self)
+        TkinterDnD._require(self)
+        self._dnd = TkinterDnD
+        self.drop_target_register("DND_Files")
+        self.dnd_bind("<<Drop>>", self._on_drop)
+        self._dnd_ready = True
+
+    def _init_icon(self):
+        self._update_icon()
+        self._icon_ready = True
+
     # Theme
     def _switch_theme(self, mode):
         ctk.set_appearance_mode("light" if mode.lower()=="light" else "dark" if mode.lower()=="dark" else "system")
-        self._update_icon()
+        if self._icon_ready:
+            self._update_icon()
         from .ledger import apply_treeview_theme, update_treeview_stripes
 
         apply_treeview_theme(self)
@@ -177,10 +188,11 @@ class App(ctk.CTk):
             ctk.ScalingTracker.remove_window(self.destroy, self)
         except Exception:
             pass
-        try:
-            self._dnd.Tk.destroy(self)
-        except Exception:
-            pass
+        if self._dnd_ready:
+            try:
+                self._dnd.Tk.destroy(self)
+            except Exception:
+                pass
 
     # Read
     def _load_excel(self):
