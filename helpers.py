@@ -33,7 +33,22 @@ def setup_logger(log_path: str = "bilagskontroll.log") -> logging.Logger:
     return logger
 
 
-logger = setup_logger()
+
+class _LazyLogger:
+    """Utsett opprettelsen av logger til første bruk."""
+
+    _logger = None
+
+    def _get(self):
+        if self._logger is None:
+            self._logger = setup_logger()
+        return self._logger
+
+    def __getattr__(self, name):
+        return getattr(self._get(), name)
+
+
+logger = _LazyLogger()
 
 def _pd():
     import pandas as pd
