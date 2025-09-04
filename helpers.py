@@ -3,7 +3,6 @@ import os
 import re
 import sys
 import logging
-from logging.handlers import RotatingFileHandler
 
 
 def setup_logger(log_path: str = "bilagskontroll.log") -> logging.Logger:
@@ -19,6 +18,9 @@ def setup_logger(log_path: str = "bilagskontroll.log") -> logging.Logger:
     logging.Logger
         Konfigurert logger for applikasjonen.
     """
+
+    # Importeres her for å unngå unødvendig overhead ved programoppstart.
+    from logging.handlers import RotatingFileHandler
 
     logger = logging.getLogger("bilagskontroll")
     if not logger.handlers:
