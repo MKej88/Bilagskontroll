@@ -4,9 +4,7 @@
 import os
 import re
 
-import tkinter as tk
-import customtkinter as ctk
-from tkinter import filedialog, messagebox
+# Tkinter og CustomTkinter importeres lazily for raskere oppstart.
 
 
 from helpers import (
@@ -25,8 +23,15 @@ APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
 # ----------------- App -----------------
-class App(ctk.CTk):
+class App:
     def __init__(self):
+        import tkinter as tk
+        import customtkinter as ctk
+        from tkinter import filedialog, messagebox
+
+        globals().update(tk=tk, ctk=ctk, filedialog=filedialog, messagebox=messagebox)
+
+        self.__class__ = type(self.__class__.__name__, (ctk.CTk, self.__class__), {})
         ctk.CTk.__init__(self)
 
         self._dnd_ready = False
