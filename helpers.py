@@ -23,7 +23,7 @@ def setup_logger(log_path: str = "bilagskontroll.log") -> logging.Logger:
     logger = logging.getLogger("bilagskontroll")
     if not logger.handlers:
         handler = RotatingFileHandler(
-            log_path, encoding="utf-8", maxBytes=1_000_000, backupCount=3
+            log_path, encoding="utf-8", maxBytes=1_000_000, backupCount=3, delay=True
         )
         handler.setFormatter(
             logging.Formatter("%(asctime)s %(levelname)s %(message)s")
