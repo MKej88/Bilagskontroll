@@ -28,13 +28,14 @@ OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 class App(ctk.CTk):
     def __init__(self):
         ctk.CTk.__init__(self)
+        self._dnd_ready = False
+        self._icon_ready = False
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
         self.title(APP_TITLE)
         self.geometry("1280x900")
         self.minsize(1180, 820)
         self.app_icon_img = None
-        self._update_icon()
 
         self.df = None
         self.sample_df = None
@@ -78,6 +79,7 @@ class App(ctk.CTk):
         TkinterDnD.DnDWrapper.__init__(self)
         TkinterDnD._require(self)
         self._dnd = TkinterDnD
+        self._dnd_ready = True
 
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
@@ -91,7 +93,8 @@ class App(ctk.CTk):
         self.bind("<Right>", lambda e: self.next())
         self.bind("<Control-o>", lambda e: self.open_in_po())
         self.render()
-        self._after_jobs.append(self.after(0, self.load_logo_images))
+        self._after_jobs.append(self.after_idle(self.load_logo_images))
+        self._after_jobs.append(self.after_idle(self._init_icon))
 
         # Drag og slipp
         self.drop_target_register("DND_Files")
@@ -103,7 +106,8 @@ class App(ctk.CTk):
     # Theme
     def _switch_theme(self, mode):
         ctk.set_appearance_mode("light" if mode.lower()=="light" else "dark" if mode.lower()=="dark" else "system")
-        self._update_icon()
+        if self._icon_ready:
+            self._update_icon()
         from .ledger import apply_treeview_theme, update_treeview_stripes
 
         apply_treeview_theme(self)
@@ -126,6 +130,10 @@ class App(ctk.CTk):
             self.iconphoto(False, self.app_icon_img)
         except Exception:
             pass
+
+    def _init_icon(self):
+        self._update_icon()
+        self._icon_ready = True
 
     def load_logo_images(self):
         try:
@@ -183,10 +191,11 @@ class App(ctk.CTk):
             ctk.ScalingTracker.remove_window(self.destroy, self)
         except Exception:
             pass
-        try:
-            self._dnd.Tk.destroy(self)
-        except Exception:
-            pass
+        if self._dnd_ready:
+            try:
+                self._dnd.Tk.destroy(self)
+            except Exception:
+                pass
 
     # Read
     def _load_excel(self):
