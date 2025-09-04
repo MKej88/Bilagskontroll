@@ -6,19 +6,6 @@ import re
 
 # Tkinter og CustomTkinter importeres lazily for raskere oppstart.
 
-
-from helpers import (
-    resource_path,
-    to_str,
-    fmt_money,
-    format_number_with_thousands,
-    guess_invoice_col,
-    guess_col,
-    guess_net_amount_col,
-    fmt_pct,
-    logger,
-)
-
 APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
@@ -30,6 +17,29 @@ class App:
         from tkinter import filedialog, messagebox
 
         globals().update(tk=tk, ctk=ctk, filedialog=filedialog, messagebox=messagebox)
+
+        from helpers import (
+            resource_path,
+            to_str,
+            fmt_money,
+            format_number_with_thousands,
+            guess_invoice_col,
+            guess_col,
+            guess_net_amount_col,
+            fmt_pct,
+            logger,
+        )
+        globals().update(
+            resource_path=resource_path,
+            to_str=to_str,
+            fmt_money=fmt_money,
+            format_number_with_thousands=format_number_with_thousands,
+            guess_invoice_col=guess_invoice_col,
+            guess_col=guess_col,
+            guess_net_amount_col=guess_net_amount_col,
+            fmt_pct=fmt_pct,
+            logger=logger,
+        )
 
         self.__class__ = type(self.__class__.__name__, (ctk.CTk, self.__class__), {})
         ctk.CTk.__init__(self)

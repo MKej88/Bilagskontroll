@@ -1,15 +1,14 @@
-import tkinter as tk
-from tkinter import ttk
-import customtkinter as ctk
-from .ledger import (
-    LEDGER_COLS,
-    apply_treeview_theme,
-    update_treeview_stripes,
-    sort_treeview,
-)
-
-
 def build_main(app):
+    import tkinter as tk
+    from tkinter import ttk
+    import customtkinter as ctk
+    from .ledger import (
+        LEDGER_COLS,
+        apply_treeview_theme,
+        update_treeview_stripes,
+        sort_treeview,
+    )
+
     panel = ctk.CTkFrame(app, corner_radius=16)
     panel.grid(row=0, column=1, sticky="nsew", padx=(0, 14), pady=14)
     panel.grid_columnconfigure(0, weight=1)
