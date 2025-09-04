@@ -88,7 +88,7 @@ class App(ctk.CTk):
         self.bind("<Right>", lambda e: self.next())
         self.bind("<Control-o>", lambda e: self.open_in_po())
         self.render()
-        self._after_jobs.append(self.after(0, self.load_logo_images))
+        self._after_jobs.append(self.after_idle(self.load_logo_images))
         self._after_jobs.append(self.after_idle(self._init_dnd))
         self._after_jobs.append(self.after_idle(self._init_icon))
 
