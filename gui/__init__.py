@@ -28,11 +28,6 @@ class App:
         self.__class__ = type(self.__class__.__name__, (ctk.CTk, self.__class__), {})
         ctk.CTk.__init__(self)
 
-        globals().update(
-            FONT_TITLE=ctk.CTkFont(size=16, weight="bold"),
-            FONT_BODY=ctk.CTkFont(size=14),
-        )
-
         self._dnd_ready = False
         self._icon_ready = False
         self.title(APP_TITLE)
@@ -66,6 +61,13 @@ class App:
         self._theme_initialized = False
         self.after_idle(self._build_ui)
 
+    def _init_fonts(self):
+        global FONT_TITLE, FONT_BODY
+        if FONT_TITLE is None:
+            FONT_TITLE = ctk.CTkFont(size=16, weight="bold")
+        if FONT_BODY is None:
+            FONT_BODY = ctk.CTkFont(size=14)
+
     def _ensure_helpers(self):
         """Importer tunge hjelpefunksjoner fra ``helpers`` ved første behov."""
         if getattr(self, "_helpers_loaded", False):
@@ -94,6 +96,7 @@ class App:
 
     def _build_ui(self):
         """Bygger hoved-UI etter at event-loopen er startet."""
+        self._init_fonts()
         self._init_ui()
         self.after_idle(self._post_init)
 
