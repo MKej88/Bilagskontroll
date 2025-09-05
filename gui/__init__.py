@@ -18,28 +18,12 @@ class App:
 
         globals().update(tk=tk, ctk=ctk, filedialog=filedialog, messagebox=messagebox)
 
-        from helpers import (
-            resource_path,
-            to_str,
-            fmt_money,
-            format_number_with_thousands,
-            guess_invoice_col,
-            guess_col,
-            guess_net_amount_col,
-            fmt_pct,
-            logger,
-        )
-        globals().update(
-            resource_path=resource_path,
-            to_str=to_str,
-            fmt_money=fmt_money,
-            format_number_with_thousands=format_number_with_thousands,
-            guess_invoice_col=guess_invoice_col,
-            guess_col=guess_col,
-            guess_net_amount_col=guess_net_amount_col,
-            fmt_pct=fmt_pct,
-            logger=logger,
-        )
+        from helpers import resource_path
+        globals().update(resource_path=resource_path)
+
+        # Hjelpefunksjoner fra helpers importeres først ved behov for å
+        # unngå unødvendig overhead ved oppstart.
+        self._helpers_loaded = False
 
         self.__class__ = type(self.__class__.__name__, (ctk.CTk, self.__class__), {})
         ctk.CTk.__init__(self)
@@ -76,6 +60,32 @@ class App:
         self.logo_img = None
         self._init_theme()
         self.after_idle(self._build_ui)
+
+    def _ensure_helpers(self):
+        """Importer tunge hjelpefunksjoner fra ``helpers`` ved første behov."""
+        if getattr(self, "_helpers_loaded", False):
+            return
+        from helpers import (
+            to_str,
+            fmt_money,
+            format_number_with_thousands,
+            guess_invoice_col,
+            guess_col,
+            guess_net_amount_col,
+            fmt_pct,
+            logger,
+        )
+        globals().update(
+            to_str=to_str,
+            fmt_money=fmt_money,
+            format_number_with_thousands=format_number_with_thousands,
+            guess_invoice_col=guess_invoice_col,
+            guess_col=guess_col,
+            guess_net_amount_col=guess_net_amount_col,
+            fmt_pct=fmt_pct,
+            logger=logger,
+        )
+        self._helpers_loaded = True
 
     def _build_ui(self):
         """Bygger hoved-UI etter at event-loopen er startet."""
@@ -221,6 +231,7 @@ class App:
 
     # Read
     def _load_excel(self):
+        self._ensure_helpers()
         from data_utils import load_invoice_df, extract_customer_from_invoice_file
 
         path = self.file_path_var.get()
@@ -264,6 +275,7 @@ class App:
         self.render()
 
     def _load_gl_excel(self):
+        self._ensure_helpers()
         from data_utils import load_gl_df
 
         path = self.gl_path_var.get()
@@ -308,6 +320,7 @@ class App:
         self.lbl_filecount.configure(text=f"Antall bilag: {self.antall_bilag}")
         
     def make_sample(self):
+        self._ensure_helpers()
         if self.df is None:
             messagebox.showinfo(APP_TITLE, "Velg Excel først."); return
         try:
@@ -326,6 +339,7 @@ class App:
         self.render()
 
     def _current_row_dict(self):
+        self._ensure_helpers()
         row = self.sample_df.iloc[self.idx]
         return {str(c): to_str(row[c]) for c in self.sample_df.columns}
 
@@ -359,6 +373,7 @@ class App:
         self._show_inline("Åpner PowerOffice")
     
     def copy_invoice(self):
+        self._ensure_helpers()
         if self.sample_df is None: return
         inv_val = to_str(self.sample_df.iloc[self.idx].get(self.invoice_col, ""))
         cleaned = re.sub(r"[^\d-]", "", inv_val)
@@ -369,6 +384,7 @@ class App:
     # Ledger
     # Summary / status
     def _update_status_card(self):
+        self._ensure_helpers()
         from data_utils import calc_sum_kontrollert, calc_sum_net_all
 
         sum_k = calc_sum_kontrollert(self.sample_df, self.decisions, self.net_amount_col)
@@ -398,6 +414,7 @@ class App:
 
     # Details + render
     def _details_text_for_row(self, row_dict):
+        self._ensure_helpers()
         lines=[]
         for k in self.sample_df.columns:
             key=str(k); val=to_str(row_dict.get(key,"")).strip()
@@ -411,6 +428,7 @@ class App:
         except Exception: pass
 
     def render(self):
+        self._ensure_helpers()
         self._update_counts_labels()
         if self.sample_df is not None and len(self.sample_df)>0:
             self.lbl_count.configure(text=f"Bilag: {self.idx+1}/{len(self.sample_df)}")
