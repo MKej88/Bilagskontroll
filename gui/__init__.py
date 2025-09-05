@@ -9,6 +9,10 @@ import re
 APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
+# Delte skrifttyper
+FONT_TITLE = None
+FONT_BODY = None
+
 # ----------------- App -----------------
 class App:
     def __init__(self):
@@ -27,6 +31,11 @@ class App:
 
         self.__class__ = type(self.__class__.__name__, (ctk.CTk, self.__class__), {})
         ctk.CTk.__init__(self)
+
+        globals().update(
+            FONT_TITLE=ctk.CTkFont(size=16, weight="bold"),
+            FONT_BODY=ctk.CTkFont(size=14),
+        )
 
         self._dnd_ready = False
         self._icon_ready = False
