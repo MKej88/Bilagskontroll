@@ -484,7 +484,11 @@ class App:
             self.btn_prev.configure(state="normal" if self.idx > 0 else "disabled")
             self.btn_next.configure(state="normal" if self.idx < len(self.sample_df) - 1 else "disabled")
 
-        self._update_status_card_safe()
+        if (
+            (self.df is not None and len(self.df) > 0)
+            or (self.sample_df is not None and len(self.sample_df) > 0)
+        ):
+            self._update_status_card_safe()
 
 if __name__ == "__main__":
     App().mainloop()
