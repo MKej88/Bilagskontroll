@@ -1,5 +1,5 @@
 import os
-from . import FONT_TITLE, FONT_BODY
+from . import FONT_TITLE, FONT_BODY, create_button
 
 
 def _toggle_sample_btn(app, *_):
@@ -17,13 +17,13 @@ def build_sidebar(app):
         .grid(row=0, column=0, padx=14, pady=(14, 6), sticky="w")  # Spesiell font: stor tittel
 
     app.file_path_var = ctk.StringVar(master=app, value="")
-    ctk.CTkButton(card, text="Velg leverandørfakturaer (Excel)…", command=app.choose_file)\
+    create_button(card, text="Velg leverandørfakturaer (Excel)…", command=app.choose_file)\
         .grid(row=1, column=0, padx=14, pady=(4, 2), sticky="ew")
     ctk.CTkLabel(card, textvariable=app.file_path_var, wraplength=260, anchor="w", justify="left")\
         .grid(row=2, column=0, padx=14, pady=(0, 6), sticky="ew")
 
     app.gl_path_var = ctk.StringVar(master=app, value="")
-    ctk.CTkButton(card, text="Velg hovedbok (Excel)…", command=app.choose_gl_file)\
+    create_button(card, text="Velg hovedbok (Excel)…", command=app.choose_gl_file)\
         .grid(row=3, column=0, padx=14, pady=(2, 2), sticky="ew")
     ctk.CTkLabel(card, textvariable=app.gl_path_var, wraplength=260, anchor="w", justify="left")\
         .grid(row=4, column=0, padx=14, pady=(0, 6), sticky="ew")
@@ -66,7 +66,7 @@ def build_sidebar(app):
         validatecommand=(vcmd_year, "%P"),
     ).grid(row=1, column=1, padx=(8, 0), pady=(6, 0))
 
-    app.sample_btn = ctk.CTkButton(card, text="🎲 Lag utvalg", command=app.make_sample, state="disabled")
+    app.sample_btn = create_button(card, text="🎲 Lag utvalg", command=app.make_sample, state="disabled")
     app.sample_btn.grid(row=6, column=0, padx=14, pady=(8, 6), sticky="ew")
 
     app.sample_size_var.trace_add("write", lambda *_: _toggle_sample_btn(app))

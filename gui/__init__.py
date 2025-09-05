@@ -13,6 +13,25 @@ OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 FONT_TITLE = None
 FONT_BODY = None
 
+# Standardstil for knapper
+BTN_FG = "#1f6aa5"
+BTN_HOVER = "#185a8b"
+BTN_RADIUS = 8
+
+
+def create_button(master, **kwargs):
+    """Opprett en knapp med felles stil."""
+    import customtkinter as ctk
+
+    options = {
+        "fg_color": BTN_FG,
+        "hover_color": BTN_HOVER,
+        "font": FONT_BODY,
+        "corner_radius": BTN_RADIUS,
+    }
+    options.update(kwargs)
+    return ctk.CTkButton(master, **options)
+
 # ----------------- App -----------------
 class App:
     def __init__(self):
