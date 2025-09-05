@@ -75,6 +75,10 @@ class App:
 
         self.logo_img = None
         self._init_theme()
+        self.after_idle(self._build_ui)
+
+    def _build_ui(self):
+        """Bygger hoved-UI etter at event-loopen er startet."""
         self._init_ui()
         self.after_idle(self._post_init)
 
