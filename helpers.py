@@ -24,6 +24,9 @@ def setup_logger(log_path: str = "bilagskontroll.log") -> logging.Logger:
 
     logger = logging.getLogger("bilagskontroll")
     if not logger.handlers:
+        log_dir = os.path.dirname(log_path)
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
         handler = RotatingFileHandler(
             log_path, encoding="utf-8", maxBytes=1_000_000, backupCount=3, delay=True
         )
