@@ -145,10 +145,10 @@ class App:
         self.protocol("WM_DELETE_WINDOW", self.destroy)
 
     def _post_init(self):
-        self._init_theme()
-        self.load_logo_images()
+        self.after(200, self._init_theme)
+        self.after(200, self.load_logo_images)
         self._init_dnd()
-        self._init_icon()
+        self.after(200, self._init_icon)
 
     def _init_dnd(self):
         TkinterDnD = getattr(self, "_TkinterDnD", None)
