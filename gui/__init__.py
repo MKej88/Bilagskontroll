@@ -21,9 +21,6 @@ class App:
         
         globals().update(tk=tk, ctk=ctk)
 
-        from helpers import resource_path
-        globals().update(resource_path=resource_path)
-
         # Hjelpefunksjoner fra helpers importeres først ved behov for å
         # unngå unødvendig overhead ved oppstart.
         self._helpers_loaded = False
@@ -165,6 +162,7 @@ class App:
         self.render()
 
     def _update_icon(self):
+        from helpers import resource_path
         try:
             dark = ctk.get_appearance_mode().lower() == "dark"
         except Exception:
@@ -182,6 +180,7 @@ class App:
             pass
 
     def load_logo_images(self):
+        from helpers import resource_path
         try:
             from PIL import Image
             img_light = Image.open(resource_path("icons/bilagskontroll_logo_256.png"))
