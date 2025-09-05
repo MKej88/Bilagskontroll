@@ -147,8 +147,8 @@ class App:
     def _post_init(self):
         self._init_theme()
         self.load_logo_images()
-        self._init_dnd()
         self._init_icon()
+        self.bind("<<Drop>>", self._lazy_init_dnd)
 
     def _init_dnd(self):
         TkinterDnD = getattr(self, "_TkinterDnD", None)
@@ -164,6 +164,13 @@ class App:
         self.drop_target_register("DND_Files")
         self.dnd_bind("<<Drop>>", self._on_drop)
         self._dnd_ready = True
+
+    def _lazy_init_dnd(self, event):
+        if not getattr(self, "_dnd_ready", False):
+            self.unbind("<<Drop>>")
+            self._init_dnd()
+        if self._dnd_ready:
+            self._on_drop(event)
 
     def _init_icon(self):
         self._update_icon()
