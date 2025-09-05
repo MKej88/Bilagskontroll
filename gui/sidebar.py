@@ -1,4 +1,5 @@
 import os
+from . import FONT_TITLE, FONT_BODY
 
 
 def _toggle_sample_btn(app, *_):
@@ -13,7 +14,7 @@ def build_sidebar(app):
     card.grid(row=0, column=0, sticky="nsw", padx=14, pady=14)
 
     ctk.CTkLabel(card, text="⚙️ Innstillinger", font=ctk.CTkFont(size=18, weight="bold"))\
-        .grid(row=0, column=0, padx=14, pady=(14, 6), sticky="w")
+        .grid(row=0, column=0, padx=14, pady=(14, 6), sticky="w")  # Spesiell font: stor tittel
 
     app.file_path_var = ctk.StringVar(master=app, value="")
     ctk.CTkButton(card, text="Velg leverandørfakturaer (Excel)…", command=app.choose_file)\
@@ -71,11 +72,11 @@ def build_sidebar(app):
     app.sample_size_var.trace_add("write", lambda *_: _toggle_sample_btn(app))
     app.year_var.trace_add("write", lambda *_: _toggle_sample_btn(app))
 
-    app.lbl_filecount = ctk.CTkLabel(card, text="Antall bilag: –", font=ctk.CTkFont(size=16, weight="bold"))
+    app.lbl_filecount = ctk.CTkLabel(card, text="Antall bilag: –", font=FONT_TITLE)
     app.lbl_filecount.grid(row=7, column=0, padx=14, pady=(2, 2), sticky="w")
 
     ctk.CTkLabel(card, text="Oppdragsinfo", font=ctk.CTkFont(size=14, weight="bold"))\
-        .grid(row=8, column=0, padx=14, pady=(8, 2), sticky="w")
+        .grid(row=8, column=0, padx=14, pady=(8, 2), sticky="w")  # Spesiell font: 14pt fet
     opp = ctk.CTkFrame(card, corner_radius=8)
     opp.grid(row=9, column=0, padx=14, pady=(0, 8), sticky="ew")
     opp.grid_columnconfigure(0, weight=0)
@@ -104,7 +105,7 @@ def build_sidebar(app):
     info_lbl = ctk.CTkLabel(
         opp,
         text="Kundenavn hentes automatisk",
-        font=ctk.CTkFont(size=12, slant="italic"),
+        font=ctk.CTkFont(size=12, slant="italic"),  # Spesiell font: liten og kursiv
         anchor="w",
         justify="left",
         wraplength=240,
@@ -114,7 +115,7 @@ def build_sidebar(app):
     card.grid_rowconfigure(20, weight=1)
 
     ctk.CTkLabel(card, text="Tema", font=ctk.CTkFont(size=13))\
-        .grid(row=101, column=0, padx=14, pady=(0, 0), sticky="w")
+        .grid(row=101, column=0, padx=14, pady=(0, 0), sticky="w")  # Spesiell font: 13pt
     theme = ctk.CTkSegmentedButton(card, values=["System", "Light", "Dark"], command=app._switch_theme)
     theme.set("System")
     theme.grid(row=102, column=0, padx=14, pady=(2, 14), sticky="ew")
@@ -123,8 +124,8 @@ def build_sidebar(app):
     status_card.grid(row=100, column=0, padx=14, pady=(8, 14), sticky="ew")
     status_card.grid_columnconfigure(0, weight=1)
 
-    title_font = ctk.CTkFont(size=18, weight="bold")
-    body_font = ctk.CTkFont(size=14)
+    title_font = ctk.CTkFont(size=18, weight="bold")  # Spesiell font: større enn vanlig tittel
+    body_font = FONT_BODY
 
     ctk.CTkLabel(status_card, text="Status", font=title_font, anchor="center", justify="center")\
         .grid(row=0, column=0, sticky="ew", pady=(10, 6))

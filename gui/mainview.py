@@ -1,3 +1,6 @@
+from . import FONT_TITLE, FONT_BODY
+
+
 def build_main(app):
     from tkinter import ttk
     import customtkinter as ctk
@@ -17,10 +20,10 @@ def build_main(app):
     head.grid(row=0, column=0, sticky="ew", padx=12, pady=8)
     head.grid_columnconfigure(6, weight=1)
 
-    bold_font = ctk.CTkFont(size=16, weight="bold")
+    # Spesiell font: større uten fet skrift
     head_font = ctk.CTkFont(size=16)
 
-    app.lbl_count = ctk.CTkLabel(head, text="Bilag: –/–", font=bold_font)
+    app.lbl_count = ctk.CTkLabel(head, text="Bilag: –/–", font=FONT_TITLE)
     app.lbl_status = ctk.CTkLabel(head, text="Status: –", font=head_font)
     app.lbl_invoice = ctk.CTkLabel(head, text="Fakturanr: –", font=head_font)
     app.lbl_count.grid(row=0, column=0, padx=(4, 12))
@@ -58,14 +61,14 @@ def build_main(app):
     right.grid(row=0, column=1, sticky="nsew")
 
     ctk.CTkLabel(left, text="Detaljer for bilag", font=ctk.CTkFont(size=15, weight="bold"))\
-        .grid(row=0, column=0, sticky="w", padx=8, pady=(4,4))
+        .grid(row=0, column=0, sticky="w", padx=8, pady=(4,4))  # Spesiell font: 15pt tittel
     left.grid_columnconfigure(0, weight=1)
     left.grid_rowconfigure(1, weight=1, minsize=120)
-    app.detail_box = ctk.CTkTextbox(left, height=360, font=ctk.CTkFont(size=14))
+    app.detail_box = ctk.CTkTextbox(left, height=360, font=FONT_BODY)
     app.detail_box.grid(row=1, column=0, sticky="nsew", padx=(8,6), pady=(0,8))
 
     ctk.CTkLabel(right, text="Hovedbok (bilagslinjer)", font=ctk.CTkFont(size=15, weight="bold"))\
-        .grid(row=0, column=0, sticky="w", padx=8, pady=(4,4))
+        .grid(row=0, column=0, sticky="w", padx=8, pady=(4,4))  # Spesiell font: 15pt tittel
     right.grid_columnconfigure(0, weight=1)
     right.grid_columnconfigure(1, weight=0)
     right.grid_rowconfigure(1, weight=3, minsize=150)
@@ -100,8 +103,8 @@ def build_main(app):
     app.ledger_sum.grid(row=3, column=0, columnspan=2, sticky="ew", padx=(0, 12), pady=(6, 10))
 
     ctk.CTkLabel(right, text="Kommentar", font=ctk.CTkFont(size=15, weight="bold"))\
-        .grid(row=4, column=0, columnspan=2, sticky="w", padx=(8, 6), pady=(8, 4))
-    app.comment_box = ctk.CTkTextbox(right, height=110, font=ctk.CTkFont(size=13))
+        .grid(row=4, column=0, columnspan=2, sticky="w", padx=(8, 6), pady=(8, 4))  # Spesiell font: 15pt tittel
+    app.comment_box = ctk.CTkTextbox(right, height=110, font=ctk.CTkFont(size=13))  # Spesiell liten font
     app.comment_box.grid(row=5, column=0, columnspan=2, sticky="nsew", padx=(8, 6), pady=(0, 0))
 
     bottom = ctk.CTkFrame(panel)
