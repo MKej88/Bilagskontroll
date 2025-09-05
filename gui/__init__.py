@@ -76,7 +76,7 @@ class App:
         self.logo_img = None
         self._init_theme()
         self._init_ui()
-        self._post_init()
+        self.after_idle(self._post_init)
 
     def _init_ui(self):
         try:
