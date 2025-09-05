@@ -63,7 +63,7 @@ class App:
         self.gl_postedby_col = None
 
         self.logo_img = None
-        self._init_theme()
+        self._theme_initialized = False
         self.after_idle(self._build_ui)
 
     def _ensure_helpers(self):
@@ -123,6 +123,7 @@ class App:
         self.protocol("WM_DELETE_WINDOW", self.destroy)
 
     def _post_init(self):
+        self._init_theme()
         self.load_logo_images()
         self._init_dnd()
         self._init_icon()
@@ -148,10 +149,14 @@ class App:
 
     # Theme
     def _init_theme(self):
+        if getattr(self, "_theme_initialized", False):
+            return
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
+        self._theme_initialized = True
 
     def _switch_theme(self, mode):
+        self._init_theme()
         ctk.set_appearance_mode("light" if mode.lower()=="light" else "dark" if mode.lower()=="dark" else "system")
         if self._icon_ready:
             self._update_icon()
