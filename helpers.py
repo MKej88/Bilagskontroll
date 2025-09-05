@@ -60,12 +60,7 @@ def _pd():
 _RE_DIGITS = re.compile(r"\D+")
 _RE_FLOAT_SUFFIX = re.compile(r"\d+\.0")
 _RE_NUMBER = re.compile(r"-?\d+(?:[.,]\d+)?")
-_INVOICE_PATS = [
-    re.compile(r"^faktura\.?nr\.?$"),
-    re.compile(r"^fakturanr\.?$"),
-    re.compile(r"^faktura[ \._-]*nummer$"),
-    re.compile(r"^invoice.*(no|number)$"),
-]
+_INVOICE_PATS = None
 
 
 def resource_path(relpath: str) -> str:
@@ -137,6 +132,14 @@ def format_number_with_thousands(s):
 
 
 def guess_invoice_col(cols):
+    global _INVOICE_PATS
+    if _INVOICE_PATS is None:
+        _INVOICE_PATS = [
+            re.compile(r"^faktura\.?nr\.?$"),
+            re.compile(r"^fakturanr\.?$"),
+            re.compile(r"^faktura[ \._-]*nummer$"),
+            re.compile(r"^invoice.*(no|number)$"),
+        ]
     for c in map(str, cols):
         lc = c.lower().strip()
         if any(p.search(lc) for p in _INVOICE_PATS):
@@ -145,6 +148,14 @@ def guess_invoice_col(cols):
 
 
 def guess_col(cols, *names_regex):
+    global _INVOICE_PATS
+    if _INVOICE_PATS is None:
+        _INVOICE_PATS = [
+            re.compile(r"^faktura\.?nr\.?$"),
+            re.compile(r"^fakturanr\.?$"),
+            re.compile(r"^faktura[ \._-]*nummer$"),
+            re.compile(r"^invoice.*(no|number)$"),
+        ]
     for c in map(str, cols):
         lc = c.lower().strip()
         if any(re.search(rgx, lc, re.IGNORECASE) for rgx in names_regex):
