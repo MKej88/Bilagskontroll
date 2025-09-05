@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.0.4
+
+### Endringer
+- Loggeren oppretter automatisk katalogen for loggfilen.
+
+### Dokumentasjon
+- README oppdatert med informasjon om logging.
+
 ## 1.0.3
 
 ### Endringer
