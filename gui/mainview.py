@@ -1,4 +1,4 @@
-from . import FONT_TITLE, FONT_BODY
+from . import FONT_TITLE, FONT_BODY, create_button
 
 
 def build_main(app):
@@ -29,7 +29,7 @@ def build_main(app):
     app.lbl_count.grid(row=0, column=0, padx=(4, 12))
     app.lbl_status.grid(row=0, column=1, padx=8)
     app.lbl_invoice.grid(row=0, column=2, padx=8)
-    ctk.CTkButton(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(8,0))
+    create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(8,0))
     app.copy_feedback = ctk.CTkLabel(head, text="", text_color="#2ecc71")
     app.copy_feedback.grid(row=0, column=4, padx=8, sticky="w")
 
@@ -40,14 +40,14 @@ def build_main(app):
     btns.grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 4))
     btns.grid_columnconfigure((0,1,2,3,4), weight=1)
 
-    ctk.CTkButton(btns, text="✅ Godkjent", fg_color="#2ecc71", hover_color="#29b765",
+    create_button(btns, text="✅ Godkjent", fg_color="#2ecc71", hover_color="#29b765",
                   command=lambda: app.set_decision_and_next("Godkjent")).grid(row=0, column=0, padx=6, pady=6, sticky="ew")
-    ctk.CTkButton(btns, text="⛔ Ikke godkjent", fg_color="#e74c3c", hover_color="#cf4334",
+    create_button(btns, text="⛔ Ikke godkjent", fg_color="#e74c3c", hover_color="#cf4334",
                   command=lambda: app.set_decision_and_next("Ikke godkjent")).grid(row=0, column=1, padx=6, pady=6, sticky="ew")
-    ctk.CTkButton(btns, text="🔗 Åpne i PowerOffice", command=app.open_in_po).grid(row=0, column=2, padx=6, pady=6, sticky="ew")
-    app.btn_prev = ctk.CTkButton(btns, text="⬅ Forrige", command=app.prev)
+    create_button(btns, text="🔗 Åpne i PowerOffice", command=app.open_in_po).grid(row=0, column=2, padx=6, pady=6, sticky="ew")
+    app.btn_prev = create_button(btns, text="⬅ Forrige", command=app.prev)
     app.btn_prev.grid(row=0, column=3, padx=6, pady=6, sticky="ew")
-    app.btn_next = ctk.CTkButton(btns, text="➡ Neste", command=app.next)
+    app.btn_next = create_button(btns, text="➡ Neste", command=app.next)
     app.btn_next.grid(row=0, column=4, padx=6, pady=6, sticky="ew")
 
     paned = ctk.CTkFrame(panel)
@@ -115,6 +115,6 @@ def build_main(app):
         from report import export_pdf
         export_pdf(app)
 
-    ctk.CTkButton(bottom, text="📄 Eksporter PDF rapport", command=_export_pdf).pack(side="left")
+    create_button(bottom, text="📄 Eksporter PDF rapport", command=_export_pdf).pack(side="left")
     ctk.CTkLabel(bottom, text="").pack(side="left", expand=True, fill="x")
     return panel
