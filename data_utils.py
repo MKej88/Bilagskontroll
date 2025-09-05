@@ -109,12 +109,18 @@ def calc_sum_kontrollert(sample_df: Optional[pd.DataFrame], decisions: list, net
     return total
 
 
-def calc_sum_net_all(df: Optional[pd.DataFrame], net_amount_col: Optional[str]) -> float:
+def calc_sum_net_all(
+    df: Optional[pd.DataFrame],
+    net_amount_col: Optional[str],
+    skip_last: bool = True,
+) -> float:
     if df is None or df.dropna(how="all").empty:
         return 0.0
     df_eff = df.dropna(how="all").copy()
-    if len(df_eff) > 0:
-        df_eff = df_eff.iloc[:-1]
+    if skip_last and len(df_eff) > 0:
+        last_row = df_eff.iloc[-1].astype(str)
+        if last_row.str.contains(r"\bsum\b", case=False).any():
+            df_eff = df_eff.iloc[:-1]
     mask = ~df_eff.astype(str).apply(lambda c: c.str.contains(r"\bsum\b", case=False)).any(axis=1)
     df_eff = df_eff.loc[mask]
     total = 0.0

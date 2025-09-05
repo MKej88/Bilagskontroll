@@ -24,3 +24,11 @@ def test_calc_sum_net_all_kun_summeringsrad():
         'netto': [123.0]
     })
     assert calc_sum_net_all(df, 'netto') == 0.0
+
+
+def test_calc_sum_net_all_beholder_siste_rad_uten_sum():
+    df = pd.DataFrame({
+        'tekst': ['rad1', 'rad2', 'rad3'],
+        'netto': [100.0, 200.0, 300.0]
+    })
+    assert calc_sum_net_all(df, 'netto') == 600.0
