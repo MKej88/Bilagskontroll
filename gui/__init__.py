@@ -18,9 +18,8 @@ class App:
     def __init__(self):
         import tkinter as tk
         import customtkinter as ctk
-        from tkinter import filedialog, messagebox
-
-        globals().update(tk=tk, ctk=ctk, filedialog=filedialog, messagebox=messagebox)
+        
+        globals().update(tk=tk, ctk=ctk)
 
         from helpers import resource_path
         globals().update(resource_path=resource_path)
@@ -216,12 +215,14 @@ class App:
 
     # Files
     def choose_file(self):
+        from tkinter import filedialog
         p = filedialog.askopenfilename(title="Velg Excel (fakturaliste)", filetypes=[("Excel","*.xlsx *.xls")])
         if not p: return
         self.file_path_var.set(p)
         self._load_excel()
 
     def choose_gl_file(self):
+        from tkinter import filedialog
         p = filedialog.askopenfilename(title="Velg Hovedbok (Excel)", filetypes=[("Excel","*.xlsx *.xls")])
         if not p: return
         self.gl_path_var.set(p)
@@ -240,6 +241,7 @@ class App:
 
     # Read
     def _load_excel(self):
+        from tkinter import messagebox
         self._ensure_helpers()
         from data_utils import load_invoice_df, extract_customer_from_invoice_file
 
@@ -284,6 +286,7 @@ class App:
         self.render()
 
     def _load_gl_excel(self):
+        from tkinter import messagebox
         self._ensure_helpers()
         from data_utils import load_gl_df
 
@@ -329,6 +332,7 @@ class App:
         self.lbl_filecount.configure(text=f"Antall bilag: {self.antall_bilag}")
         
     def make_sample(self):
+        from tkinter import messagebox
         self._ensure_helpers()
         if self.df is None:
             messagebox.showinfo(APP_TITLE, "Velg Excel først."); return
