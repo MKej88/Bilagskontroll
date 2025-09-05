@@ -1,5 +1,4 @@
 def build_main(app):
-    import tkinter as tk
     from tkinter import ttk
     import customtkinter as ctk
     from .ledger import (
@@ -48,14 +47,15 @@ def build_main(app):
     app.btn_next = ctk.CTkButton(btns, text="➡ Neste", command=app.next)
     app.btn_next.grid(row=0, column=4, padx=6, pady=6, sticky="ew")
 
-    paned = tk.PanedWindow(panel, orient="horizontal")
+    paned = ctk.CTkFrame(panel)
     paned.grid(row=2, column=0, sticky="nsew", padx=12, pady=(4, 6))
+    paned.grid_columnconfigure((0, 1), weight=1, minsize=420)
+    paned.grid_rowconfigure(0, weight=1)
+
     left = ctk.CTkFrame(paned)
     right = ctk.CTkFrame(paned)
-    paned.add(left,  minsize=420)
-    paned.add(right, minsize=420)
-    paned.paneconfigure(left, stretch="always")
-    paned.paneconfigure(right, stretch="always")
+    left.grid(row=0, column=0, sticky="nsew")
+    right.grid(row=0, column=1, sticky="nsew")
 
     ctk.CTkLabel(left, text="Detaljer for bilag", font=ctk.CTkFont(size=15, weight="bold"))\
         .grid(row=0, column=0, sticky="w", padx=8, pady=(4,4))
