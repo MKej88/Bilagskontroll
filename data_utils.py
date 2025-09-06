@@ -114,19 +114,21 @@ def calc_sum_net_all(
     net_amount_col: Optional[str],
     skip_last: bool = True,
 ) -> float:
-    if df is None or df.dropna(how="all").empty:
+    if (
+        df is None
+        or df.dropna(how="all").empty
+        or not net_amount_col
+        or net_amount_col not in df.columns
+    ):
         return 0.0
     df_eff = df.dropna(how="all").copy()
     if skip_last and len(df_eff) > 0:
         last_row = df_eff.iloc[-1].astype(str)
         if last_row.str.contains(r"\bsum\b", case=False).any():
             df_eff = df_eff.iloc[:-1]
-    mask = ~df_eff.astype(str).apply(lambda c: c.str.contains(r"\bsum\b", case=False)).any(axis=1)
-    df_eff = df_eff.loc[mask]
-    total = 0.0
-    for _, r in df_eff.iterrows():
-        v = _net_amount_from_row(r, net_amount_col)
-        if v is not None:
-            total += v
-    return total
+    mask = ~df_eff.astype(str).apply(
+        lambda c: c.str.contains(r"\bsum\b", case=False, na=False)
+    ).any(axis=1)
+    ser = df_eff.loc[mask, net_amount_col].apply(parse_amount)
+    return ser.sum(skipna=True)
 
