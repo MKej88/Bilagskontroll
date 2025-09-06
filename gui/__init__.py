@@ -335,7 +335,6 @@ class App:
     def _load_excel(self):
         from tkinter import messagebox
         self._ensure_helpers()
-        from data_utils import load_invoice_df, extract_customer_from_invoice_file
 
         path = self.file_path_var.get()
         if not path:
@@ -344,6 +343,13 @@ class App:
         header_idx = 4
         big = os.path.getsize(path) > 5 * 1024 * 1024
         popup = self._show_loading_popup() if big else None
+        # Utsett tung lasting slik at popupen rekker å vises
+        self.after(100, lambda: self._finish_load_excel(path, header_idx, popup))
+
+    def _finish_load_excel(self, path, header_idx, popup=None):
+        from tkinter import messagebox
+        from data_utils import load_invoice_df, extract_customer_from_invoice_file
+
         try:
             df = load_invoice_df(path, header_idx)
             self.antall_bilag = len(df.dropna(how="all"))
@@ -351,7 +357,6 @@ class App:
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}")
             self.df = None
-            return
         finally:
             if popup:
                 popup.destroy()
@@ -378,7 +383,6 @@ class App:
     def _load_gl_excel(self):
         from tkinter import messagebox
         self._ensure_helpers()
-        from data_utils import load_gl_df
 
         path = self.gl_path_var.get()
         if not path:
@@ -386,11 +390,18 @@ class App:
         logger.info(f"Laster hovedbok fra {path}")
         big = os.path.getsize(path) > 5 * 1024 * 1024
         popup = self._show_loading_popup() if big else None
+        # Utsett tung lasting slik at popupen rekker å vises
+        self.after(100, lambda: self._finish_load_gl(path, popup))
+
+    def _finish_load_gl(self, path, popup=None):
+        from tkinter import messagebox
+        from data_utils import load_gl_df
+
         try:
             gl = load_gl_df(path)
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
-            return
+            gl = None
         finally:
             if popup:
                 popup.destroy()
