@@ -19,6 +19,26 @@ BTN_HOVER = "#185a8b"
 BTN_RADIUS = 8
 
 
+# Farger per tema
+COLORS = {
+    "success": {"light": "#2ecc71", "dark": "#27ae60"},
+    "success_hover": {"light": "#29b765", "dark": "#219150"},
+    "error": {"light": "#e74c3c", "dark": "#c0392b"},
+    "error_hover": {"light": "#cf4334", "dark": "#992d22"},
+}
+
+
+def get_color(name: str) -> str:
+    """Returner farge basert på gjeldende tema."""
+    import customtkinter as ctk
+
+    mode = ctk.get_appearance_mode().lower()
+    try:
+        return COLORS[name]["dark" if mode == "dark" else "light"]
+    except KeyError as e:
+        raise KeyError(f"Ukjent fargenavn: {name}") from e
+
+
 def create_button(master, **kwargs):
     """Opprett en knapp med felles stil."""
     import customtkinter as ctk
@@ -447,7 +467,9 @@ class App:
     # PDF
     # Inline
     def _show_inline(self, msg: str, ok=True):
-        self.inline_status.configure(text_color=("#2ecc71" if ok else "#e74c3c"))
+        self.inline_status.configure(
+            text_color=(get_color("success") if ok else get_color("error"))
+        )
         self.inline_status.configure(text=msg)
         self.after(3500, lambda: self.inline_status.configure(text=""))
 
