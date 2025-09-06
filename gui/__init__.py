@@ -12,6 +12,12 @@ OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 # Delte skrifttyper
 FONT_TITLE = None
 FONT_BODY = None
+FONT_TITLE_LITE = None
+FONT_TITLE_LARGE = None
+FONT_TITLE_SMALL = None
+FONT_BODY_BOLD = None
+FONT_SMALL = None
+FONT_SMALL_ITALIC = None
 
 # Standardstil for knapper
 BTN_FG = "#1f6aa5"
@@ -101,11 +107,24 @@ class App:
         self.after_idle(self._build_ui)
 
     def _init_fonts(self):
-        global FONT_TITLE, FONT_BODY
+        global FONT_TITLE, FONT_BODY, FONT_TITLE_LITE, FONT_TITLE_LARGE, FONT_TITLE_SMALL, \
+            FONT_BODY_BOLD, FONT_SMALL, FONT_SMALL_ITALIC
         if FONT_TITLE is None:
             FONT_TITLE = ctk.CTkFont(size=16, weight="bold")
         if FONT_BODY is None:
             FONT_BODY = ctk.CTkFont(size=14)
+        if FONT_TITLE_LITE is None:
+            FONT_TITLE_LITE = ctk.CTkFont(size=16)
+        if FONT_TITLE_LARGE is None:
+            FONT_TITLE_LARGE = ctk.CTkFont(size=18, weight="bold")
+        if FONT_TITLE_SMALL is None:
+            FONT_TITLE_SMALL = ctk.CTkFont(size=15, weight="bold")
+        if FONT_BODY_BOLD is None:
+            FONT_BODY_BOLD = ctk.CTkFont(size=14, weight="bold")
+        if FONT_SMALL is None:
+            FONT_SMALL = ctk.CTkFont(size=13)
+        if FONT_SMALL_ITALIC is None:
+            FONT_SMALL_ITALIC = ctk.CTkFont(size=12, slant="italic")
 
     def _ensure_helpers(self):
         """Importer tunge hjelpefunksjoner fra ``helpers`` ved første behov."""
