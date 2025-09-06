@@ -38,7 +38,9 @@ def build_sidebar(app):
 
     row_utv = ctk.CTkFrame(card)
     row_utv.grid(row=5, column=0, padx=14, pady=(4, 0), sticky="ew")
-    ctk.CTkLabel(row_utv, text="Antall tilfeldig utvalg").grid(row=0, column=0, sticky="w")
+    ctk.CTkLabel(row_utv, text="Antall tilfeldig utvalg").grid(
+        row=0, column=0, padx=(8, 0), sticky="w"
+    )
 
     def _validate_int(P: str) -> bool:
         return P.isdigit() or P == ""
@@ -53,7 +55,7 @@ def build_sidebar(app):
         validatecommand=(vcmd_int, "%P"),
     ).grid(row=0, column=1, padx=(8, 0))
 
-    ctk.CTkLabel(row_utv, text="År").grid(row=1, column=0, pady=(6, 0), sticky="w")
+    ctk.CTkLabel(row_utv, text="År").grid(row=1, column=0, padx=(8, 0), pady=(6, 0), sticky="w")
 
     def _validate_year(P: str) -> bool:
         if P == "":
