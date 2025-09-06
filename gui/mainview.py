@@ -10,14 +10,7 @@ from . import (
 
 
 def build_main(app):
-    from tkinter import ttk
     import customtkinter as ctk
-    from .ledger import (
-        LEDGER_COLS,
-        apply_treeview_theme,
-        update_treeview_stripes,
-        sort_treeview,
-    )
 
     panel = ctk.CTkFrame(app, corner_radius=16)
     panel.grid(row=0, column=1, sticky="nsew", padx=(0, 14), pady=14)
@@ -76,6 +69,7 @@ def build_main(app):
     right = ctk.CTkFrame(paned)
     left.grid(row=0, column=0, sticky="nsew")
     right.grid(row=0, column=1, sticky="nsew")
+    app.right_frame = right
 
     ctk.CTkLabel(left, text="Detaljer for bilag", font=FONT_TITLE_SMALL)\
         .grid(row=0, column=0, sticky="w", padx=8, pady=(4,4))
@@ -91,13 +85,47 @@ def build_main(app):
     right.grid_rowconfigure(1, weight=3, minsize=150)
     right.grid_rowconfigure(5, weight=1, minsize=80)
 
+    ctk.CTkLabel(right, text="Kommentar", font=FONT_TITLE_SMALL)\
+        .grid(row=4, column=0, columnspan=2, sticky="w", padx=(8, 6), pady=(8, 4))
+    app.comment_box = ctk.CTkTextbox(right, height=110, font=FONT_SMALL)
+    app.comment_box.grid(row=5, column=0, columnspan=2, sticky="nsew", padx=(8, 6), pady=(0, 0))
+
+    bottom = ctk.CTkFrame(panel)
+    bottom.grid(row=3, column=0, sticky="ew", padx=12, pady=(0, 0))
+    app.bottom_frame = bottom
+
+    def _export_pdf():
+        from report import export_pdf
+        export_pdf(app)
+
+    create_button(bottom, text="📄 Eksporter PDF rapport", command=_export_pdf).pack(side="left")
+    ctk.CTkLabel(bottom, text="").pack(side="left", expand=True, fill="x")
+    return panel
+
+
+def build_ledger_widgets(app):
+    from tkinter import ttk
+    import customtkinter as ctk
+    from .ledger import (
+        LEDGER_COLS,
+        apply_treeview_theme,
+        update_treeview_stripes,
+        sort_treeview,
+    )
+
+    right = app.right_frame
     app.ledger_cols = LEDGER_COLS
-    app.ledger_tree = ttk.Treeview(right, columns=LEDGER_COLS, show="headings", height=10, style="Custom.Treeview")
+    app.ledger_tree = ttk.Treeview(
+        right, columns=LEDGER_COLS, show="headings", height=10, style="Custom.Treeview"
+    )
     for col, w, anchor in [
-        ("Kontonr", 90, "w"), ("Konto", 180, "w"),
-        ("Beskrivelse", 260, "w"), ("MVA", 70, "w"),
-        ("MVA-beløp", 110, "e"), ("Beløp", 110, "e"),
-        ("Postert av", 140, "w")
+        ("Kontonr", 90, "w"),
+        ("Konto", 180, "w"),
+        ("Beskrivelse", 260, "w"),
+        ("MVA", 70, "w"),
+        ("MVA-beløp", 110, "e"),
+        ("Beløp", 110, "e"),
+        ("Postert av", 140, "w"),
     ]:
         app.ledger_tree.heading(
             col,
@@ -118,20 +146,3 @@ def build_main(app):
 
     app.ledger_sum = ctk.CTkLabel(right, text=" ", anchor="e", justify="right")
     app.ledger_sum.grid(row=3, column=0, columnspan=2, sticky="ew", padx=(0, 12), pady=(6, 10))
-
-    ctk.CTkLabel(right, text="Kommentar", font=FONT_TITLE_SMALL)\
-        .grid(row=4, column=0, columnspan=2, sticky="w", padx=(8, 6), pady=(8, 4))
-    app.comment_box = ctk.CTkTextbox(right, height=110, font=FONT_SMALL)
-    app.comment_box.grid(row=5, column=0, columnspan=2, sticky="nsew", padx=(8, 6), pady=(0, 0))
-
-    bottom = ctk.CTkFrame(panel)
-    bottom.grid(row=3, column=0, sticky="ew", padx=12, pady=(0, 0))
-    app.bottom_frame = bottom
-
-    def _export_pdf():
-        from report import export_pdf
-        export_pdf(app)
-
-    create_button(bottom, text="📄 Eksporter PDF rapport", command=_export_pdf).pack(side="left")
-    ctk.CTkLabel(bottom, text="").pack(side="left", expand=True, fill="x")
-    return panel

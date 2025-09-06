@@ -164,7 +164,7 @@ class App:
         except Exception:
             TkinterDnD = None
         from .sidebar import build_sidebar
-        from .mainview import build_main
+        from .mainview import build_main, build_ledger_widgets
 
         self._TkinterDnD = TkinterDnD
 
@@ -175,6 +175,8 @@ class App:
         self.sample_size_var.set("")
         self.year_var.set("")
         self.main = build_main(self)
+        if self.gl_df is not None:
+            build_ledger_widgets(self)
 
         self.bind("<Left>", lambda e: self.prev())
         self.bind("<Right>", lambda e: self.next())
@@ -389,7 +391,11 @@ class App:
         self.gl_postedby_col    = guess_col(cols, r"postert\s*av", r"bokf(ø|o)rt\s*av", r"registrert\s*av", r"posted\s*by", r"created\s*by")
 
         from .ledger import populate_ledger_table
+        from .mainview import build_ledger_widgets
         self.populate_ledger_table = populate_ledger_table
+
+        if not hasattr(self, "ledger_tree"):
+            build_ledger_widgets(self)
 
         if self.sample_df is not None:
             self.render()
@@ -522,11 +528,16 @@ class App:
             self.detail_box.configure(state="normal"); self.detail_box.delete("0.0","end")
             self.detail_box.insert("0.0", self._details_text_for_row(row_dict)); self.detail_box.configure(state="disabled")
 
-            if hasattr(self, "populate_ledger_table"):
+            if hasattr(self, "populate_ledger_table") and hasattr(self, "ledger_tree"):
                 self.populate_ledger_table(self, inv_val)
             else:
-                for item in self.ledger_tree.get_children(): self.ledger_tree.delete(item)
-                self.ledger_sum.configure(text="Last gjerne også inn en hovedbok for å se bilagslinjene.")
+                if hasattr(self, "ledger_tree"):
+                    for item in self.ledger_tree.get_children():
+                        self.ledger_tree.delete(item)
+                if hasattr(self, "ledger_sum"):
+                    self.ledger_sum.configure(
+                        text="Last gjerne også inn en hovedbok for å se bilagslinjene."
+                    )
 
             self.comment_box.delete("0.0","end")
             if self.comments and self.idx < len(self.comments) and self.comments[self.idx]:
@@ -534,8 +545,13 @@ class App:
         else:
             self.lbl_count.configure(text="Bilag: –/–"); self.lbl_invoice.configure(text="Fakturanr: –"); self.lbl_status.configure(text="Status: –")
             self.detail_box.configure(state="normal"); self.detail_box.delete("0.0","end"); self.detail_box.insert("0.0","Velg Excel-fil og lag et utvalg."); self.detail_box.configure(state="disabled")
-            for item in self.ledger_tree.get_children(): self.ledger_tree.delete(item)
-            self.ledger_sum.configure(text="Last gjerne også inn en hovedbok for å se bilagslinjene.")
+            if hasattr(self, "ledger_tree"):
+                for item in self.ledger_tree.get_children():
+                    self.ledger_tree.delete(item)
+            if hasattr(self, "ledger_sum"):
+                self.ledger_sum.configure(
+                    text="Last gjerne også inn en hovedbok for å se bilagslinjene."
+                )
             self.comment_box.delete("0.0","end")
 
         if self.sample_df is None or len(self.sample_df) == 0:
