@@ -22,22 +22,41 @@ def _pd():
     return pd
 
 
+def _col_key(name: str) -> str:
+    """Normaliser kolonnenavn for enklare samanlikning."""
+    return re.sub(r"[^0-9a-zæøå]", "", str(name).lower())
+
+
+def _make_usecols_filter(cols: Optional[List[str]]):
+    if not cols:
+        return None
+    keys = [_col_key(c) for c in cols]
+
+    def _matcher(col: str) -> bool:
+        ck = _col_key(col)
+        return any(k in ck for k in keys)
+
+    return _matcher
+
+
 def load_invoice_df(
     path: str, header_idx: int = 4, usecols: Optional[List[str]] = None
 ) -> pd.DataFrame:
     """Leser fakturalisten fra Excel."""
     logger.info(f"Laster fakturaliste fra {path}")
     pd = _pd()
-    return pd.read_excel(path, engine="openpyxl", header=header_idx, usecols=usecols)
+    usecols_filter = _make_usecols_filter(usecols)
+    return pd.read_excel(path, engine="openpyxl", header=header_idx, usecols=usecols_filter)
 
 
 def load_gl_df(path: str, usecols: Optional[List[str]] = None) -> pd.DataFrame:
     """Leser hovedboken fra Excel."""
     logger.info(f"Laster hovedbok fra {path}")
     pd = _pd()
-    gl = pd.read_excel(path, engine="openpyxl", header=0, usecols=usecols)
+    usecols_filter = _make_usecols_filter(usecols)
+    gl = pd.read_excel(path, engine="openpyxl", header=0, usecols=usecols_filter)
     if sum(str(c).lower().startswith("unnamed") for c in gl.columns) > len(gl.columns) / 2:
-        gl = pd.read_excel(path, engine="openpyxl", header=4, usecols=usecols)
+        gl = pd.read_excel(path, engine="openpyxl", header=4, usecols=usecols_filter)
     return gl
 
 

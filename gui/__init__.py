@@ -369,7 +369,11 @@ class App:
     def _load_excel(self):
         from tkinter import messagebox
         self._ensure_helpers()
-        from data_utils import load_invoice_df, extract_customer_from_invoice_file
+        from data_utils import (
+            load_invoice_df,
+            extract_customer_from_invoice_file,
+            FALLBACK_NET_COLUMNS,
+        )
 
         path = self.file_path_var.get()
         if not path:
@@ -381,7 +385,13 @@ class App:
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
         try:
-            invoice_cols = ["Fakturanr", "Leverandør", "Fakturadato", "Beløp"]
+            invoice_cols = [
+                "fakturanr",
+                "leverand",
+                "fakturadato",
+                "dato",
+                *FALLBACK_NET_COLUMNS,
+            ]
             df = load_invoice_df(path, header_idx, usecols=invoice_cols)
             self.antall_bilag = len(df.dropna(how="all"))
             self.df = df
@@ -415,7 +425,7 @@ class App:
     def _load_gl_excel(self):
         from tkinter import messagebox
         self._ensure_helpers()
-        from data_utils import load_gl_df
+        from data_utils import load_gl_df, FALLBACK_NET_COLUMNS
 
         path = self.gl_path_var.get()
         if not path:
@@ -427,16 +437,19 @@ class App:
             self.inline_status.update_idletasks()
         try:
             gl_cols = [
-                "Fakturanr",
-                "Kontonr",
-                "Konto",
-                "Beskrivelse",
-                "MVA",
-                "MVA-beløp",
-                "Beløp",
-                "Postert av",
-                "Debet",
-                "Kredit",
+                "fakturanr",
+                "bilagsnr",
+                "kontonr",
+                "konto",
+                "beskriv",
+                "tekst",
+                "mva",
+                "mvabelop",
+                "belop",
+                "postert",
+                "debet",
+                "kredit",
+                *FALLBACK_NET_COLUMNS,
             ]
             gl = load_gl_df(path, usecols=gl_cols)
         except Exception as e:
