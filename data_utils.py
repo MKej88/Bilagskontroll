@@ -22,20 +22,22 @@ def _pd():
     return pd
 
 
-def load_invoice_df(path: str, header_idx: int = 4) -> pd.DataFrame:
+def load_invoice_df(
+    path: str, header_idx: int = 4, usecols: Optional[List[str]] = None
+) -> pd.DataFrame:
     """Leser fakturalisten fra Excel."""
     logger.info(f"Laster fakturaliste fra {path}")
     pd = _pd()
-    return pd.read_excel(path, engine="openpyxl", header=header_idx)
+    return pd.read_excel(path, engine="openpyxl", header=header_idx, usecols=usecols)
 
 
-def load_gl_df(path: str) -> pd.DataFrame:
+def load_gl_df(path: str, usecols: Optional[List[str]] = None) -> pd.DataFrame:
     """Leser hovedboken fra Excel."""
     logger.info(f"Laster hovedbok fra {path}")
     pd = _pd()
-    gl = pd.read_excel(path, engine="openpyxl", header=0)
+    gl = pd.read_excel(path, engine="openpyxl", header=0, usecols=usecols)
     if sum(str(c).lower().startswith("unnamed") for c in gl.columns) > len(gl.columns) / 2:
-        gl = pd.read_excel(path, engine="openpyxl", header=4)
+        gl = pd.read_excel(path, engine="openpyxl", header=4, usecols=usecols)
     return gl
 
 

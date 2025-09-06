@@ -381,7 +381,8 @@ class App:
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
         try:
-            df = load_invoice_df(path, header_idx)
+            invoice_cols = ["Fakturanr", "Leverandør", "Fakturadato", "Beløp"]
+            df = load_invoice_df(path, header_idx, usecols=invoice_cols)
             self.antall_bilag = len(df.dropna(how="all"))
             self.df = df
         except Exception as e:
@@ -425,7 +426,19 @@ class App:
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
         try:
-            gl = load_gl_df(path)
+            gl_cols = [
+                "Fakturanr",
+                "Kontonr",
+                "Konto",
+                "Beskrivelse",
+                "MVA",
+                "MVA-beløp",
+                "Beløp",
+                "Postert av",
+                "Debet",
+                "Kredit",
+            ]
+            gl = load_gl_df(path, usecols=gl_cols)
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
             return
