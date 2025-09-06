@@ -76,8 +76,16 @@ class App:
         self._dnd_ready = False
         self._icon_ready = False
         self.title(APP_TITLE)
-        self.geometry("1280x900")
-        self.minsize(1180, 820)
+
+        screen_w = self.winfo_screenwidth()
+        screen_h = self.winfo_screenheight()
+        width = int(screen_w * 0.8)
+        height = int(screen_h * 0.8)
+        self.geometry(f"{width}x{height}")
+        min_w = int(screen_w * 0.6)
+        min_h = int(screen_h * 0.6)
+        self.minsize(min_w, min_h)
+
         self.app_icon_img = None
 
         self.df = None
