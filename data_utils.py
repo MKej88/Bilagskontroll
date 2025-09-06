@@ -29,14 +29,19 @@ def load_invoice_df(path: str, header_idx: int = 4) -> pd.DataFrame:
     return pd.read_excel(path, engine="openpyxl", header=header_idx)
 
 
-def load_gl_df(path: str) -> pd.DataFrame:
-    """Leser hovedboken fra Excel."""
+def load_gl_df(path: str, nrows: int = 10) -> pd.DataFrame:
+    """Leser hovedboken fra Excel.
+
+    Leser først ``nrows`` rader for å avgjøre korrekt header og leser deretter
+    hele filen én gang med riktig header.
+    """
     logger.info(f"Laster hovedbok fra {path}")
     pd = _pd()
-    gl = pd.read_excel(path, engine="openpyxl", header=0)
-    if sum(str(c).lower().startswith("unnamed") for c in gl.columns) > len(gl.columns) / 2:
-        gl = pd.read_excel(path, engine="openpyxl", header=4)
-    return gl
+    preview = pd.read_excel(path, engine="openpyxl", header=0, nrows=nrows)
+    header_idx = 0
+    if sum(str(c).lower().startswith("unnamed") for c in preview.columns) > len(preview.columns) / 2:
+        header_idx = 4
+    return pd.read_excel(path, engine="openpyxl", header=header_idx)
 
 
 def extract_customer_from_invoice_file(path: str) -> Optional[str]:
