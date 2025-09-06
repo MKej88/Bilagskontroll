@@ -3,7 +3,19 @@
 
 import os
 import re
-import customtkinter as ctk
+
+# CustomTkinter importeres ved behov for raskere oppstart.
+_ctk_mod = None
+
+
+def _ctk():
+    """Importer ``customtkinter`` ved første kall og returner modulen."""
+    global _ctk_mod
+    if _ctk_mod is None:
+        import customtkinter as ctk
+
+        _ctk_mod = ctk
+    return _ctk_mod
 
 # Tkinter og CustomTkinter importeres lazily for raskere oppstart.
 
@@ -37,7 +49,7 @@ COLORS = {
 
 def get_color(name: str) -> str:
     """Returner farge basert på gjeldende tema."""
-    import customtkinter as ctk
+    ctk = _ctk()
 
     mode = ctk.get_appearance_mode().lower()
     try:
@@ -48,7 +60,7 @@ def get_color(name: str) -> str:
 
 def create_button(master, **kwargs):
     """Opprett en knapp med felles stil."""
-    import customtkinter as ctk
+    ctk = _ctk()
 
     options = {
         "fg_color": BTN_FG,
@@ -60,17 +72,21 @@ def create_button(master, **kwargs):
     return ctk.CTkButton(master, **options)
 
 # ----------------- App -----------------
-class App(ctk.CTk):
+class App:
     def __init__(self):
         import tkinter as tk
+        ctk = _ctk()
 
         globals().update(tk=tk, ctk=ctk)
+
+        # Endre klassen dynamisk slik at den arver fra ``CTk``.
+        cls = self.__class__
+        self.__class__ = type(cls.__name__, (ctk.CTk, cls), {})
+        ctk.CTk.__init__(self)
 
         # Hjelpefunksjoner fra helpers importeres først ved behov for å
         # unngå unødvendig overhead ved oppstart.
         self._helpers_loaded = False
-
-        super().__init__()
 
         self._dnd_ready = False
         self._icon_ready = False
@@ -130,6 +146,7 @@ class App(ctk.CTk):
         self.after_idle(self._build_ui)
 
     def _init_fonts(self):
+        ctk = _ctk()
         global FONT_TITLE, FONT_BODY, FONT_TITLE_LITE, FONT_TITLE_LARGE, FONT_TITLE_SMALL, \
             FONT_BODY_BOLD, FONT_SMALL, FONT_SMALL_ITALIC
         if FONT_TITLE is None:
@@ -248,6 +265,7 @@ class App(ctk.CTk):
 
     # Theme
     def _init_theme(self):
+        ctk = _ctk()
         if getattr(self, "_theme_initialized", False):
             return
         ctk.set_appearance_mode("system")
@@ -255,6 +273,7 @@ class App(ctk.CTk):
         self._theme_initialized = True
 
     def _switch_theme(self, mode):
+        ctk = _ctk()
         self._init_theme()
         modes = {"light": "light", "dark": "dark"}
         ctk.set_appearance_mode(modes.get(mode.lower(), "system"))
@@ -267,6 +286,7 @@ class App(ctk.CTk):
         self.render()
 
     def _update_icon(self):
+        ctk = _ctk()
         from helpers import resource_path
         try:
             dark = ctk.get_appearance_mode().lower() == "dark"
@@ -285,6 +305,7 @@ class App(ctk.CTk):
             pass
 
     def load_logo_images(self):
+        ctk = _ctk()
         from helpers import resource_path
         try:
             from PIL import Image
@@ -333,6 +354,7 @@ class App(ctk.CTk):
         self._load_gl_excel()
 
     def destroy(self):
+        ctk = _ctk()
         try:
             ctk.ScalingTracker.remove_window(self.destroy, self)
         except Exception:
