@@ -321,6 +321,8 @@ class App:
         x = self.winfo_rootx() + (self.winfo_width() - popup.winfo_width()) // 2
         y = self.winfo_rooty() + (self.winfo_height() - popup.winfo_height()) // 2
         popup.geometry(f"+{x}+{y}")
+        popup.lift()
+        self.update()
         return popup
 
     # Read
