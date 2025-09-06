@@ -369,7 +369,7 @@ class App:
     def _load_excel(self):
         from tkinter import messagebox
         self._ensure_helpers()
-        from data_utils import load_invoice_df, extract_customer_from_invoice_file
+        from data_utils import load_invoice_df
 
         path = self.file_path_var.get()
         if not path:
@@ -381,9 +381,13 @@ class App:
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
         try:
-            df = load_invoice_df(path, header_idx)
+            df, cust = load_invoice_df(path, header_idx)
             self.antall_bilag = len(df.dropna(how="all"))
             self.df = df
+            if cust:
+                self.kunde_var.set(cust)
+                if hasattr(self, "kunde_entry"):
+                    self.kunde_entry.configure(state="disabled")
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}")
             self.df = None
@@ -397,15 +401,6 @@ class App:
 
         self.invoice_col = guess_invoice_col(self.df.columns)
         self.net_amount_col = guess_net_amount_col(self.df.columns)
-        # Hent kundenavn automatisk fra fakturaliste (linje 2)
-        try:
-            cust = extract_customer_from_invoice_file(path)
-            if cust:
-                self.kunde_var.set(cust)
-            if hasattr(self, "kunde_entry"):
-                self.kunde_entry.configure(state="disabled")
-        except Exception:
-            pass
 
         self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
         self._update_counts_labels()

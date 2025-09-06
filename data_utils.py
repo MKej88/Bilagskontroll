@@ -22,17 +22,25 @@ def _pd():
     return pd
 
 
-def load_invoice_df(path: str, header_idx: int = 4) -> pd.DataFrame:
-    """Leser fakturalisten fra Excel."""
+def load_invoice_df(path: str, header_idx: int = 4) -> tuple[pd.DataFrame, Optional[str]]:
+    """Leser fakturalisten fra Excel og henter også kundenavn.
+
+    Returnerer en tupel med ``DataFrame`` og eventuelt kundenavn hvis dette
+    finnes i de øverste radene av filen.
+    """
     logger.info(f"Laster fakturaliste fra {path}")
     pd = _pd()
-    return pd.read_excel(
+    raw = pd.read_excel(
         path,
         engine="openpyxl",
-        header=header_idx,
+        header=None,
         dtype=str,
         engine_kwargs={"read_only": True},
     )
+    kunde = extract_customer_from_invoice_file(df=raw)
+    df = raw.iloc[header_idx + 1 :].reset_index(drop=True)
+    df.columns = raw.iloc[header_idx]
+    return df, kunde
 
 
 def load_gl_df(path: str, nrows: int = 10) -> pd.DataFrame:
@@ -66,23 +74,34 @@ def load_gl_df(path: str, nrows: int = 10) -> pd.DataFrame:
     )
 
 
-def extract_customer_from_invoice_file(path: str) -> Optional[str]:
+def extract_customer_from_invoice_file(
+    path: Optional[str] = None, df: Optional[pd.DataFrame] = None
+) -> Optional[str]:
     """
     Leser rad 2 i fakturalista og prøver å hente ut kundenavn.
 
     Strategi:
       - Søk etter mønster "Kunde: <navn>" eller "Customer: <navn>" i rad 2
       - Hvis ikke funn, velg lengste ikke-numeriske tekstcelle i rad 2
+
+    Parameter ``df`` kan oppgis for å unngå ny fillesing.
     """
-    logger.info(f"Henter kundenavn fra {path}")
+    logger.info(
+        f"Henter kundenavn fra {path}" if path else "Henter kundenavn fra DataFrame"
+    )
     try:
         pd = _pd()
-        raw = pd.read_excel(path, engine="openpyxl", header=None, nrows=2)
+        if df is None:
+            if path is None:
+                return None
+            df = pd.read_excel(path, engine="openpyxl", header=None, nrows=2)
+        else:
+            df = df.head(2)
     except Exception:
         return None
-    if raw is None or len(raw) < 2:
+    if df is None or len(df) < 2:
         return None
-    row2 = raw.iloc[1].fillna("")
+    row2 = df.iloc[1].fillna("")
     # Direkte mønster "Kunde: X"
     for v in row2.values:
         s = str(v).strip()
