@@ -425,7 +425,7 @@ class App:
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
         try:
-            gl = load_gl_df(path)
+            gl = load_gl_df(path, nrows=10)
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
             return
