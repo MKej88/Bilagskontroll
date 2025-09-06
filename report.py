@@ -13,48 +13,60 @@ from helpers import (
 )
 
 from data_utils import calc_sum_kontrollert, calc_sum_net_all, _net_amount_from_row
+from report_utils import build_ledger_table
 
-
-def export_pdf(app):
-    if app.sample_df is None:
-        app._show_inline("Lag et utvalg først", ok=False)
-        return
-    try:
-        from reportlab.lib.pagesizes import A4
-        from reportlab.platypus import (
-            SimpleDocTemplate,
-            Paragraph,
-            Spacer,
-            Table,
-            TableStyle,
-            PageBreak,
-        )
-        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from reportlab.lib import colors
-    except ImportError:
-        app._show_inline("Manglende modul: reportlab (py -m pip install reportlab)", ok=False)
-        return
-
-    from report_utils import build_ledger_table
-    now = datetime.now()
-    save = filedialog.asksaveasfilename(
-        title="Lagre PDF-rapport",
-        defaultextension=".pdf",
-        filetypes=[("PDF", "*.pdf")],
-        initialfile=f"bilagskontroll_{now.strftime('%Y%m%d_%H%M%S')}.pdf",
+try:  # pragma: no cover - valgfri avhengighet
+    from reportlab.lib.pagesizes import A4
+    from reportlab.platypus import (
+        SimpleDocTemplate,
+        Paragraph,
+        Spacer,
+        Table,
+        TableStyle,
+        PageBreak,
     )
-    if not save:
-        logger.info("PDF-eksport avbrutt")
-        app._show_inline("Avbrutt", ok=False)
-        return
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+except ImportError:  # pragma: no cover
+    A4 = SimpleDocTemplate = Paragraph = Spacer = Table = TableStyle = PageBreak = None
+    getSampleStyleSheet = ParagraphStyle = colors = None
 
-    styles = getSampleStyleSheet()
-    title = styles["Title"]
-    body = styles["BodyText"]
-    body.fontSize = 9
-    body.leading = 11
-    small = ParagraphStyle("small", parent=body, fontSize=8, leading=10)
 
+def create_info_table(app, now):
+    info_rows = []
+    try:
+        kunde = to_str(app.kunde_var.get()) if hasattr(app, "kunde_var") else ""
+        kundenr = to_str(app.kundenr_var.get()) if hasattr(app, "kundenr_var") else ""
+        utfort = to_str(app.utfort_av_var.get()) if hasattr(app, "utfort_av_var") else ""
+    except Exception:
+        kunde = kundenr = utfort = ""
+    if kunde:
+        info_rows.append(["Kunde", kunde])
+    if kundenr:
+        info_rows.append(["Kundenr", kundenr])
+    if utfort:
+        info_rows.append(["Utført av", utfort])
+    info_rows.append(["Rapport laget", now.strftime("%d.%m.%Y %H:%M")])
+    flow = []
+    if info_rows:
+        info_tbl = Table(info_rows, colWidths=[80, 440], hAlign="LEFT")
+        info_tbl.setStyle(
+            TableStyle(
+                [
+                    ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.whitesmoke),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ]
+            )
+        )
+        flow.append(info_tbl)
+        flow.append(Spacer(1, 6))
+    return flow
+
+
+def create_status_table(app, body):
     approved = sum(1 for d in app.decisions if d == "Godkjent")
     rejected = sum(1 for d in app.decisions if d == "Ikke godkjent")
     remaining = sum(1 for d in app.decisions if d is None)
@@ -81,39 +93,7 @@ def export_pdf(app):
     sum_rejected = _sum_for_decision("Ikke godkjent")
     sum_remaining = _sum_for_decision(None)
 
-    flow = []
-    flow.append(Paragraph("Bilagskontroll – Rapport", title))
-    flow.append(Spacer(1, 4))
-    try:
-        kunde = to_str(app.kunde_var.get()) if hasattr(app, "kunde_var") else ""
-        kundenr = to_str(app.kundenr_var.get()) if hasattr(app, "kundenr_var") else ""
-        utfort = to_str(app.utfort_av_var.get()) if hasattr(app, "utfort_av_var") else ""
-    except Exception:
-        kunde = kundenr = utfort = ""
-    info_rows = []
-    if kunde:
-        info_rows.append(["Kunde", kunde])
-    if kundenr:
-        info_rows.append(["Kundenr", kundenr])
-    if utfort:
-        info_rows.append(["Utført av", utfort])
-    info_rows.append(["Rapport laget", now.strftime("%d.%m.%Y %H:%M")])
-    if info_rows:
-        info_tbl = Table(info_rows, colWidths=[80, 440], hAlign="LEFT")
-        info_tbl.setStyle(
-            TableStyle(
-                [
-                    ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.whitesmoke),
-                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                    ("FONTSIZE", (0, 0), (-1, -1), 8),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ]
-            )
-        )
-        flow.append(info_tbl)
-        flow.append(Spacer(1, 6))
-    flow.append(
+    flow = [
         Paragraph(
             (
                 "<b>Status</b>:<br/>"
@@ -122,9 +102,10 @@ def export_pdf(app):
                 f"% kontrollert: {fmt_pct(pct)}"
             ),
             body,
-        )
-    )
-    flow.append(Spacer(1, 4))
+        ),
+        Spacer(1, 4),
+    ]
+
     status_rows = [
         ["Status", "Antall", "Beløp"],
         ["Godkjent", approved, fmt_money(sum_approved)],
@@ -148,7 +129,10 @@ def export_pdf(app):
     )
     flow.append(status_tbl)
     flow.append(Spacer(1, 8))
+    return flow
 
+
+def create_rejected_table(app, styles):
     rejected_rows = []
     for i, d in enumerate(app.decisions):
         if d != "Ikke godkjent":
@@ -176,6 +160,7 @@ def export_pdf(app):
         com = app.comments[i].strip() if i < len(app.comments) else ""
         rejected_rows.append([inv, belop, com])
 
+    flow = []
     if rejected_rows:
         flow.append(Paragraph("Ikke godkjent", styles["Heading3"]))
         rej_tbl = Table(
@@ -197,7 +182,11 @@ def export_pdf(app):
         )
         flow.append(rej_tbl)
         flow.append(Spacer(1, 8))
+    return flow
 
+
+def create_invoice_section(app, styles, small):
+    flow = []
     total = len(app.sample_df)
     for i in range(total):
         r = app.sample_df.iloc[i]
@@ -241,8 +230,44 @@ def export_pdf(app):
         flow.append(build_ledger_table(app, inv, small))
         if i < total - 1:
             flow.append(Spacer(1, 10))
-        if i < total - 1:
             flow.append(PageBreak())
+    return flow
+
+
+def export_pdf(app):
+    if app.sample_df is None:
+        app._show_inline("Lag et utvalg først", ok=False)
+        return
+    if SimpleDocTemplate is None:
+        app._show_inline(
+            "Manglende modul: reportlab (py -m pip install reportlab)", ok=False
+        )
+        return
+
+    now = datetime.now()
+    save = filedialog.asksaveasfilename(
+        title="Lagre PDF-rapport",
+        defaultextension=".pdf",
+        filetypes=[("PDF", "*.pdf")],
+        initialfile=f"bilagskontroll_{now.strftime('%Y%m%d_%H%M%S')}.pdf",
+    )
+    if not save:
+        logger.info("PDF-eksport avbrutt")
+        app._show_inline("Avbrutt", ok=False)
+        return
+
+    styles = getSampleStyleSheet()
+    title = styles["Title"]
+    body = styles["BodyText"]
+    body.fontSize = 9
+    body.leading = 11
+    small = ParagraphStyle("small", parent=body, fontSize=8, leading=10)
+
+    flow = [Paragraph("Bilagskontroll – Rapport", title), Spacer(1, 4)]
+    flow += create_info_table(app, now)
+    flow += create_status_table(app, body)
+    flow += create_rejected_table(app, styles)
+    flow += create_invoice_section(app, styles, small)
 
     doc = SimpleDocTemplate(
         save,
@@ -256,5 +281,6 @@ def export_pdf(app):
         doc.build(flow)
         logger.info(f"PDF-rapport lagret til {save}")
         app._show_inline(f"Lagret PDF: {os.path.basename(save)}", ok=True)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover - direkte feil fra reportlab
         app._show_inline(f"Feil ved PDF-generering: {e}", ok=False)
+
