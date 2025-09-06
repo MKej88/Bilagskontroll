@@ -33,9 +33,12 @@ def load_gl_df(path: str) -> pd.DataFrame:
     """Leser hovedboken fra Excel."""
     logger.info(f"Laster hovedbok fra {path}")
     pd = _pd()
-    gl = pd.read_excel(path, engine="openpyxl", header=0)
-    if sum(str(c).lower().startswith("unnamed") for c in gl.columns) > len(gl.columns) / 2:
-        gl = pd.read_excel(path, engine="openpyxl", header=4)
+    excel_file = pd.ExcelFile(path, engine="openpyxl")
+    first_cols = excel_file.parse(nrows=0).columns
+    valgt_header = 0
+    if sum(str(c).lower().startswith("unnamed") for c in first_cols) > len(first_cols) / 2:
+        valgt_header = 4
+    gl = excel_file.parse(header=valgt_header)
     return gl
 
 
