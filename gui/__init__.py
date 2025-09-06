@@ -3,6 +3,7 @@
 
 import os
 import re
+import customtkinter as ctk
 
 # Tkinter og CustomTkinter importeres lazily for raskere oppstart.
 
@@ -59,19 +60,17 @@ def create_button(master, **kwargs):
     return ctk.CTkButton(master, **options)
 
 # ----------------- App -----------------
-class App:
+class App(ctk.CTk):
     def __init__(self):
         import tkinter as tk
-        import customtkinter as ctk
-        
+
         globals().update(tk=tk, ctk=ctk)
 
         # Hjelpefunksjoner fra helpers importeres først ved behov for å
         # unngå unødvendig overhead ved oppstart.
         self._helpers_loaded = False
 
-        self.__class__ = type(self.__class__.__name__, (ctk.CTk, self.__class__), {})
-        ctk.CTk.__init__(self)
+        super().__init__()
 
         self._dnd_ready = False
         self._icon_ready = False
