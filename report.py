@@ -12,7 +12,7 @@ from helpers import (
     logger,
 )
 
-from data_utils import calc_sum_kontrollert, calc_sum_net_all
+from data_utils import calc_sum_kontrollert, calc_sum_net_all, _net_amount_from_row
 
 
 def export_pdf(app):
@@ -72,23 +72,7 @@ def export_pdf(app):
             if dec_value is None and d is not None:
                 continue
             row = app.sample_df.iloc[i]
-            val = None
-            if app.net_amount_col and app.net_amount_col in app.sample_df.columns:
-                val = parse_amount(row.get(app.net_amount_col))
-            if val is None:
-                for fb in [
-                    "Beløp",
-                    "Belop",
-                    "Total",
-                    "Sum",
-                    "Nettobeløp",
-                    "Netto beløp",
-                    "Beløp eks mva",
-                ]:
-                    if fb in app.sample_df.columns:
-                        val = parse_amount(row.get(fb))
-                        if val is not None:
-                            break
+            val = _net_amount_from_row(row, app.net_amount_col)
             if val is not None:
                 total += val
         return total
