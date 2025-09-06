@@ -322,6 +322,8 @@ class App:
         y = self.winfo_rooty() + (self.winfo_height() - popup.winfo_height()) // 2
         popup.geometry(f"+{x}+{y}")
         popup.lift()
+        popup.attributes("-topmost", True)
+        popup.update()
         self.update()
         return popup
 
