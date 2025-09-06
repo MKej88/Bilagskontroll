@@ -38,22 +38,25 @@ def load_invoice_df(path: str, header_idx: int = 4) -> pd.DataFrame:
 def load_gl_df(path: str, nrows: int = 10) -> pd.DataFrame:
     """Leser hovedboken fra Excel.
 
-    Leser først ``nrows`` rader for å avgjøre korrekt header og leser deretter
-    hele filen én gang med riktig header.
+    Leser et lite antall rader med ``openpyxl`` for å finne riktig header og
+    leser deretter hele filen én gang med ``pandas``.
     """
     logger.info(f"Laster hovedbok fra {path}")
-    pd = _pd()
-    preview = pd.read_excel(
-        path,
-        engine="openpyxl",
-        header=0,
-        nrows=nrows,
-        dtype=str,
-        engine_kwargs={"read_only": True},
-    )
+    import openpyxl
+
+    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    ws = wb.active
     header_idx = 0
-    if sum(str(c).lower().startswith("unnamed") for c in preview.columns) > len(preview.columns) / 2:
-        header_idx = 4
+    for i, row in enumerate(ws.iter_rows(min_row=1, max_row=nrows, values_only=True)):
+        if not row:
+            continue
+        non_empty = sum(1 for c in row if c not in (None, ""))
+        if non_empty > len(row) / 2:
+            header_idx = i
+            break
+    wb.close()
+
+    pd = _pd()
     return pd.read_excel(
         path,
         engine="openpyxl",
