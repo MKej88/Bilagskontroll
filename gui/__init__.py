@@ -339,12 +339,10 @@ class App:
             return
         logger.info(f"Laster fakturaliste fra {path}")
         header_idx = 4
-        big = os.path.getsize(path) > 5 * 1024 * 1024
-        if big:
-            self._set_busy(True)
-            if hasattr(self, "inline_status"):
-                self.inline_status.configure(text="laster inn fil...")
-                self.inline_status.update_idletasks()
+        self._set_busy(True)
+        if hasattr(self, "inline_status"):
+            self.inline_status.configure(text="laster inn fil...")
+            self.inline_status.update_idletasks()
         try:
             df = load_invoice_df(path, header_idx)
             self.antall_bilag = len(df.dropna(how="all"))
@@ -354,10 +352,9 @@ class App:
             self.df = None
             return
         finally:
-            if big:
-                self._set_busy(False)
-                if hasattr(self, "inline_status"):
-                    self.inline_status.configure(text="")
+            self._set_busy(False)
+            if hasattr(self, "inline_status"):
+                self.inline_status.configure(text="")
 
         if self.df is None or self.df.dropna(how="all").empty:
             messagebox.showwarning(APP_TITLE, "Excel-filen ser tom ut."); return
@@ -387,22 +384,19 @@ class App:
         if not path:
             return
         logger.info(f"Laster hovedbok fra {path}")
-        big = os.path.getsize(path) > 5 * 1024 * 1024
-        if big:
-            self._set_busy(True)
-            if hasattr(self, "inline_status"):
-                self.inline_status.configure(text="laster inn fil...")
-                self.inline_status.update_idletasks()
+        self._set_busy(True)
+        if hasattr(self, "inline_status"):
+            self.inline_status.configure(text="laster inn fil...")
+            self.inline_status.update_idletasks()
         try:
             gl = load_gl_df(path)
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
             return
         finally:
-            if big:
-                self._set_busy(False)
-                if hasattr(self, "inline_status"):
-                    self.inline_status.configure(text="")
+            self._set_busy(False)
+            if hasattr(self, "inline_status"):
+                self.inline_status.configure(text="")
         if gl is None or gl.dropna(how="all").empty:
             messagebox.showwarning(APP_TITLE, "Hovedboken ser tom ut."); return
 
@@ -531,7 +525,10 @@ class App:
     def _set_busy(self, busy: bool):
         """Vis eller skjul tenkekursor på alle widgets."""
         try:
-            cursor = ("wait" if os.name == "nt" else "watch") if busy else ""
+            if busy:
+                cursor = "wait" if os.name == "nt" else "watch"
+            else:
+                cursor = "arrow" if os.name == "nt" else "left_ptr"
 
             def _apply(widget):
                 try:
@@ -542,7 +539,7 @@ class App:
                     _apply(child)
 
             _apply(self)
-            self.update()
+            self.update_idletasks()
         except Exception:
             pass
 
