@@ -22,20 +22,32 @@ def _pd():
     return pd
 
 
+def _excel_engine() -> str:
+    """Velg raskeste tilgjengelige Excel-motor."""
+    try:  # Foretrekk pyarrow hvis installert
+        import pyarrow  # type: ignore  # noqa: F401
+
+        return "pyarrow"
+    except Exception:
+        return "openpyxl"
+
+
 def load_invoice_df(path: str, header_idx: int = 4) -> pd.DataFrame:
     """Leser fakturalisten fra Excel."""
     logger.info(f"Laster fakturaliste fra {path}")
     pd = _pd()
-    return pd.read_excel(path, engine="openpyxl", header=header_idx)
+    engine = _excel_engine()
+    return pd.read_excel(path, engine=engine, header=header_idx)
 
 
 def load_gl_df(path: str) -> pd.DataFrame:
     """Leser hovedboken fra Excel."""
     logger.info(f"Laster hovedbok fra {path}")
     pd = _pd()
-    gl = pd.read_excel(path, engine="openpyxl", header=0)
+    engine = _excel_engine()
+    gl = pd.read_excel(path, engine=engine, header=0)
     if sum(str(c).lower().startswith("unnamed") for c in gl.columns) > len(gl.columns) / 2:
-        gl = pd.read_excel(path, engine="openpyxl", header=4)
+        gl = pd.read_excel(path, engine=engine, header=4)
     return gl
 
 
@@ -50,7 +62,8 @@ def extract_customer_from_invoice_file(path: str) -> Optional[str]:
     logger.info(f"Henter kundenavn fra {path}")
     try:
         pd = _pd()
-        raw = pd.read_excel(path, engine="openpyxl", header=None, nrows=2)
+        engine = _excel_engine()
+        raw = pd.read_excel(path, engine=engine, header=None, nrows=2)
     except Exception:
         return None
     if raw is None or len(raw) < 2:
