@@ -307,6 +307,33 @@ class App:
             except Exception:
                 pass
 
+    def _start_inline_progress(self):
+        """Vis en indeterminat fremdriftsindikator i inline-statusfeltet."""
+        if not hasattr(self, "inline_status"):
+            return
+        import customtkinter as ctk
+
+        self.inline_status.grid_remove()
+        pb = ctk.CTkProgressBar(self.inline_status.master, mode="indeterminate", width=120)
+        pb.grid(row=0, column=5, padx=8, sticky="e")
+        pb.start()
+        self._inline_progress = pb
+
+    def _stop_inline_progress(self):
+        """Skjul og fjern fremdriftsindikatoren."""
+        pb = getattr(self, "_inline_progress", None)
+        if pb is not None:
+            try:
+                pb.stop()
+            except Exception:
+                pass
+            pb.grid_remove()
+            pb.destroy()
+            delattr(self, "_inline_progress")
+        if hasattr(self, "inline_status"):
+            self.inline_status.grid()
+            self.inline_status.configure(text="")
+
     # Read
     def _load_excel(self):
         from tkinter import messagebox
@@ -315,13 +342,11 @@ class App:
 
         path = self.file_path_var.get()
         if not path:
+            self._stop_inline_progress()
             return
         logger.info(f"Laster fakturaliste fra {path}")
         header_idx = 4
-        big = os.path.getsize(path) > 5 * 1024 * 1024
-        if big and hasattr(self, "inline_status"):
-            self.inline_status.configure(text="laster inn fil...")
-            self.inline_status.update_idletasks()
+        self._start_inline_progress()
         try:
             df = load_invoice_df(path, header_idx)
             self.antall_bilag = len(df.dropna(how="all"))
@@ -331,8 +356,7 @@ class App:
             self.df = None
             return
         finally:
-            if big and hasattr(self, "inline_status"):
-                self.inline_status.configure(text="")
+            self._stop_inline_progress()
 
         if self.df is None or self.df.dropna(how="all").empty:
             messagebox.showwarning(APP_TITLE, "Excel-filen ser tom ut."); return
@@ -360,20 +384,17 @@ class App:
 
         path = self.gl_path_var.get()
         if not path:
+            self._stop_inline_progress()
             return
         logger.info(f"Laster hovedbok fra {path}")
-        big = os.path.getsize(path) > 5 * 1024 * 1024
-        if big and hasattr(self, "inline_status"):
-            self.inline_status.configure(text="laster inn fil...")
-            self.inline_status.update_idletasks()
+        self._start_inline_progress()
         try:
             gl = load_gl_df(path)
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
             return
         finally:
-            if big and hasattr(self, "inline_status"):
-                self.inline_status.configure(text="")
+            self._stop_inline_progress()
         if gl is None or gl.dropna(how="all").empty:
             messagebox.showwarning(APP_TITLE, "Hovedboken ser tom ut."); return
 
