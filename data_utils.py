@@ -26,7 +26,13 @@ def load_invoice_df(path: str, header_idx: int = 4) -> pd.DataFrame:
     """Leser fakturalisten fra Excel."""
     logger.info(f"Laster fakturaliste fra {path}")
     pd = _pd()
-    return pd.read_excel(path, engine="openpyxl", header=header_idx)
+    return pd.read_excel(
+        path,
+        engine="openpyxl",
+        header=header_idx,
+        dtype=str,
+        engine_kwargs={"read_only": True},
+    )
 
 
 def load_gl_df(path: str, nrows: int = 10) -> pd.DataFrame:
@@ -37,11 +43,24 @@ def load_gl_df(path: str, nrows: int = 10) -> pd.DataFrame:
     """
     logger.info(f"Laster hovedbok fra {path}")
     pd = _pd()
-    preview = pd.read_excel(path, engine="openpyxl", header=0, nrows=nrows)
+    preview = pd.read_excel(
+        path,
+        engine="openpyxl",
+        header=0,
+        nrows=nrows,
+        dtype=str,
+        engine_kwargs={"read_only": True},
+    )
     header_idx = 0
     if sum(str(c).lower().startswith("unnamed") for c in preview.columns) > len(preview.columns) / 2:
         header_idx = 4
-    return pd.read_excel(path, engine="openpyxl", header=header_idx)
+    return pd.read_excel(
+        path,
+        engine="openpyxl",
+        header=header_idx,
+        dtype=str,
+        engine_kwargs={"read_only": True},
+    )
 
 
 def extract_customer_from_invoice_file(path: str) -> Optional[str]:
