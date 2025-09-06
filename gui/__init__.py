@@ -323,7 +323,11 @@ class App:
         popup.geometry(f"+{x}+{y}")
         popup.lift()
         popup.attributes("-topmost", True)
+        popup.focus_force()
+        popup.update_idletasks()
+        popup.wait_visibility()
         popup.update()
+        self.update_idletasks()
         self.update()
         return popup
 
