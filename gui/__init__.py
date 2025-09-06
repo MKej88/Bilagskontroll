@@ -153,9 +153,11 @@ class App:
         self._helpers_loaded = True
 
     def _build_ui(self):
-        """Bygger hoved-UI etter at event-loopen er startet."""
+        """Startar eit minimums-UI og utset tunge delar."""
         self._init_fonts()
         self._init_ui()
+        self.after(0, self._build_sidebar)
+        self.after(0, self._build_main)
         self.after_idle(self._post_init)
 
     def _init_ui(self):
@@ -163,27 +165,38 @@ class App:
             from tkinterdnd2 import TkinterDnD
         except Exception:
             TkinterDnD = None
-        from .sidebar import build_sidebar
-        from .mainview import build_main, build_ledger_widgets
 
         self._TkinterDnD = TkinterDnD
 
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
-        self.sidebar = build_sidebar(self)
-        self.sample_size_var.set("")
-        self.year_var.set("")
-        self.main = build_main(self)
-        if self.gl_df is not None:
-            build_ledger_widgets(self)
 
         self.bind("<Left>", lambda e: self.prev())
         self.bind("<Right>", lambda e: self.next())
         self.bind("<Control-o>", lambda e: self.open_in_po())
-        self.render()
 
         self.protocol("WM_DELETE_WINDOW", self.destroy)
+
+    def _build_sidebar(self):
+        from .sidebar import build_sidebar
+
+        self.sidebar = build_sidebar(self)
+        self.sample_size_var.set("")
+        self.year_var.set("")
+
+    def _build_main(self):
+        from .mainview import build_main
+
+        self.main = build_main(self)
+        if self.gl_df is not None:
+            self.after(0, self._build_ledger_widgets)
+        self.render()
+
+    def _build_ledger_widgets(self):
+        from .mainview import build_ledger_widgets
+
+        build_ledger_widgets(self)
 
     def _post_init(self):
         self.after(200, self._init_theme)
