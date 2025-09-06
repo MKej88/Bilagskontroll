@@ -218,7 +218,8 @@ class App:
 
     def _switch_theme(self, mode):
         self._init_theme()
-        ctk.set_appearance_mode("light" if mode.lower()=="light" else "dark" if mode.lower()=="dark" else "system")
+        modes = {"light": "light", "dark": "dark"}
+        ctk.set_appearance_mode(modes.get(mode.lower(), "system"))
         if self._icon_ready:
             self._update_icon()
         from .ledger import apply_treeview_theme, update_treeview_stripes
