@@ -1,4 +1,4 @@
-from . import FONT_TITLE, FONT_BODY, create_button
+from . import FONT_TITLE, FONT_BODY, create_button, get_color
 
 
 def build_main(app):
@@ -30,20 +30,30 @@ def build_main(app):
     app.lbl_status.grid(row=0, column=1, padx=8)
     app.lbl_invoice.grid(row=0, column=2, padx=8)
     create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(8,0))
-    app.copy_feedback = ctk.CTkLabel(head, text="", text_color="#2ecc71")
+    app.copy_feedback = ctk.CTkLabel(head, text="", text_color=get_color("success"))
     app.copy_feedback.grid(row=0, column=4, padx=8, sticky="w")
 
-    app.inline_status = ctk.CTkLabel(head, text="", text_color="#2ecc71")
+    app.inline_status = ctk.CTkLabel(head, text="", text_color=get_color("success"))
     app.inline_status.grid(row=0, column=5, padx=8, sticky="e")
 
     btns = ctk.CTkFrame(panel)
     btns.grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 4))
     btns.grid_columnconfigure((0,1,2,3,4), weight=1)
 
-    create_button(btns, text="✅ Godkjent", fg_color="#2ecc71", hover_color="#29b765",
-                  command=lambda: app.set_decision_and_next("Godkjent")).grid(row=0, column=0, padx=6, pady=6, sticky="ew")
-    create_button(btns, text="⛔ Ikke godkjent", fg_color="#e74c3c", hover_color="#cf4334",
-                  command=lambda: app.set_decision_and_next("Ikke godkjent")).grid(row=0, column=1, padx=6, pady=6, sticky="ew")
+    create_button(
+        btns,
+        text="✅ Godkjent",
+        fg_color=get_color("success"),
+        hover_color=get_color("success_hover"),
+        command=lambda: app.set_decision_and_next("Godkjent"),
+    ).grid(row=0, column=0, padx=6, pady=6, sticky="ew")
+    create_button(
+        btns,
+        text="⛔ Ikke godkjent",
+        fg_color=get_color("error"),
+        hover_color=get_color("error_hover"),
+        command=lambda: app.set_decision_and_next("Ikke godkjent"),
+    ).grid(row=0, column=1, padx=6, pady=6, sticky="ew")
     create_button(btns, text="🔗 Åpne i PowerOffice", command=app.open_in_po).grid(row=0, column=2, padx=6, pady=6, sticky="ew")
     app.btn_prev = create_button(btns, text="⬅ Forrige", command=app.prev)
     app.btn_prev.grid(row=0, column=3, padx=6, pady=6, sticky="ew")
