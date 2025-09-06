@@ -307,6 +307,22 @@ class App:
             except Exception:
                 pass
 
+    def _show_loading_popup(self):
+        """Vis et lite popup-vindu med teksten ``Laster inn..``."""
+        import customtkinter as ctk
+
+        popup = ctk.CTkToplevel(self)
+        popup.title("Laster inn..")
+        popup.resizable(False, False)
+        ctk.CTkLabel(popup, text="Laster inn..", font=FONT_TITLE).pack(
+            padx=20, pady=20
+        )
+        popup.update_idletasks()
+        x = self.winfo_rootx() + (self.winfo_width() - popup.winfo_width()) // 2
+        y = self.winfo_rooty() + (self.winfo_height() - popup.winfo_height()) // 2
+        popup.geometry(f"+{x}+{y}")
+        return popup
+
     # Read
     def _load_excel(self):
         from tkinter import messagebox
@@ -319,9 +335,7 @@ class App:
         logger.info(f"Laster fakturaliste fra {path}")
         header_idx = 4
         big = os.path.getsize(path) > 5 * 1024 * 1024
-        if big and hasattr(self, "inline_status"):
-            self.inline_status.configure(text="laster inn fil...")
-            self.inline_status.update_idletasks()
+        popup = self._show_loading_popup() if big else None
         try:
             df = load_invoice_df(path, header_idx)
             self.antall_bilag = len(df.dropna(how="all"))
@@ -331,8 +345,8 @@ class App:
             self.df = None
             return
         finally:
-            if big and hasattr(self, "inline_status"):
-                self.inline_status.configure(text="")
+            if popup:
+                popup.destroy()
 
         if self.df is None or self.df.dropna(how="all").empty:
             messagebox.showwarning(APP_TITLE, "Excel-filen ser tom ut."); return
@@ -363,17 +377,15 @@ class App:
             return
         logger.info(f"Laster hovedbok fra {path}")
         big = os.path.getsize(path) > 5 * 1024 * 1024
-        if big and hasattr(self, "inline_status"):
-            self.inline_status.configure(text="laster inn fil...")
-            self.inline_status.update_idletasks()
+        popup = self._show_loading_popup() if big else None
         try:
             gl = load_gl_df(path)
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
             return
         finally:
-            if big and hasattr(self, "inline_status"):
-                self.inline_status.configure(text="")
+            if popup:
+                popup.destroy()
         if gl is None or gl.dropna(how="all").empty:
             messagebox.showwarning(APP_TITLE, "Hovedboken ser tom ut."); return
 
