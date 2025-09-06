@@ -37,14 +37,14 @@ Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel�
 - [pandas](https://pypi.org/project/pandas/) – leser og håndterer Excel‑data
 - [customtkinter](https://pypi.org/project/customtkinter/) – gir et moderne brukergrensesnitt
 - [reportlab](https://pypi.org/project/reportlab/) – genererer PDF‑rapporten
-- [pyarrow](https://pypi.org/project/pyarrow/) – raskere Excel‑innlasting (valgfritt)
+- [pyarrow](https://pypi.org/project/pyarrow/) – raskere Excel‑innlasting (valgfritt, krever pandas >= 2.0)
 
 ## Installasjon
 
 ```bash
 python -m venv venv
 source venv/bin/activate  # venv\Scripts\activate på Windows
-pip install pandas customtkinter reportlab pyarrow
+pip install "pandas>=2.0" customtkinter reportlab pyarrow
 ```
 
 ## Bruk

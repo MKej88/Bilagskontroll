@@ -23,13 +23,22 @@ def _pd():
 
 
 def _excel_engine() -> str:
-    """Velg raskeste tilgjengelige Excel-motor."""
-    try:  # Foretrekk pyarrow hvis installert
-        import pyarrow  # type: ignore  # noqa: F401
+    """Velg raskeste tilgjengelige Excel-motor.
 
-        return "pyarrow"
+    Bruk ``pyarrow`` når både biblioteket og støtte i ``pandas`` (>=2.0) er
+    tilgjengelig. Ellers fall tilbake til ``openpyxl``.
+    """
+
+    try:
+        import importlib
+        import pandas as pd
+        importlib.import_module("pyarrow")
+        major, minor = (int(x) for x in pd.__version__.split(".")[:2])
+        if (major, minor) >= (2, 0):
+            return "pyarrow"
     except Exception:
-        return "openpyxl"
+        pass
+    return "openpyxl"
 
 
 def load_invoice_df(path: str, header_idx: int = 4) -> pd.DataFrame:
