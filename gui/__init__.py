@@ -529,10 +529,20 @@ class App:
         self.after(3500, lambda: self.inline_status.configure(text=""))
 
     def _set_busy(self, busy: bool):
-        """Vis eller skjul tenkemodus for musepekeren."""
+        """Vis eller skjul tenkekursor på alle widgets."""
         try:
-            self.configure(cursor="watch" if busy else "")
-            self.update_idletasks()
+            cursor = ("wait" if os.name == "nt" else "watch") if busy else ""
+
+            def _apply(widget):
+                try:
+                    widget.configure(cursor=cursor)
+                except Exception:
+                    pass
+                for child in widget.winfo_children():
+                    _apply(child)
+
+            _apply(self)
+            self.update()
         except Exception:
             pass
 
