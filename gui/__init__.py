@@ -24,15 +24,8 @@ def _ctk():
 APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
-def get_color(name: str) -> str:
-    """Returner farge basert på gjeldende tema."""
-    ctk = _ctk()
-
-    mode = ctk.get_appearance_mode().lower()
-    try:
-        return style.COLORS[name]["dark" if mode == "dark" else "light"]
-    except KeyError as e:
-        raise KeyError(f"Ukjent fargenavn: {name}") from e
+# For bakoverkompatibilitet
+get_color = style.get_color
 
 
 def create_button(master, **kwargs):
@@ -602,7 +595,7 @@ class App:
     # Inline
     def _show_inline(self, msg: str, ok=True):
         self.inline_status.configure(
-            text_color=(get_color("success") if ok else get_color("error"))
+            text_color=(style.get_color("success") if ok else style.get_color("error"))
         )
         self.inline_status.configure(text=msg)
         self.after(3500, lambda: self.inline_status.configure(text=""))

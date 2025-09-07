@@ -1,4 +1,4 @@
-from . import create_button, get_color
+from . import create_button
 from .style import style
 
 
@@ -19,10 +19,10 @@ def build_header(app):
     app.lbl_status.grid(row=0, column=1, padx=style.PAD_MD)
     app.lbl_invoice.grid(row=0, column=2, padx=style.PAD_MD)
     create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(style.PAD_MD,0))
-    app.copy_feedback = ctk.CTkLabel(head, text="", text_color=get_color("success"))
+    app.copy_feedback = ctk.CTkLabel(head, text="", text_color=style.get_color("success"))
     app.copy_feedback.grid(row=0, column=4, padx=style.PAD_MD, sticky="w")
 
-    app.inline_status = ctk.CTkLabel(head, text="", text_color=get_color("success"))
+    app.inline_status = ctk.CTkLabel(head, text="", text_color=style.get_color("success"))
     app.inline_status.grid(row=0, column=5, padx=style.PAD_MD, sticky="e")
 
     return head
@@ -39,15 +39,15 @@ def build_action_buttons(app):
     create_button(
         btns,
         text="✅ Godkjent",
-        fg_color=get_color("success"),
-        hover_color=get_color("success_hover"),
+        fg_color=style.get_color("success"),
+        hover_color=style.get_color("success_hover"),
         command=lambda: app.set_decision_and_next("Godkjent"),
     ).grid(row=0, column=0, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
     create_button(
         btns,
         text="⛔ Ikke godkjent",
-        fg_color=get_color("error"),
-        hover_color=get_color("error_hover"),
+        fg_color=style.get_color("error"),
+        hover_color=style.get_color("error_hover"),
         command=lambda: app.set_decision_and_next("Ikke godkjent"),
     ).grid(row=0, column=1, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
     create_button(btns, text="🔗 Åpne i PowerOffice", command=app.open_in_po).grid(row=0, column=2, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
@@ -118,7 +118,7 @@ def build_bottom(app):
     pb_style = ttk.Style()
     pb_style.configure(
         "green.Horizontal.TProgressbar",
-        background=get_color("success"),
+        background=style.get_color("success"),
     )
     app.progress_bar = ttk.Progressbar(
         bottom,

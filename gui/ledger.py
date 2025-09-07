@@ -4,19 +4,20 @@ LEDGER_COLS = ["Kontonr", "Konto", "Beskrivelse", "MVA", "MVA-beløp", "Beløp",
 def apply_treeview_theme(app):
     from tkinter import ttk
     import customtkinter as ctk
+    from .style import style
 
-    style = ttk.Style()
+    ttk_style = ttk.Style()
     try:
-        style.theme_use("clam")
+        ttk_style.theme_use("clam")
     except Exception:
         pass
-    mode = ctk.get_appearance_mode().lower()
-    if mode == "dark":
-        bg = "#1e1e1e"; fg = "#e6e6e6"; hb = "#2a2a2a"; sel_bg = "#3a3a3a"; sel_fg = "#ffffff"
-    else:
-        bg = "#ffffff"; fg = "#000000"; hb = "#f0f0f0"; sel_bg = "#d0d0ff"; sel_fg = "#000000"
     font = app.detail_box.cget("font") if hasattr(app, "detail_box") else ctk.CTkFont(size=14)
-    style.configure(
+    bg = style.get_color("table_bg")
+    fg = style.get_color("table_fg")
+    hb = style.get_color("table_header_bg")
+    sel_bg = style.get_color("table_sel_bg")
+    sel_fg = style.get_color("table_sel_fg")
+    ttk_style.configure(
         "Custom.Treeview",
         background=bg,
         fieldbackground=bg,
@@ -25,22 +26,25 @@ def apply_treeview_theme(app):
         borderwidth=0,
         font=font,
     )
-    style.configure("Custom.Treeview.Heading",
-                    background=hb, foreground=fg, borderwidth=0)
-    style.map("Custom.Treeview",
-              background=[("selected", sel_bg)],
-              foreground=[("selected", sel_fg)])
+    ttk_style.configure(
+        "Custom.Treeview.Heading",
+        background=hb,
+        foreground=fg,
+        borderwidth=0,
+    )
+    ttk_style.map(
+        "Custom.Treeview",
+        background=[("selected", sel_bg)],
+        foreground=[("selected", sel_fg)],
+    )
     app.ledger_tree.configure(style="Custom.Treeview")
 
 
 def update_treeview_stripes(app):
-    import customtkinter as ctk
+    from .style import style
 
-    mode = ctk.get_appearance_mode().lower()
-    if mode == "dark":
-        odd = "#232323"; even = "#1e1e1e"
-    else:
-        odd = "#f6f6f6"; even = "#ffffff"
+    odd = style.get_color("table_row_odd")
+    even = style.get_color("table_row_even")
     app.ledger_tree.tag_configure("odd", background=odd)
     app.ledger_tree.tag_configure("even", background=even)
 
