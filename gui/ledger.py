@@ -123,7 +123,7 @@ def ledger_rows(app, invoice_value: str):
     return rows
 
 
-def autofit_tree_columns(tree, cols):
+def autofit_tree_columns(tree, cols, total_width=None):
     import tkinter.font as tkfont
 
     body_font = tkfont.nametofont("TkDefaultFont")
@@ -131,6 +131,8 @@ def autofit_tree_columns(tree, cols):
         head_font = tkfont.nametofont("TkHeadingFont")
     except Exception:
         head_font = body_font
+
+    widths: list[int] = []
     for col in cols:
         max_px = head_font.measure(col)
         for iid in tree.get_children(""):
@@ -139,7 +141,16 @@ def autofit_tree_columns(tree, cols):
             if px > max_px:
                 max_px = px
         max_px = max(70, min(max_px + 24, 500))
-        tree.column(col, width=max_px)
+        widths.append(max_px)
+
+    if total_width:
+        total_content = sum(widths)
+        if total_content < total_width:
+            extra = (total_width - total_content) // len(widths)
+            widths = [w + extra for w in widths]
+
+    for col, w in zip(cols, widths):
+        tree.column(col, width=w)
 
 
 def populate_ledger_table(app, invoice_value: str):

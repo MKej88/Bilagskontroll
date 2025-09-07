@@ -351,6 +351,11 @@ class App:
     def destroy(self):
         ctk = _ctk()
         try:
+            if hasattr(self, "ledger_tree") and hasattr(self, "_ledger_configure_id"):
+                self.ledger_tree.unbind("<Configure>", self._ledger_configure_id)
+        except Exception:
+            pass
+        try:
             ctk.ScalingTracker.remove_window(self.destroy, self)
         except Exception:
             pass
