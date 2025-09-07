@@ -118,6 +118,12 @@ class App:
         self.gl_amount_col = None
         self.gl_postedby_col = None
 
+        # Framdriftsindikator
+        self._progress_job = None
+        self._progress_running = False
+        self._progress_val = 0
+        self._progress_msg = ""
+
         self.logo_img = None
         self._theme_initialized = False
         self.after_idle(self._build_ui)
@@ -344,6 +350,8 @@ class App:
     # Read
     def _load_excel(self):
         from tkinter import messagebox
+        import threading
+
         self._ensure_helpers()
         from data_utils import load_invoice_df
 
@@ -356,34 +364,49 @@ class App:
         if big and hasattr(self, "inline_status"):
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
-        try:
-            df, cust = load_invoice_df(path, header_idx)
-            self.antall_bilag = len(df.dropna(how="all"))
-            self.df = df
-            if cust:
-                self.kunde_var.set(cust)
-                if hasattr(self, "kunde_entry"):
-                    self.kunde_entry.configure(state="disabled")
-        except Exception as e:
-            messagebox.showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}")
-            self.df = None
-            return
-        finally:
+        self._start_progress("Laster fakturaliste...")
+
+        def finalize():
             if big and hasattr(self, "inline_status"):
                 self.inline_status.configure(text="")
+            self._finish_progress()
 
-        if self.df is None or self.df.dropna(how="all").empty:
-            messagebox.showwarning(APP_TITLE, "Excel-filen ser tom ut."); return
+        def worker():
+            try:
+                df, cust = load_invoice_df(path, header_idx)
+            except Exception as e:
+                def err():
+                    messagebox.showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}")
+                    finalize()
+                self.after(0, err)
+                return
 
-        self.invoice_col = guess_invoice_col(self.df.columns)
-        self.net_amount_col = guess_net_amount_col(self.df.columns)
+            def success():
+                self.antall_bilag = len(df.dropna(how="all"))
+                self.df = df
+                if cust:
+                    self.kunde_var.set(cust)
+                    if hasattr(self, "kunde_entry"):
+                        self.kunde_entry.configure(state="disabled")
+                if self.df is None or self.df.dropna(how="all").empty:
+                    messagebox.showwarning(APP_TITLE, "Excel-filen ser tom ut.")
+                    finalize()
+                    return
+                self.invoice_col = guess_invoice_col(self.df.columns)
+                self.net_amount_col = guess_net_amount_col(self.df.columns)
+                self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
+                self._update_counts_labels()
+                self.render()
+                finalize()
 
-        self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
-        self._update_counts_labels()
-        self.render()
+            self.after(0, success)
+
+        threading.Thread(target=worker, daemon=True).start()
 
     def _load_gl_excel(self):
         from tkinter import messagebox
+        import threading
+
         self._ensure_helpers()
         from data_utils import load_gl_df
 
@@ -395,39 +418,57 @@ class App:
         if big and hasattr(self, "inline_status"):
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
-        try:
-            gl = load_gl_df(path, nrows=10)
-        except Exception as e:
-            messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
-            return
-        finally:
+        self._start_progress("Laster hovedbok...")
+
+        def finalize():
             if big and hasattr(self, "inline_status"):
                 self.inline_status.configure(text="")
-        if gl is None or gl.dropna(how="all").empty:
-            messagebox.showwarning(APP_TITLE, "Hovedboken ser tom ut."); return
+            self._finish_progress()
 
-        self.gl_df = gl; cols = [str(c) for c in gl.columns]
-        self.gl_invoice_col     = guess_invoice_col(cols)
-        self.gl_accountno_col   = guess_col(cols, r"^kontonr\.?$", r"konto.*nummer", r"account.*(number|no)", r"acct.*no")
-        self.gl_accountname_col = guess_col(cols, r"^kontonavn$", r"konto\s*navn", r"^konto$", r"account.*name", r"(?:^| )navn$")
-        self.gl_text_col        = guess_col(cols, r"^tekst$", r"text", r"posteringstekst")
-        self.gl_desc_col        = guess_col(cols, r"beskrivelse", r"description", r"forklaring")
-        self.gl_vatcode_col     = guess_col(cols, r"^mva(?!-)|mva[- ]?kode", r"^vat(?!.*amount)|tax code")
-        self.gl_vatamount_col   = guess_col(cols, r"mva[- ]?bel(ø|o)p", r"vat amount", r"tax amount")
-        self.gl_debit_col       = guess_col(cols, r"^debet$", r"debit")
-        self.gl_credit_col      = guess_col(cols, r"^kredit$", r"credit")
-        self.gl_amount_col      = guess_col(cols, r"^bel(ø|o)p$", r"amount", r"sum")
-        self.gl_postedby_col    = guess_col(cols, r"postert\s*av", r"bokf(ø|o)rt\s*av", r"registrert\s*av", r"posted\s*by", r"created\s*by")
+        def worker():
+            try:
+                gl = load_gl_df(path, nrows=10)
+            except Exception as e:
+                def err():
+                    messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
+                    finalize()
+                self.after(0, err)
+                return
 
-        from .ledger import populate_ledger_table
-        from .mainview import build_ledger_widgets
-        self.populate_ledger_table = populate_ledger_table
+            def success():
+                if gl is None or gl.dropna(how="all").empty:
+                    messagebox.showwarning(APP_TITLE, "Hovedboken ser tom ut.")
+                    finalize()
+                    return
 
-        if not hasattr(self, "ledger_tree"):
-            build_ledger_widgets(self)
+                self.gl_df = gl
+                cols = [str(c) for c in gl.columns]
+                self.gl_invoice_col     = guess_invoice_col(cols)
+                self.gl_accountno_col   = guess_col(cols, r"^kontonr\.?$", r"konto.*nummer", r"account.*(number|no)", r"acct.*no")
+                self.gl_accountname_col = guess_col(cols, r"^kontonavn$", r"konto\s*navn", r"^konto$", r"account.*name", r"(?:^| )navn$")
+                self.gl_text_col        = guess_col(cols, r"^tekst$", r"text", r"posteringstekst")
+                self.gl_desc_col        = guess_col(cols, r"beskrivelse", r"description", r"forklaring")
+                self.gl_vatcode_col     = guess_col(cols, r"^mva(?!-)|mva[- ]?kode", r"^vat(?!.*amount)|tax code")
+                self.gl_vatamount_col   = guess_col(cols, r"mva[- ]?bel(ø|o)p", r"vat amount", r"tax amount")
+                self.gl_debit_col       = guess_col(cols, r"^debet$", r"debit")
+                self.gl_credit_col      = guess_col(cols, r"^kredit$", r"credit")
+                self.gl_amount_col      = guess_col(cols, r"^bel(ø|o)p$", r"amount", r"sum")
+                self.gl_postedby_col    = guess_col(cols, r"postert\s*av", r"bokf(ø|o)rt\s*av", r"registrert\s*av", r"posted\s*by", r"created\s*by")
 
-        if self.sample_df is not None:
-            self.render()
+                from .ledger import populate_ledger_table
+                from .mainview import build_ledger_widgets
+                self.populate_ledger_table = populate_ledger_table
+
+                if not hasattr(self, "ledger_tree"):
+                    build_ledger_widgets(self)
+
+                if self.sample_df is not None:
+                    self.render()
+                finalize()
+
+            self.after(0, success)
+
+        threading.Thread(target=worker, daemon=True).start()
 # Sampling / nav
     def _update_counts_labels(self):
         self.lbl_filecount.configure(text=f"Antall bilag: {self.antall_bilag}")
@@ -518,6 +559,44 @@ class App:
             self.lbl_st_godkjent.configure(text="Godkjent: –")
             self.lbl_st_ikkegodkjent.configure(text="Ikke godkjent: –")
             self.lbl_st_gjen.configure(text="Gjenstår å kontrollere: –")
+
+    # Status
+    def _start_progress(self, msg: str):
+        self._progress_msg = msg
+        self._progress_val = 0
+        self._progress_running = True
+        self._set_status(msg, 0)
+        self._progress_job = self.after(100, self._progress_step)
+
+    def _progress_step(self):
+        if not self._progress_running:
+            return
+        self._progress_val = min(95, self._progress_val + 2)
+        self._set_status(self._progress_msg, self._progress_val)
+        self._progress_job = self.after(100, self._progress_step)
+
+    def _finish_progress(self):
+        self._progress_running = False
+        if self._progress_job is not None:
+            self.after_cancel(self._progress_job)
+            self._progress_job = None
+        self._set_status(self._progress_msg, 100)
+        self.after(500, lambda: self._set_status(""))
+
+    def _set_status(self, msg: str, progress: float | None = None):
+        if hasattr(self, "status_label"):
+            if progress is not None:
+                self.status_label.configure(text=f"{msg} {progress:.0f}%")
+            else:
+                self.status_label.configure(text=msg)
+            self.status_label.update_idletasks()
+        if hasattr(self, "progress_bar"):
+            if progress is not None:
+                self.progress_bar.pack(side="right", padx=style.PAD_SM)
+                self.progress_bar.configure(value=max(0, min(100, progress)))
+                self.progress_bar.update_idletasks()
+            else:
+                self.progress_bar.pack_forget()
 
     # PDF
     # Inline

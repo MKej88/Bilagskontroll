@@ -228,6 +228,7 @@ def create_invoice_section(app, styles, small):
         flow.append(det_tbl)
         flow.append(Spacer(1, 6))
         flow.append(build_ledger_table(app, inv, small))
+        app._set_status("Eksporterer PDF...", (i / total) * 100)
         if i < total - 1:
             flow.append(Spacer(1, 10))
             flow.append(PageBreak())
@@ -256,6 +257,8 @@ def export_pdf(app):
         app._show_inline("Avbrutt", ok=False)
         return
 
+    app._set_status("Eksporterer PDF...", 0)
+
     styles = getSampleStyleSheet()
     title = styles["Title"]
     body = styles["BodyText"]
@@ -279,8 +282,11 @@ def export_pdf(app):
     )
     try:
         doc.build(flow)
+        app._set_status("Eksporterer PDF...", 100)
         logger.info(f"PDF-rapport lagret til {save}")
         app._show_inline(f"Lagret PDF: {os.path.basename(save)}", ok=True)
     except Exception as e:  # pragma: no cover - direkte feil fra reportlab
         app._show_inline(f"Feil ved PDF-generering: {e}", ok=False)
+    finally:
+        app._set_status("")
 
