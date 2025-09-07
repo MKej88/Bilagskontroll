@@ -2,6 +2,8 @@ import os
 from . import create_button
 from .style import style, PADDING_Y
 
+SIDEBAR_LOGO_WIDTH = 200
+
 
 def _toggle_sample_btn(app, *_):
     state = "normal" if app.sample_size_var.get() and app.year_var.get() else "disabled"
@@ -186,11 +188,11 @@ def build_sidebar(app):
         img_dark = Image.open(resource_path("icons/borev_logo_darkmode.png"))
 
         w, h = img_light.size
-        scaled_h = int(h * (260 / w))
+        scaled_h = int(h * (SIDEBAR_LOGO_WIDTH / w))
         app.sidebar_logo_img = ctk.CTkImage(
             light_image=img_light,
             dark_image=img_dark,
-            size=(260, scaled_h),
+            size=(SIDEBAR_LOGO_WIDTH, scaled_h),
         )
         ctk.CTkLabel(card, text="", image=app.sidebar_logo_img).grid(
             row=101,
