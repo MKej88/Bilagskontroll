@@ -183,9 +183,15 @@ class App:
 
         self._TkinterDnD = TkinterDnD
 
-        self.grid_columnconfigure(0, weight=0)
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(0, weight=1)
+        ctk = _ctk()
+        self.paned = tk.PanedWindow(self, orient=tk.HORIZONTAL)
+        self.paned.pack(fill="both", expand=True)
+
+        self.sidebar_frame = ctk.CTkFrame(self.paned)
+        self.main_frame = ctk.CTkFrame(self.paned)
+        self.paned.add(self.sidebar_frame)
+        self.paned.add(self.main_frame)
+        self.paned.paneconfigure(self.sidebar_frame, minsize=260)
 
         self.bind("<Left>", lambda e: self.prev())
         self.bind("<Right>", lambda e: self.next())
@@ -196,14 +202,14 @@ class App:
     def _build_sidebar(self):
         from .sidebar import build_sidebar
 
-        self.sidebar = build_sidebar(self)
+        self.sidebar = build_sidebar(self, self.sidebar_frame)
         self.sample_size_var.set("")
         self.year_var.set("")
 
     def _build_main(self):
         from .mainview import build_main
 
-        self.main = build_main(self)
+        self.main = build_main(self, self.main_frame)
         if self.gl_df is not None:
             self.after(0, self._build_ledger_widgets)
         self.render()

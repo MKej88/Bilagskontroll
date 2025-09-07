@@ -8,11 +8,11 @@ def _toggle_sample_btn(app, *_):
     app.sample_btn.configure(state=state)
 
 
-def build_sidebar(app):
+def build_sidebar(app, master):
     import customtkinter as ctk
 
-    card = ctk.CTkFrame(app, corner_radius=16)
-    card.grid(row=0, column=0, sticky="nsw", padx=style.PAD_XL, pady=style.PAD_XL)
+    card = ctk.CTkFrame(master, corner_radius=16)
+    card.pack(fill="both", expand=True, padx=style.PAD_XL, pady=style.PAD_XL)
 
     ctk.CTkLabel(card, text="⚙️ Innstillinger", font=style.FONT_TITLE_LARGE)\
         .grid(row=0, column=0, padx=style.PAD_XL, pady=(style.PAD_XL, style.PAD_SM), sticky="w")

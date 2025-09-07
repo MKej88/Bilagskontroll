@@ -133,11 +133,11 @@ def build_bottom(app):
     return bottom
 
 
-def build_main(app):
+def build_main(app, master):
     import customtkinter as ctk
 
-    panel = ctk.CTkFrame(app, corner_radius=16)
-    panel.grid(row=0, column=1, sticky="nsew", padx=(0, style.PAD_XL), pady=style.PAD_XL)
+    panel = ctk.CTkFrame(master, corner_radius=16)
+    panel.pack(fill="both", expand=True, padx=(0, style.PAD_XL), pady=style.PAD_XL)
     panel.grid_columnconfigure(0, weight=1)
     panel.grid_rowconfigure(2, weight=1, minsize=300)
 
