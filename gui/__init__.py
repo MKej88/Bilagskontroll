@@ -235,6 +235,21 @@ class App:
         self.dnd_bind("<<Drop>>", self._on_drop)
         self._dnd_ready = True
 
+    def add_drop_target(self, widget, func):
+        """Registrer eit widget som mål for dra-og-slipp."""
+
+        def _register():
+            if getattr(self, "_dnd_ready", False):
+                try:
+                    widget.drop_target_register("DND_Files")
+                    widget.dnd_bind("<<Drop>>", func)
+                except Exception:
+                    pass
+            else:
+                self.after(200, _register)
+
+        _register()
+
     def _init_icon(self):
         self._update_icon()
         self._icon_ready = True
