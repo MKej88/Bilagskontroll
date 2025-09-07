@@ -97,12 +97,19 @@ def build_panes(app):
     right.grid_columnconfigure(0, weight=1)
     right.grid_columnconfigure(1, weight=0)
     right.grid_rowconfigure(1, weight=3, minsize=150)
-    right.grid_rowconfigure(5, weight=1, minsize=80)
+    right.grid_rowconfigure(5, weight=1, minsize=120)
 
     ctk.CTkLabel(right, text="Kommentar", font=style.FONT_TITLE_SMALL)\
         .grid(row=4, column=0, columnspan=2, sticky="w", padx=(style.PAD_MD, style.PAD_SM), pady=(style.PAD_MD, style.PAD_XS))
-    app.comment_box = ctk.CTkTextbox(right, height=110, font=style.FONT_SMALL)
-    app.comment_box.grid(row=5, column=0, columnspan=2, sticky="nsew", padx=(style.PAD_MD, style.PAD_SM), pady=(0, 0))
+    app.comment_box = ctk.CTkTextbox(right, font=style.FONT_SMALL)
+    app.comment_box.grid(
+        row=5,
+        column=0,
+        columnspan=2,
+        sticky="nsew",
+        padx=(style.PAD_MD, style.PAD_SM),
+        pady=(0, style.PAD_MD),
+    )
 
     return paned
 
