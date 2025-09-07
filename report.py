@@ -169,8 +169,9 @@ def create_invoice_section(app, styles, small):
         dec = app.decisions[i] if i < len(app.decisions) else ""
         com = app.comments[i].strip() if i < len(app.comments) else ""
         rows = [["Felt", "Verdi"]]
-        row_dict = {str(c): to_str(r[c]) for c in app.sample_df.columns}
-        for k in app.sample_df.columns:
+        cols = [c for c in app.sample_df.columns if not str(c).startswith("_")]
+        row_dict = {str(c): to_str(r[c]) for c in cols}
+        for k in cols:
             key = str(k)
             val = to_str(row_dict.get(key, ""))
             if not val:
