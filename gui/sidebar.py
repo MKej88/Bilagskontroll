@@ -57,6 +57,8 @@ def build_sidebar(app):
         if not path.lower().endswith((".xlsx", ".xls")):
             return
         app.file_path_var.set(path)
+        from .busy import show_busy
+        show_busy(app, "Laster fakturaliste...")
         app._load_excel()
 
     def _drop_gl(event):
@@ -64,6 +66,8 @@ def build_sidebar(app):
         if not path.lower().endswith((".xlsx", ".xls")):
             return
         app.gl_path_var.set(path)
+        from .busy import show_busy
+        show_busy(app, "Laster hovedbok...")
         app._load_gl_excel()
 
     app.add_drop_target(app.inv_drop, _drop_invoice)
