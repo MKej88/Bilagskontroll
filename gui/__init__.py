@@ -345,6 +345,27 @@ class App:
                 pass
 
     # Read
+    def _update_year_options(self):
+        years = set()
+        paths = []
+        if hasattr(self, "file_path_var"):
+            paths.append(self.file_path_var.get())
+        if hasattr(self, "gl_path_var"):
+            paths.append(self.gl_path_var.get())
+        for p in paths:
+            if not p:
+                continue
+            m = re.search(r"(20\d{2})", os.path.basename(p))
+            if m:
+                years.add(m.group(1))
+        years = sorted(years, reverse=True)
+        if hasattr(self, "year_combo"):
+            self.year_combo.configure(values=years)
+        if years and getattr(self, "year_var", None) and self.year_var.get() not in years:
+            self.year_var.set(years[0])
+        from .sidebar import _toggle_sample_btn
+        _toggle_sample_btn(self)
+
     def _load_excel(self):
         from tkinter import messagebox
         import threading
@@ -402,6 +423,7 @@ class App:
                 self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
                 self._update_counts_labels()
                 self.render()
+                self._update_year_options()
                 finalize()
 
             self.after(0, success)
@@ -478,6 +500,7 @@ class App:
 
                 if self.sample_df is not None:
                     self.render()
+                self._update_year_options()
                 finalize()
 
             self.after(0, success)
