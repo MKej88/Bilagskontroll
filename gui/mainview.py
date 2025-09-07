@@ -4,35 +4,28 @@ from .style import style, PADDING_Y
 
 def build_header(app):
     import customtkinter as ctk
-    from PIL import Image
-    from customtkinter import CTkImage
 
     panel = app.main_panel
     head = ctk.CTkFrame(panel)
     head.grid(row=0, column=0, sticky="ew", padx=style.PAD_LG, pady=style.PAD_MD)
-    head.grid_columnconfigure(7, weight=1)
+    head.grid_columnconfigure(6, weight=1)
 
     head_font = style.FONT_TITLE_LITE
-
-    light = Image.open("icons/borev_logo_lightmode.png")
-    dark = Image.open("icons/borev_logo_darkmode.png")
-    logo = CTkImage(light_image=light, dark_image=dark, size=(32, 32))
-    ctk.CTkLabel(head, image=logo, text="").grid(row=0, column=0, padx=(style.PAD_XS, style.PAD_MD))
 
     app.lbl_count = ctk.CTkLabel(head, text="Bilag: –/–", font=style.FONT_TITLE)
     app.lbl_status = ctk.CTkLabel(head, text="Status: –", font=head_font)
     app.lbl_invoice = ctk.CTkLabel(head, text="Fakturanr: –", font=head_font)
-    app.lbl_count.grid(row=0, column=1, padx=(0, style.PAD_LG))
-    app.lbl_status.grid(row=0, column=2, padx=style.PAD_MD)
-    app.lbl_invoice.grid(row=0, column=3, padx=style.PAD_MD)
-    create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=4, padx=(style.PAD_MD, 0))
+    app.lbl_count.grid(row=0, column=0, padx=(style.PAD_XS, style.PAD_LG))
+    app.lbl_status.grid(row=0, column=1, padx=style.PAD_MD)
+    app.lbl_invoice.grid(row=0, column=2, padx=style.PAD_MD)
+    create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(style.PAD_MD,0))
     app.copy_feedback = ctk.CTkLabel(head, text="", text_color=style.get_color("success"))
-    app.copy_feedback.grid(row=0, column=5, padx=style.PAD_MD, sticky="w")
+    app.copy_feedback.grid(row=0, column=4, padx=style.PAD_MD, sticky="w")
 
     app.inline_status = ctk.CTkLabel(head, text="", text_color=style.get_color("success"))
-    app.inline_status.grid(row=0, column=6, padx=style.PAD_MD, sticky="e")
+    app.inline_status.grid(row=0, column=5, padx=style.PAD_MD, sticky="e")
 
-    ctk.CTkLabel(head, text="Temavalg").grid(row=0, column=8, padx=(style.PAD_MD, style.PAD_XS))
+    ctk.CTkLabel(head, text="Temavalg").grid(row=0, column=7, padx=(style.PAD_MD, style.PAD_XS))
     app.theme_var = ctk.StringVar(value="System")
     app.theme_menu = ctk.CTkOptionMenu(
         head,
@@ -40,7 +33,7 @@ def build_header(app):
         values=["System", "Light", "Dark"],
         command=app._switch_theme,
     )
-    app.theme_menu.grid(row=0, column=9, padx=(0, style.PAD_MD))
+    app.theme_menu.grid(row=0, column=8, padx=(0, style.PAD_MD))
     app.theme_menu.set("System")
 
     return head
