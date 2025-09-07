@@ -505,7 +505,11 @@ class App:
     def _current_row_dict(self):
         self._ensure_helpers()
         row = self.sample_df.iloc[self.idx]
-        return {str(c): to_str(row[c]) for c in self.sample_df.columns}
+        return {
+            str(c): to_str(row[c])
+            for c in self.sample_df.columns
+            if not str(c).startswith("_")
+        }
 
     def set_decision_and_next(self, val, advance=True):
         if self.sample_df is None: return
@@ -621,7 +625,10 @@ class App:
         self._ensure_helpers()
         lines=[]
         for k in self.sample_df.columns:
-            key=str(k); val=to_str(row_dict.get(key,"")).strip()
+            key=str(k)
+            if key.startswith("_"):
+                continue
+            val=to_str(row_dict.get(key,"")).strip()
             if not val: continue
             disp = val if (key.lower().startswith("faktura") and "nr" in key.lower()) else format_number_with_thousands(val)
             lines.append(f"{key}: {disp}")
