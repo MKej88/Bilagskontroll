@@ -459,6 +459,7 @@ class App:
                     self.gl_df["_inv_norm"] = self.gl_df[self.gl_invoice_col].map(only_digits)
                 else:
                     self.gl_df["_inv_norm"] = ""
+                self.gl_index = self.gl_df.groupby("_inv_norm").indices
 
                 from .ledger import populate_ledger_table
                 from .mainview import build_ledger_widgets
