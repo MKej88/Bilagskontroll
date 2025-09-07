@@ -650,7 +650,20 @@ class App:
 
             row_dict = self._current_row_dict()
             self.detail_box.configure(state="normal"); self.detail_box.delete("0.0","end")
-            self.detail_box.insert("0.0", self._details_text_for_row(row_dict)); self.detail_box.configure(state="disabled")
+            details = self._details_text_for_row(row_dict)
+            for line in details.splitlines():
+                if not line:
+                    continue
+                if ":" in line:
+                    key, val = line.split(":", 1)
+                    if key.strip().lower() in {"nettobeløp", "mva", "totalbeløp"}:
+                        self.detail_box.insert("end", f"{key}:", "bold")
+                        self.detail_box.insert("end", f"{val}\n")
+                    else:
+                        self.detail_box.insert("end", line + "\n")
+                else:
+                    self.detail_box.insert("end", line + "\n")
+            self.detail_box.configure(state="disabled")
 
             if hasattr(self, "populate_ledger_table") and hasattr(self, "ledger_tree"):
                 self.populate_ledger_table(self, inv_val)

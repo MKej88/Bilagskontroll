@@ -80,6 +80,8 @@ def build_panes(app):
     left.grid_rowconfigure(1, weight=1, minsize=120)
     app.detail_box = ctk.CTkTextbox(left, height=360, font=style.FONT_BODY)
     app.detail_box.grid(row=1, column=0, sticky="nsew", padx=(style.PAD_MD, style.PAD_SM), pady=(0, style.PAD_MD))
+    # Konfigurer tag for fet tekst i detaljboksen
+    app.detail_box.tag_configure("bold", font=style.FONT_BODY_BOLD)
 
     ctk.CTkLabel(right, text="Hovedbok (bilagslinjer)", font=style.FONT_TITLE_SMALL)\
         .grid(row=0, column=0, sticky="w", padx=style.PAD_MD, pady=(style.PAD_XS, style.PAD_XS))
