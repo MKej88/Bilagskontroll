@@ -107,8 +107,12 @@ def build_bottom(app):
 
     def _export_pdf():
         from report import export_pdf
-
-        export_pdf(app)
+        from .busy import show_busy, hide_busy
+        show_busy(app, "Eksporterer rapport...")
+        try:
+            export_pdf(app)
+        finally:
+            hide_busy(app)
 
     create_button(bottom, text="📄 Eksporter PDF rapport", command=_export_pdf).pack(side="left")
 
