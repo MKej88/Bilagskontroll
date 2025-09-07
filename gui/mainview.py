@@ -18,22 +18,24 @@ def build_main(app):
 
     head = ctk.CTkFrame(panel)
     head.grid(row=0, column=0, sticky="ew", padx=12, pady=8)
-    head.grid_columnconfigure(6, weight=1)
+    head.grid_columnconfigure(7, weight=1)
 
     head_font = style.fonts.title_lite
 
     app.lbl_count = ctk.CTkLabel(head, text="Bilag: –/–", font=style.fonts.title)
     app.lbl_status = ctk.CTkLabel(head, text="Status: –", font=head_font)
     app.lbl_invoice = ctk.CTkLabel(head, text="Fakturanr: –", font=head_font)
+    app.lbl_supplier = ctk.CTkLabel(head, text="Leverandør: –", font=head_font)
     app.lbl_count.grid(row=0, column=0, padx=(4, 12))
     app.lbl_status.grid(row=0, column=1, padx=8)
     app.lbl_invoice.grid(row=0, column=2, padx=8)
-    create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(8,0))
+    app.lbl_supplier.grid(row=0, column=3, padx=8)
+    create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=4, padx=(8,0))
     app.copy_feedback = ctk.CTkLabel(head, text="", text_color=get_color("success"))
-    app.copy_feedback.grid(row=0, column=4, padx=8, sticky="w")
+    app.copy_feedback.grid(row=0, column=5, padx=8, sticky="w")
 
     app.inline_status = ctk.CTkLabel(head, text="", text_color=get_color("success"))
-    app.inline_status.grid(row=0, column=5, padx=8, sticky="e")
+    app.inline_status.grid(row=0, column=6, padx=8, sticky="e")
 
     btns = ctk.CTkFrame(panel)
     btns.grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 4))
