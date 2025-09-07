@@ -25,15 +25,15 @@ def build_sidebar(app):
             parent,
             height=70,
             corner_radius=style.BTN_RADIUS,
-            fg_color=style.get_color("dnd_bg"),
-            border_color=style.get_color("dnd_border"),
+            fg_color=style.get_color_pair("dnd_bg"),
+            border_color=style.get_color_pair("dnd_border"),
             border_width=2,
         )
         ctk.CTkLabel(
             frame,
             text=text,
             anchor="center",
-            text_color=style.get_color("dnd_border"),
+            text_color=style.get_color_pair("dnd_border"),
         ).pack(expand=True, fill="both", padx=style.PAD_MD, pady=style.PAD_SM)
         return frame
 

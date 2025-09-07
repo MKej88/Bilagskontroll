@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 
 @dataclass
@@ -42,6 +42,14 @@ class Style:
         mode = ctk.get_appearance_mode().lower()
         try:
             return self.COLORS[name]["dark" if mode == "dark" else "light"]
+        except KeyError as e:
+            raise KeyError(f"Ukjent fargenavn: {name}") from e
+
+    def get_color_pair(self, name: str) -> Tuple[str, str]:
+        """Returner (lys, mørk) fargepar for CustomTkinter-komponenter."""
+        try:
+            col = self.COLORS[name]
+            return col["light"], col["dark"]
         except KeyError as e:
             raise KeyError(f"Ukjent fargenavn: {name}") from e
 
