@@ -176,7 +176,14 @@ def build_sidebar(app):
 
     light_logo = Image.open("icons/borev_logo_lightmode.png")
     dark_logo = Image.open("icons/borev_logo_darkmode.png")
-    app.sidebar_logo = ctk.CTkImage(light_image=light_logo, dark_image=dark_logo, size=(200, 60))
+    logo_width = 260
+    aspect_ratio = light_logo.height / light_logo.width
+    logo_height = int(logo_width * aspect_ratio)
+    app.sidebar_logo = ctk.CTkImage(
+        light_image=light_logo,
+        dark_image=dark_logo,
+        size=(logo_width, logo_height),
+    )
     ctk.CTkLabel(card, image=app.sidebar_logo, text="").grid(
         row=14,
         column=0,
