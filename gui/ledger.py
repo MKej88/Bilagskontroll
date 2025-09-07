@@ -74,13 +74,16 @@ def ledger_rows(app, invoice_value: str):
     import re
     from helpers import to_str, only_digits, parse_amount, fmt_money
 
-    if app.gl_df is None or "_inv_norm" not in app.gl_df.columns:
+    if app.gl_df is None or not hasattr(app, "gl_index"):
         return []
     key = only_digits(invoice_value)
     if not key:
         return []
+    idxs = app.gl_index.get(key, [])
+    if not idxs:
+        return []
     # Funksjonen muterer ikke app.gl_df, så kopi er unødvendig
-    hits = app.gl_df.loc[app.gl_df["_inv_norm"] == key]
+    hits = app.gl_df.loc[idxs]
     rows = []
     for _, r in hits.iterrows():
         konto_nr = to_str(r.get(app.gl_accountno_col, ""))
