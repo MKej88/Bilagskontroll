@@ -74,17 +74,13 @@ def ledger_rows(app, invoice_value: str):
     import re
     from helpers import to_str, only_digits, parse_amount, fmt_money
 
-    if app.gl_df is None or app.gl_invoice_col not in (app.gl_df.columns if app.gl_df is not None else []):
+    if app.gl_df is None or "_inv_norm" not in app.gl_df.columns:
         return []
     key = only_digits(invoice_value)
     if not key:
         return []
     # Funksjonen muterer ikke app.gl_df, så kopi er unødvendig
-    try:
-        mask = app.gl_df[app.gl_invoice_col].astype(str).map(only_digits) == key
-    except Exception:
-        mask = app.gl_df[app.gl_invoice_col].astype(str) == invoice_value
-    hits = app.gl_df.loc[mask]
+    hits = app.gl_df.loc[app.gl_df["_inv_norm"] == key]
     rows = []
     for _, r in hits.iterrows():
         konto_nr = to_str(r.get(app.gl_accountno_col, ""))
