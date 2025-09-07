@@ -358,7 +358,7 @@ class App:
         if big and hasattr(self, "inline_status"):
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
-        self._set_status("Laster fakturaliste...", True)
+        self._set_status("Laster fakturaliste...", 0)
 
         def finalize():
             if big and hasattr(self, "inline_status"):
@@ -391,6 +391,7 @@ class App:
                 self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
                 self._update_counts_labels()
                 self.render()
+                self._set_status("Laster fakturaliste...", 100)
                 finalize()
 
             self.after(0, success)
@@ -412,7 +413,7 @@ class App:
         if big and hasattr(self, "inline_status"):
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
-        self._set_status("Laster hovedbok...", True)
+        self._set_status("Laster hovedbok...", 0)
 
         def finalize():
             if big and hasattr(self, "inline_status"):
@@ -458,6 +459,7 @@ class App:
 
                 if self.sample_df is not None:
                     self.render()
+                self._set_status("Laster hovedbok...", 100)
                 finalize()
 
             self.after(0, success)
@@ -555,16 +557,19 @@ class App:
             self.lbl_st_gjen.configure(text="Gjenstår å kontrollere: –")
 
     # Status
-    def _set_status(self, msg: str, progress: bool | None = None):
+    def _set_status(self, msg: str, progress: float | None = None):
         if hasattr(self, "status_label"):
-            self.status_label.configure(text=msg)
+            if progress is not None:
+                self.status_label.configure(text=f"{msg} {progress:.0f}%")
+            else:
+                self.status_label.configure(text=msg)
             self.status_label.update_idletasks()
         if hasattr(self, "progress_bar"):
-            if progress:
+            if progress is not None:
                 self.progress_bar.pack(side="right", padx=style.PAD_SM)
-                self.progress_bar.start()
+                self.progress_bar.configure(value=max(0, min(100, progress)))
+                self.progress_bar.update_idletasks()
             else:
-                self.progress_bar.stop()
                 self.progress_bar.pack_forget()
 
     # PDF
