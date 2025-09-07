@@ -2,6 +2,11 @@ from dataclasses import dataclass, field
 from typing import Dict, Optional, Tuple
 
 
+# Standard padding for GUI-komponenter
+PADDING_X = 10
+PADDING_Y = 8
+
+
 @dataclass
 class Style:
     """Samler felles stilkonfigurasjon for GUI."""

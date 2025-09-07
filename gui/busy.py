@@ -1,4 +1,5 @@
 from . import _ctk
+from .style import PADDING_X, PADDING_Y
 
 
 def show_busy(app, message: str):
@@ -11,9 +12,9 @@ def show_busy(app, message: str):
     win.grab_set()
 
     progress = ctk.CTkProgressBar(win, mode="indeterminate")
-    progress.pack(padx=20, pady=(20, 10), fill="x")
+    progress.pack(padx=PADDING_X * 2, pady=(PADDING_Y * 2, PADDING_Y), fill="x")
     progress.start()
-    ctk.CTkLabel(win, text=message).pack(padx=20, pady=(0, 20))
+    ctk.CTkLabel(win, text=message).pack(padx=PADDING_X * 2, pady=(0, PADDING_Y * 2))
 
     app._busy_win = win
     win.update_idletasks()

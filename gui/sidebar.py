@@ -1,6 +1,6 @@
 import os
 from . import create_button
-from .style import style
+from .style import style, PADDING_Y
 
 
 def _toggle_sample_btn(app, *_):
@@ -152,7 +152,7 @@ def build_sidebar(app):
     body_font = style.FONT_BODY
 
     ctk.CTkLabel(status_card, text="Status", font=title_font, anchor="center", justify="center")\
-        .grid(row=0, column=0, sticky="ew", pady=(10, style.PAD_SM))
+        .grid(row=0, column=0, sticky="ew", pady=(PADDING_Y, style.PAD_SM))
 
     app.lbl_st_sum_kontrollert = ctk.CTkLabel(status_card, text="Sum kontrollert: –", font=body_font, anchor="center", justify="center")
     app.lbl_st_sum_kontrollert.grid(row=1, column=0, sticky="ew", pady=(0, style.PAD_XXS))
@@ -170,6 +170,6 @@ def build_sidebar(app):
     app.lbl_st_ikkegodkjent.grid(row=5, column=0, sticky="ew", pady=(0, style.PAD_XXS))
 
     app.lbl_st_gjen = ctk.CTkLabel(status_card, text="Gjenstår å kontrollere: –", font=body_font, anchor="center", justify="center")
-    app.lbl_st_gjen.grid(row=6, column=0, sticky="ew", pady=(style.PAD_SM, 10))
+    app.lbl_st_gjen.grid(row=6, column=0, sticky="ew", pady=(style.PAD_SM, PADDING_Y))
 
     return card

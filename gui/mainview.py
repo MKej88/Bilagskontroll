@@ -1,5 +1,5 @@
 from . import create_button
-from .style import style
+from .style import style, PADDING_Y
 
 
 def build_header(app):
@@ -212,4 +212,11 @@ def build_ledger_widgets(app):
     update_treeview_stripes(app)
 
     app.ledger_sum = ctk.CTkLabel(right, text=" ", anchor="e", justify="right")
-    app.ledger_sum.grid(row=3, column=0, columnspan=2, sticky="ew", padx=(0, style.PAD_LG), pady=(style.PAD_SM, 10))
+    app.ledger_sum.grid(
+        row=3,
+        column=0,
+        columnspan=2,
+        sticky="ew",
+        padx=(0, style.PAD_LG),
+        pady=(style.PAD_SM, PADDING_Y),
+    )
