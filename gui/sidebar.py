@@ -14,7 +14,7 @@ def build_sidebar(app):
     card = ctk.CTkFrame(app, corner_radius=16)
     card.grid(row=0, column=0, sticky="nsw", padx=style.PAD_XL, pady=style.PAD_XL)
 
-    ctk.CTkLabel(card, text="⚙️ Innstillinger", font=style.FONT_TITLE_LARGE)\
+    ctk.CTkLabel(card, text="⚙️ Datautvalg", font=style.FONT_TITLE_LARGE)\
         .grid(row=0, column=0, padx=style.PAD_XL, pady=(style.PAD_XL, style.PAD_SM), sticky="w")
 
     app.file_path_var = ctk.StringVar(master=app, value="")

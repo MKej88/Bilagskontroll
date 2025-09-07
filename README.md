@@ -10,7 +10,7 @@ Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel�
 | --- | ----------- |
 | `bilagskontroll.py` | Startfil som åpner GUI‑applikasjonen |
 | `gui/__init__.py`    | `App`‑klassen og sammensetting av grensesnittet |
-| `gui/sidebar.py`     | Sidepanel med filvalg og innstillinger |
+| `gui/sidebar.py`     | Sidepanel for filvalg og datautvalg |
 | `gui/mainview.py`    | Hovedvisning for kontroll av bilag |
 | `gui/ledger.py`      | Viser bilagslinjer fra hovedboken |
 | `data_utils.py`      | Data- og beregningslogikk |
