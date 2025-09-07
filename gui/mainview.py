@@ -50,7 +50,7 @@ def build_action_buttons(app):
         hover_color=style.get_color("error_hover"),
         command=lambda: app.set_decision_and_next("Ikke godkjent"),
     ).grid(row=0, column=1, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
-    create_button(btns, text="🔗 Åpne i PowerOffice", command=app.open_in_po).grid(row=0, column=2, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
+    create_button(btns, text="🔗 Åpne PowerOffice", command=app.open_in_po).grid(row=0, column=2, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
     app.btn_prev = create_button(btns, text="⬅ Forrige", command=app.prev)
     app.btn_prev.grid(row=0, column=3, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
     app.btn_next = create_button(btns, text="➡ Neste", command=app.next)
