@@ -2,9 +2,6 @@ import os
 from . import create_button
 from .style import style, PADDING_Y
 
-SIDEBAR_LOGO_WIDTH = 200
-
-
 def _toggle_sample_btn(app, *_):
     state = "normal" if app.sample_size_var.get() and app.year_var.get() else "disabled"
     app.sample_btn.configure(state=state)
@@ -179,29 +176,5 @@ def build_sidebar(app):
 
     app.lbl_st_gjen = ctk.CTkLabel(status_card, text="Gjenstår å kontrollere: –", font=body_font, anchor="center", justify="center")
     app.lbl_st_gjen.grid(row=6, column=0, sticky="ew", pady=(style.PAD_SM, PADDING_Y))
-
-    try:
-        from PIL import Image
-        from helpers import resource_path
-
-        img_light = Image.open(resource_path("icons/borev_logo_lightmode.png"))
-        img_dark = Image.open(resource_path("icons/borev_logo_darkmode.png"))
-
-        w, h = img_light.size
-        scaled_h = int(h * (SIDEBAR_LOGO_WIDTH / w))
-        app.sidebar_logo_img = ctk.CTkImage(
-            light_image=img_light,
-            dark_image=img_dark,
-            size=(SIDEBAR_LOGO_WIDTH, scaled_h),
-        )
-        ctk.CTkLabel(card, text="", image=app.sidebar_logo_img).grid(
-            row=101,
-            column=0,
-            padx=style.PAD_XL,
-            pady=(0, PADDING_Y),
-            sticky="ew",
-        )
-    except Exception:
-        pass
 
     return card
