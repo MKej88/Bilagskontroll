@@ -160,6 +160,12 @@ def build_main(app):
     return panel
 
 
+def resize_ledger_columns(app):
+    from . import ledger
+    width = app.ledger_tree.winfo_width()
+    ledger.autofit_tree_columns(app.ledger_tree, app.ledger_cols, width)
+
+
 def build_ledger_widgets(app):
     from tkinter import ttk
     import customtkinter as ctk
@@ -197,6 +203,10 @@ def build_ledger_widgets(app):
     app.ledger_tree.grid(row=1, column=0, sticky="nsew")
     yscroll.grid(row=1, column=1, sticky="ns")
     xscroll.grid(row=2, column=0, sticky="ew")
+
+    app._ledger_configure_id = app.ledger_tree.bind(
+        "<Configure>", lambda e: resize_ledger_columns(app)
+    )
 
     apply_treeview_theme(app)
     update_treeview_stripes(app)
