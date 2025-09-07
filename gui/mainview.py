@@ -25,6 +25,17 @@ def build_header(app):
     app.inline_status = ctk.CTkLabel(head, text="", text_color=style.get_color("success"))
     app.inline_status.grid(row=0, column=5, padx=style.PAD_MD, sticky="e")
 
+    ctk.CTkLabel(head, text="Temavalg").grid(row=0, column=7, padx=(style.PAD_MD, style.PAD_XS))
+    app.theme_var = ctk.StringVar(value="System")
+    app.theme_menu = ctk.CTkOptionMenu(
+        head,
+        variable=app.theme_var,
+        values=["System", "Light", "Dark"],
+        command=app._switch_theme,
+    )
+    app.theme_menu.grid(row=0, column=8, padx=(0, style.PAD_MD))
+    app.theme_menu.set("System")
+
     return head
 
 
