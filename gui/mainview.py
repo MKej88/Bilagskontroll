@@ -97,12 +97,19 @@ def build_panes(app):
     right.grid_columnconfigure(0, weight=1)
     right.grid_columnconfigure(1, weight=0)
     right.grid_rowconfigure(1, weight=3, minsize=150)
-    right.grid_rowconfigure(5, weight=1, minsize=80)
+    right.grid_rowconfigure(5, weight=1, minsize=120)
 
     ctk.CTkLabel(right, text="Kommentar", font=style.FONT_TITLE_SMALL)\
         .grid(row=4, column=0, columnspan=2, sticky="w", padx=(style.PAD_MD, style.PAD_SM), pady=(style.PAD_MD, style.PAD_XS))
-    app.comment_box = ctk.CTkTextbox(right, height=110, font=style.FONT_SMALL)
-    app.comment_box.grid(row=5, column=0, columnspan=2, sticky="nsew", padx=(style.PAD_MD, style.PAD_SM), pady=(0, 0))
+    app.comment_box = ctk.CTkTextbox(right, font=style.FONT_SMALL)
+    app.comment_box.grid(
+        row=5,
+        column=0,
+        columnspan=2,
+        sticky="nsew",
+        padx=(style.PAD_MD, style.PAD_SM),
+        pady=(0, style.PAD_MD),
+    )
 
     return paned
 
@@ -112,7 +119,7 @@ def build_bottom(app):
 
     panel = app.main_panel
     bottom = ctk.CTkFrame(panel)
-    bottom.grid(row=3, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, 0))
+    bottom.grid(row=3, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_MD))
     app.bottom_frame = bottom
 
     def _export_pdf():
@@ -124,7 +131,9 @@ def build_bottom(app):
         finally:
             hide_busy(app)
 
-    create_button(bottom, text="📄 Eksporter PDF rapport", command=_export_pdf).pack(side="left")
+    create_button(
+        bottom, text="📄 Eksporter PDF rapport", command=_export_pdf
+    ).pack(side="left", padx=(style.PAD_MD, style.PAD_SM))
 
     app.status_label = ctk.CTkLabel(bottom, text="")
     app.status_label.pack(side="left", expand=True, fill="x", padx=style.PAD_SM)
