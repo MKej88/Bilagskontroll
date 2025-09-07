@@ -21,30 +21,7 @@ def _ctk():
 
 APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
-
-# Delte skrifttyper
-FONT_TITLE = None
-FONT_BODY = None
-FONT_TITLE_LITE = None
-FONT_TITLE_LARGE = None
-FONT_TITLE_SMALL = None
-FONT_BODY_BOLD = None
-FONT_SMALL = None
-FONT_SMALL_ITALIC = None
-
-# Standardstil for knapper
-BTN_FG = "#1f6aa5"
-BTN_HOVER = "#185a8b"
-BTN_RADIUS = 8
-
-
-# Farger per tema
-COLORS = {
-    "success": {"light": "#2ecc71", "dark": "#27ae60"},
-    "success_hover": {"light": "#29b765", "dark": "#219150"},
-    "error": {"light": "#e74c3c", "dark": "#c0392b"},
-    "error_hover": {"light": "#cf4334", "dark": "#992d22"},
-}
+from .style import style
 
 
 def get_color(name: str) -> str:
@@ -53,7 +30,7 @@ def get_color(name: str) -> str:
 
     mode = ctk.get_appearance_mode().lower()
     try:
-        return COLORS[name]["dark" if mode == "dark" else "light"]
+        return style.colors.palette[name]["dark" if mode == "dark" else "light"]
     except KeyError as e:
         raise KeyError(f"Ukjent fargenavn: {name}") from e
 
@@ -63,10 +40,10 @@ def create_button(master, **kwargs):
     ctk = _ctk()
 
     options = {
-        "fg_color": BTN_FG,
-        "hover_color": BTN_HOVER,
-        "font": FONT_BODY,
-        "corner_radius": BTN_RADIUS,
+        "fg_color": style.colors.btn_fg,
+        "hover_color": style.colors.btn_hover,
+        "font": style.fonts.body,
+        "corner_radius": style.colors.btn_radius,
     }
     options.update(kwargs)
     return ctk.CTkButton(master, **options)
@@ -147,24 +124,23 @@ class App:
 
     def _init_fonts(self):
         ctk = _ctk()
-        global FONT_TITLE, FONT_BODY, FONT_TITLE_LITE, FONT_TITLE_LARGE, FONT_TITLE_SMALL, \
-            FONT_BODY_BOLD, FONT_SMALL, FONT_SMALL_ITALIC
-        if FONT_TITLE is None:
-            FONT_TITLE = ctk.CTkFont(size=16, weight="bold")
-        if FONT_BODY is None:
-            FONT_BODY = ctk.CTkFont(size=14)
-        if FONT_TITLE_LITE is None:
-            FONT_TITLE_LITE = ctk.CTkFont(size=16)
-        if FONT_TITLE_LARGE is None:
-            FONT_TITLE_LARGE = ctk.CTkFont(size=18, weight="bold")
-        if FONT_TITLE_SMALL is None:
-            FONT_TITLE_SMALL = ctk.CTkFont(size=15, weight="bold")
-        if FONT_BODY_BOLD is None:
-            FONT_BODY_BOLD = ctk.CTkFont(size=14, weight="bold")
-        if FONT_SMALL is None:
-            FONT_SMALL = ctk.CTkFont(size=13)
-        if FONT_SMALL_ITALIC is None:
-            FONT_SMALL_ITALIC = ctk.CTkFont(size=12, slant="italic")
+        fonts = style.fonts
+        if fonts.title is None:
+            fonts.title = ctk.CTkFont(size=16, weight="bold")
+        if fonts.body is None:
+            fonts.body = ctk.CTkFont(size=14)
+        if fonts.title_lite is None:
+            fonts.title_lite = ctk.CTkFont(size=16)
+        if fonts.title_large is None:
+            fonts.title_large = ctk.CTkFont(size=18, weight="bold")
+        if fonts.title_small is None:
+            fonts.title_small = ctk.CTkFont(size=15, weight="bold")
+        if fonts.body_bold is None:
+            fonts.body_bold = ctk.CTkFont(size=14, weight="bold")
+        if fonts.small is None:
+            fonts.small = ctk.CTkFont(size=13)
+        if fonts.small_italic is None:
+            fonts.small_italic = ctk.CTkFont(size=12, slant="italic")
 
     def _ensure_helpers(self):
         """Importer tunge hjelpefunksjoner fra ``helpers`` ved første behov."""

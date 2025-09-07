@@ -1,13 +1,6 @@
 import os
-from . import (
-    FONT_TITLE,
-    FONT_BODY,
-    FONT_TITLE_LARGE,
-    FONT_BODY_BOLD,
-    FONT_SMALL,
-    FONT_SMALL_ITALIC,
-    create_button,
-)
+from . import create_button
+from .style import style
 
 
 def _toggle_sample_btn(app, *_):
@@ -19,25 +12,31 @@ def build_sidebar(app):
     import customtkinter as ctk
 
     card = ctk.CTkFrame(app, corner_radius=16)
-    card.grid(row=0, column=0, sticky="nsw", padx=14, pady=14)
+    card.grid(
+        row=0,
+        column=0,
+        sticky="nsw",
+        padx=style.spacing.padx,
+        pady=style.spacing.pady,
+    )
 
-    ctk.CTkLabel(card, text="⚙️ Innstillinger", font=FONT_TITLE_LARGE)\
-        .grid(row=0, column=0, padx=14, pady=(14, 6), sticky="w")
+    ctk.CTkLabel(card, text="⚙️ Innstillinger", font=style.fonts.title_large)\
+        .grid(row=0, column=0, padx=style.spacing.padx, pady=(style.spacing.pady, 6), sticky="w")
 
     app.file_path_var = ctk.StringVar(master=app, value="")
     create_button(card, text="Velg leverandørfakturaer (Excel)…", command=app.choose_file)\
-        .grid(row=1, column=0, padx=14, pady=(4, 2), sticky="ew")
+        .grid(row=1, column=0, padx=style.spacing.padx, pady=(4, 2), sticky="ew")
     ctk.CTkLabel(card, textvariable=app.file_path_var, wraplength=260, anchor="w", justify="left")\
-        .grid(row=2, column=0, padx=14, pady=(0, 6), sticky="ew")
+        .grid(row=2, column=0, padx=style.spacing.padx, pady=(0, 6), sticky="ew")
 
     app.gl_path_var = ctk.StringVar(master=app, value="")
     create_button(card, text="Velg hovedbok (Excel)…", command=app.choose_gl_file)\
-        .grid(row=3, column=0, padx=14, pady=(2, 2), sticky="ew")
+        .grid(row=3, column=0, padx=style.spacing.padx, pady=(2, 2), sticky="ew")
     ctk.CTkLabel(card, textvariable=app.gl_path_var, wraplength=260, anchor="w", justify="left")\
-        .grid(row=4, column=0, padx=14, pady=(0, 6), sticky="ew")
+        .grid(row=4, column=0, padx=style.spacing.padx, pady=(0, 6), sticky="ew")
 
     row_utv = ctk.CTkFrame(card)
-    row_utv.grid(row=5, column=0, padx=14, pady=(4, 0), sticky="ew")
+    row_utv.grid(row=5, column=0, padx=style.spacing.padx, pady=(4, 0), sticky="ew")
     ctk.CTkLabel(row_utv, text="Antall tilfeldig utvalg").grid(
         row=0, column=0, padx=(8, 0), sticky="w"
     )
@@ -77,18 +76,18 @@ def build_sidebar(app):
     ).grid(row=1, column=1, padx=(8, 0), pady=(6, 0))
 
     app.sample_btn = create_button(card, text="🎲 Lag utvalg", command=app.make_sample, state="disabled")
-    app.sample_btn.grid(row=6, column=0, padx=14, pady=(8, 6), sticky="ew")
+    app.sample_btn.grid(row=6, column=0, padx=style.spacing.padx, pady=(8, 6), sticky="ew")
 
     app.sample_size_var.trace_add("write", lambda *_: _toggle_sample_btn(app))
     app.year_var.trace_add("write", lambda *_: _toggle_sample_btn(app))
 
-    app.lbl_filecount = ctk.CTkLabel(card, text="Antall bilag: –", font=FONT_TITLE)
-    app.lbl_filecount.grid(row=7, column=0, padx=14, pady=(2, 2), sticky="w")
+    app.lbl_filecount = ctk.CTkLabel(card, text="Antall bilag: –", font=style.fonts.title)
+    app.lbl_filecount.grid(row=7, column=0, padx=style.spacing.padx, pady=(2, 2), sticky="w")
 
-    ctk.CTkLabel(card, text="Oppdragsinfo", font=FONT_BODY_BOLD)\
-        .grid(row=8, column=0, padx=14, pady=(8, 2), sticky="w")
+    ctk.CTkLabel(card, text="Oppdragsinfo", font=style.fonts.body_bold)\
+        .grid(row=8, column=0, padx=style.spacing.padx, pady=(8, 2), sticky="w")
     opp = ctk.CTkFrame(card, corner_radius=8)
-    opp.grid(row=9, column=0, padx=14, pady=(0, 8), sticky="ew")
+    opp.grid(row=9, column=0, padx=style.spacing.padx, pady=(0, 8), sticky="ew")
     opp.grid_columnconfigure(0, weight=0)
     opp.grid_columnconfigure(1, weight=1)
 
@@ -115,7 +114,7 @@ def build_sidebar(app):
     info_lbl = ctk.CTkLabel(
         opp,
         text="Kundenavn hentes automatisk",
-        font=FONT_SMALL_ITALIC,
+        font=style.fonts.small_italic,
         anchor="w",
         justify="left",
         wraplength=240,
@@ -124,18 +123,18 @@ def build_sidebar(app):
 
     card.grid_rowconfigure(20, weight=1)
 
-    ctk.CTkLabel(card, text="Tema", font=FONT_SMALL)\
-        .grid(row=101, column=0, padx=14, pady=(0, 0), sticky="w")
+    ctk.CTkLabel(card, text="Tema", font=style.fonts.small)\
+        .grid(row=101, column=0, padx=style.spacing.padx, pady=(0, 0), sticky="w")
     theme = ctk.CTkSegmentedButton(card, values=["System", "Light", "Dark"], command=app._switch_theme)
     theme.set("System")
-    theme.grid(row=102, column=0, padx=14, pady=(2, 14), sticky="ew")
+    theme.grid(row=102, column=0, padx=style.spacing.padx, pady=(2, style.spacing.pady), sticky="ew")
 
     status_card = ctk.CTkFrame(card, corner_radius=12)
-    status_card.grid(row=100, column=0, padx=14, pady=(8, 14), sticky="ew")
+    status_card.grid(row=100, column=0, padx=style.spacing.padx, pady=(8, style.spacing.pady), sticky="ew")
     status_card.grid_columnconfigure(0, weight=1)
 
-    title_font = FONT_TITLE_LARGE
-    body_font = FONT_BODY
+    title_font = style.fonts.title_large
+    body_font = style.fonts.body
 
     ctk.CTkLabel(status_card, text="Status", font=title_font, anchor="center", justify="center")\
         .grid(row=0, column=0, sticky="ew", pady=(10, 6))
