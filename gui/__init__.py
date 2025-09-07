@@ -3,6 +3,7 @@
 
 import os
 import re
+from datetime import datetime
 
 from .style import style
 
@@ -346,31 +347,11 @@ class App:
 
     # Read
     def _update_year_options(self):
-        years = set()
-        paths = []
-        if hasattr(self, "file_path_var"):
-            paths.append(self.file_path_var.get())
-        if hasattr(self, "gl_path_var"):
-            paths.append(self.gl_path_var.get())
-        for p in paths:
-            if not p:
-                continue
-            try:
-                import pandas as pd
-
-                df = pd.read_excel(
-                    p, engine="openpyxl", usecols=["Fakturadato"], dtype=str
-                )
-            except Exception:
-                continue
-            for cell in df["Fakturadato"].dropna().astype(str).values:
-                m = re.search(r"(20\d{2})", cell)
-                if m:
-                    years.add(m.group(1))
-        years = sorted(years, reverse=True)
+        year = datetime.now().year
+        years = [str(year), str(year - 1)]
         if hasattr(self, "year_combo"):
             self.year_combo.configure(values=years)
-        if years and getattr(self, "year_var", None) and self.year_var.get() not in years:
+        if getattr(self, "year_var", None) and self.year_var.get() not in years:
             self.year_var.set(years[0])
         from .sidebar import _toggle_sample_btn
         _toggle_sample_btn(self)
