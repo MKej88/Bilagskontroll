@@ -355,9 +355,18 @@ class App:
         for p in paths:
             if not p:
                 continue
-            m = re.search(r"(20\d{2})", os.path.basename(p))
-            if m:
-                years.add(m.group(1))
+            try:
+                import pandas as pd
+
+                df = pd.read_excel(
+                    p, engine="openpyxl", header=None, nrows=10, dtype=str
+                )
+            except Exception:
+                continue
+            for cell in df.fillna("").astype(str).values.flatten():
+                m = re.search(r"(20\d{2})", cell)
+                if m:
+                    years.add(m.group(1))
         years = sorted(years, reverse=True)
         if hasattr(self, "year_combo"):
             self.year_combo.configure(values=years)
