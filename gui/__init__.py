@@ -276,6 +276,35 @@ class App:
         update_treeview_stripes(self)
         self.render()
 
+    def _open_theme_dialog(self):
+        ctk = _ctk()
+        self._init_theme()
+        win = ctk.CTkToplevel(self)
+        win.title("Velg tema")
+        win.resizable(False, False)
+        win.transient(self)
+        win.grab_set()
+
+        ctk.CTkLabel(win, text="Velg tema").pack(padx=20, pady=(20, 10))
+        theme_var = ctk.StringVar(value=ctk.get_appearance_mode().capitalize())
+        opt = ctk.CTkOptionMenu(win, values=["System", "Light", "Dark"], variable=theme_var)
+        opt.pack(padx=20, pady=(0, 10))
+
+        def _apply():
+            self._switch_theme(theme_var.get())
+            try:
+                win.grab_release()
+            except Exception:
+                pass
+            win.destroy()
+
+        create_button(win, text="OK", command=_apply).pack(padx=20, pady=(10, 20))
+
+        win.update_idletasks()
+        x = self.winfo_x() + self.winfo_width() // 2 - win.winfo_width() // 2
+        y = self.winfo_y() + self.winfo_height() // 2 - win.winfo_height() // 2
+        win.geometry(f"+{x}+{y}")
+
     def _update_icon(self):
         ctk = _ctk()
         from helpers import resource_path
