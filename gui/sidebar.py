@@ -50,30 +50,22 @@ def build_sidebar(app):
 
     ctk.CTkLabel(row_utv, text="År").grid(row=1, column=0, padx=(style.PAD_MD, 0), pady=(style.PAD_SM, 0), sticky="w")
 
-    def _validate_year(P: str) -> bool:
-        if P == "":
-            return True
-        if not P.isdigit() or len(P) > 4:
-            return False
-        if len(P) == 4 and not 1900 <= int(P) <= 2100:
-            return False
-        return True
-
-    vcmd_year = app.register(_validate_year)
     app.year_var = ctk.StringVar(master=app, value="")
-    ctk.CTkEntry(
+    app.year_combo = ctk.CTkComboBox(
         row_utv,
         width=80,
-        textvariable=app.year_var,
-        validate="key",
-        validatecommand=(vcmd_year, "%P"),
-    ).grid(row=1, column=1, padx=(style.PAD_MD, 0), pady=(style.PAD_SM, 0))
+        variable=app.year_var,
+        values=[],
+        state="readonly",
+        command=lambda _: _toggle_sample_btn(app),
+    )
+    app.year_combo.grid(row=1, column=1, padx=(style.PAD_MD, 0), pady=(style.PAD_SM, 0))
 
     app.sample_btn = create_button(card, text="🎲 Lag utvalg", command=app.make_sample, state="disabled")
     app.sample_btn.grid(row=6, column=0, padx=style.PAD_XL, pady=(style.PAD_MD, style.PAD_SM), sticky="ew")
 
     app.sample_size_var.trace_add("write", lambda *_: _toggle_sample_btn(app))
-    app.year_var.trace_add("write", lambda *_: _toggle_sample_btn(app))
+    app._update_year_options()
 
     app.lbl_filecount = ctk.CTkLabel(card, text="Antall bilag: –", font=style.FONT_TITLE)
     app.lbl_filecount.grid(row=7, column=0, padx=style.PAD_XL, pady=(style.PAD_XXS, style.PAD_XXS), sticky="w")

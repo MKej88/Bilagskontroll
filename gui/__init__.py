@@ -3,6 +3,7 @@
 
 import os
 import re
+from datetime import datetime
 
 from .style import style
 
@@ -345,6 +346,32 @@ class App:
                 pass
 
     # Read
+    def _update_year_options(self):
+        years: set[int] = set()
+        for df in (getattr(self, "df", None), getattr(self, "gl_df", None)):
+            if df is None or "Fakturadato" not in df.columns:
+                continue
+            for val in df["Fakturadato"].dropna().astype(str):
+                m = re.search(r"(19|20)\d{2}", val)
+                if m:
+                    years.add(int(m.group(0)))
+
+        now = datetime.now().year
+        if years:
+            filtered = sorted([y for y in years if y >= now - 1], reverse=True)
+            if not filtered:
+                filtered = sorted(years, reverse=True)[:2]
+            values = [str(y) for y in filtered]
+        else:
+            values = [str(now), str(now - 1)]
+
+        if hasattr(self, "year_combo"):
+            self.year_combo.configure(values=values)
+        if getattr(self, "year_var", None) and self.year_var.get() not in values:
+            self.year_var.set(values[0] if values else "")
+        from .sidebar import _toggle_sample_btn
+        _toggle_sample_btn(self)
+
     def _load_excel(self):
         from tkinter import messagebox
         import threading
@@ -402,6 +429,7 @@ class App:
                 self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
                 self._update_counts_labels()
                 self.render()
+                self._update_year_options()
                 finalize()
 
             self.after(0, success)
@@ -478,6 +506,7 @@ class App:
 
                 if self.sample_df is not None:
                     self.render()
+                self._update_year_options()
                 finalize()
 
             self.after(0, success)
