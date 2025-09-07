@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 1.0.5
+
+### Endringer
+- Viser ventedialog ved dra-og-slipp av filer
+- Kolonnebredder i hovedboken tilpasser seg ved endring av vinduet
+- Forbedret støtte for mørk modus og justert layout i GUI
+
+### Dokumentasjon
+- README oppdatert med nye funksjoner
+
 ## 1.0.4
 
 ### Endringer
