@@ -115,8 +115,17 @@ def build_bottom(app):
     app.status_label = ctk.CTkLabel(bottom, text="")
     app.status_label.pack(side="left", expand=True, fill="x", padx=style.PAD_SM)
 
+    pb_style = ttk.Style()
+    pb_style.configure(
+        "green.Horizontal.TProgressbar",
+        background=get_color("success"),
+    )
     app.progress_bar = ttk.Progressbar(
-        bottom, mode="determinate", length=120, maximum=100
+        bottom,
+        mode="determinate",
+        length=120,
+        maximum=100,
+        style="green.Horizontal.TProgressbar",
     )
     app.progress_bar.pack(side="right", padx=style.PAD_SM)
     app.progress_bar.pack_forget()

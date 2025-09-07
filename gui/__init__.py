@@ -118,6 +118,12 @@ class App:
         self.gl_amount_col = None
         self.gl_postedby_col = None
 
+        # Framdriftsindikator
+        self._progress_job = None
+        self._progress_running = False
+        self._progress_val = 0
+        self._progress_msg = ""
+
         self.logo_img = None
         self._theme_initialized = False
         self.after_idle(self._build_ui)
@@ -358,12 +364,12 @@ class App:
         if big and hasattr(self, "inline_status"):
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
-        self._set_status("Laster fakturaliste...", 0)
+        self._start_progress("Laster fakturaliste...")
 
         def finalize():
             if big and hasattr(self, "inline_status"):
                 self.inline_status.configure(text="")
-            self._set_status("")
+            self._finish_progress()
 
         def worker():
             try:
@@ -391,7 +397,6 @@ class App:
                 self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
                 self._update_counts_labels()
                 self.render()
-                self._set_status("Laster fakturaliste...", 100)
                 finalize()
 
             self.after(0, success)
@@ -413,12 +418,12 @@ class App:
         if big and hasattr(self, "inline_status"):
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
-        self._set_status("Laster hovedbok...", 0)
+        self._start_progress("Laster hovedbok...")
 
         def finalize():
             if big and hasattr(self, "inline_status"):
                 self.inline_status.configure(text="")
-            self._set_status("")
+            self._finish_progress()
 
         def worker():
             try:
@@ -459,7 +464,6 @@ class App:
 
                 if self.sample_df is not None:
                     self.render()
-                self._set_status("Laster hovedbok...", 100)
                 finalize()
 
             self.after(0, success)
@@ -557,6 +561,28 @@ class App:
             self.lbl_st_gjen.configure(text="Gjenstår å kontrollere: –")
 
     # Status
+    def _start_progress(self, msg: str):
+        self._progress_msg = msg
+        self._progress_val = 0
+        self._progress_running = True
+        self._set_status(msg, 0)
+        self._progress_job = self.after(100, self._progress_step)
+
+    def _progress_step(self):
+        if not self._progress_running:
+            return
+        self._progress_val = min(95, self._progress_val + 2)
+        self._set_status(self._progress_msg, self._progress_val)
+        self._progress_job = self.after(100, self._progress_step)
+
+    def _finish_progress(self):
+        self._progress_running = False
+        if self._progress_job is not None:
+            self.after_cancel(self._progress_job)
+            self._progress_job = None
+        self._set_status(self._progress_msg, 100)
+        self.after(500, lambda: self._set_status(""))
+
     def _set_status(self, msg: str, progress: float | None = None):
         if hasattr(self, "status_label"):
             if progress is not None:
