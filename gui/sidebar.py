@@ -116,7 +116,6 @@ def build_sidebar(app):
     opp.grid_columnconfigure(1, weight=1)
 
     app.kunde_var = ctk.StringVar(master=app, value="")
-    app.kundenr_var = ctk.StringVar(master=app, value="")
     try:
         default_user = os.environ.get("USERNAME") or os.environ.get("USER") or ""
     except Exception:
@@ -131,10 +130,8 @@ def build_sidebar(app):
         state="disabled",
     )
     app.kunde_entry.grid(row=0, column=1, padx=(0, style.PAD_MD), pady=(style.PAD_MD, style.PAD_XS), sticky="ew")
-    ctk.CTkLabel(opp, text="Kundenr").grid(row=1, column=0, padx=(style.PAD_MD, style.PAD_MD), pady=(style.PAD_XS, style.PAD_XS), sticky="w")
-    ctk.CTkEntry(opp, textvariable=app.kundenr_var).grid(row=1, column=1, padx=(0, style.PAD_MD), pady=(style.PAD_XS, style.PAD_XS), sticky="ew")
-    ctk.CTkLabel(opp, text="Utført av").grid(row=2, column=0, padx=(style.PAD_MD, style.PAD_MD), pady=(style.PAD_XS, style.PAD_MD), sticky="w")
-    ctk.CTkEntry(opp, textvariable=app.utfort_av_var).grid(row=2, column=1, padx=(0, style.PAD_MD), pady=(style.PAD_XS, style.PAD_MD), sticky="ew")
+    ctk.CTkLabel(opp, text="Utført av").grid(row=1, column=0, padx=(style.PAD_MD, style.PAD_MD), pady=(style.PAD_XS, style.PAD_MD), sticky="w")
+    ctk.CTkEntry(opp, textvariable=app.utfort_av_var).grid(row=1, column=1, padx=(0, style.PAD_MD), pady=(style.PAD_XS, style.PAD_MD), sticky="ew")
     info_lbl = ctk.CTkLabel(
         opp,
         text="Kundenavn hentes automatisk",
@@ -143,7 +140,7 @@ def build_sidebar(app):
         justify="left",
         wraplength=240,
     )
-    info_lbl.grid(row=3, column=0, columnspan=2, padx=(style.PAD_MD, style.PAD_MD), pady=(0, style.PAD_MD), sticky="w")
+    info_lbl.grid(row=2, column=0, columnspan=2, padx=(style.PAD_MD, style.PAD_MD), pady=(0, style.PAD_MD), sticky="w")
 
     card.grid_rowconfigure(20, weight=1)
 

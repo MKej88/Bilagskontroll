@@ -35,14 +35,11 @@ def create_info_table(app, now):
     info_rows = []
     try:
         kunde = to_str(app.kunde_var.get()) if hasattr(app, "kunde_var") else ""
-        kundenr = to_str(app.kundenr_var.get()) if hasattr(app, "kundenr_var") else ""
         utfort = to_str(app.utfort_av_var.get()) if hasattr(app, "utfort_av_var") else ""
     except Exception:
-        kunde = kundenr = utfort = ""
+        kunde = utfort = ""
     if kunde:
         info_rows.append(["Kunde", kunde])
-    if kundenr:
-        info_rows.append(["Kundenr", kundenr])
     if utfort:
         info_rows.append(["Utført av", utfort])
     info_rows.append(["Rapport laget", now.strftime("%d.%m.%Y %H:%M")])
