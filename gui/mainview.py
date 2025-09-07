@@ -1,12 +1,5 @@
-from . import (
-    FONT_TITLE,
-    FONT_BODY,
-    FONT_TITLE_LITE,
-    FONT_TITLE_SMALL,
-    FONT_SMALL,
-    create_button,
-    get_color,
-)
+from . import create_button, get_color
+from .style import style
 
 
 def build_header(app):
@@ -14,23 +7,23 @@ def build_header(app):
 
     panel = app.main_panel
     head = ctk.CTkFrame(panel)
-    head.grid(row=0, column=0, sticky="ew", padx=12, pady=8)
+    head.grid(row=0, column=0, sticky="ew", padx=style.PAD_LG, pady=style.PAD_MD)
     head.grid_columnconfigure(6, weight=1)
 
-    head_font = FONT_TITLE_LITE
+    head_font = style.FONT_TITLE_LITE
 
-    app.lbl_count = ctk.CTkLabel(head, text="Bilag: –/–", font=FONT_TITLE)
+    app.lbl_count = ctk.CTkLabel(head, text="Bilag: –/–", font=style.FONT_TITLE)
     app.lbl_status = ctk.CTkLabel(head, text="Status: –", font=head_font)
     app.lbl_invoice = ctk.CTkLabel(head, text="Fakturanr: –", font=head_font)
-    app.lbl_count.grid(row=0, column=0, padx=(4, 12))
-    app.lbl_status.grid(row=0, column=1, padx=8)
-    app.lbl_invoice.grid(row=0, column=2, padx=8)
-    create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(8,0))
+    app.lbl_count.grid(row=0, column=0, padx=(style.PAD_XS, style.PAD_LG))
+    app.lbl_status.grid(row=0, column=1, padx=style.PAD_MD)
+    app.lbl_invoice.grid(row=0, column=2, padx=style.PAD_MD)
+    create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(style.PAD_MD,0))
     app.copy_feedback = ctk.CTkLabel(head, text="", text_color=get_color("success"))
-    app.copy_feedback.grid(row=0, column=4, padx=8, sticky="w")
+    app.copy_feedback.grid(row=0, column=4, padx=style.PAD_MD, sticky="w")
 
     app.inline_status = ctk.CTkLabel(head, text="", text_color=get_color("success"))
-    app.inline_status.grid(row=0, column=5, padx=8, sticky="e")
+    app.inline_status.grid(row=0, column=5, padx=style.PAD_MD, sticky="e")
 
     return head
 
@@ -40,7 +33,7 @@ def build_action_buttons(app):
 
     panel = app.main_panel
     btns = ctk.CTkFrame(panel)
-    btns.grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 4))
+    btns.grid(row=1, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_XS))
     btns.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
 
     create_button(
@@ -49,19 +42,19 @@ def build_action_buttons(app):
         fg_color=get_color("success"),
         hover_color=get_color("success_hover"),
         command=lambda: app.set_decision_and_next("Godkjent"),
-    ).grid(row=0, column=0, padx=6, pady=6, sticky="ew")
+    ).grid(row=0, column=0, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
     create_button(
         btns,
         text="⛔ Ikke godkjent",
         fg_color=get_color("error"),
         hover_color=get_color("error_hover"),
         command=lambda: app.set_decision_and_next("Ikke godkjent"),
-    ).grid(row=0, column=1, padx=6, pady=6, sticky="ew")
-    create_button(btns, text="🔗 Åpne i PowerOffice", command=app.open_in_po).grid(row=0, column=2, padx=6, pady=6, sticky="ew")
+    ).grid(row=0, column=1, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
+    create_button(btns, text="🔗 Åpne i PowerOffice", command=app.open_in_po).grid(row=0, column=2, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
     app.btn_prev = create_button(btns, text="⬅ Forrige", command=app.prev)
-    app.btn_prev.grid(row=0, column=3, padx=6, pady=6, sticky="ew")
+    app.btn_prev.grid(row=0, column=3, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
     app.btn_next = create_button(btns, text="➡ Neste", command=app.next)
-    app.btn_next.grid(row=0, column=4, padx=6, pady=6, sticky="ew")
+    app.btn_next.grid(row=0, column=4, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
 
     return btns
 
@@ -71,7 +64,7 @@ def build_panes(app):
 
     panel = app.main_panel
     paned = ctk.CTkFrame(panel)
-    paned.grid(row=2, column=0, sticky="nsew", padx=12, pady=(4, 6))
+    paned.grid(row=2, column=0, sticky="nsew", padx=style.PAD_LG, pady=(style.PAD_XS, style.PAD_SM))
     paned.grid_columnconfigure((0, 1), weight=1, minsize=420)
     paned.grid_rowconfigure(0, weight=1)
 
@@ -81,24 +74,24 @@ def build_panes(app):
     right.grid(row=0, column=1, sticky="nsew")
     app.right_frame = right
 
-    ctk.CTkLabel(left, text="Detaljer for bilag", font=FONT_TITLE_SMALL)\
-        .grid(row=0, column=0, sticky="w", padx=8, pady=(4, 4))
+    ctk.CTkLabel(left, text="Detaljer for bilag", font=style.FONT_TITLE_SMALL)\
+        .grid(row=0, column=0, sticky="w", padx=style.PAD_MD, pady=(style.PAD_XS, style.PAD_XS))
     left.grid_columnconfigure(0, weight=1)
     left.grid_rowconfigure(1, weight=1, minsize=120)
-    app.detail_box = ctk.CTkTextbox(left, height=360, font=FONT_BODY)
-    app.detail_box.grid(row=1, column=0, sticky="nsew", padx=(8, 6), pady=(0, 8))
+    app.detail_box = ctk.CTkTextbox(left, height=360, font=style.FONT_BODY)
+    app.detail_box.grid(row=1, column=0, sticky="nsew", padx=(style.PAD_MD, style.PAD_SM), pady=(0, style.PAD_MD))
 
-    ctk.CTkLabel(right, text="Hovedbok (bilagslinjer)", font=FONT_TITLE_SMALL)\
-        .grid(row=0, column=0, sticky="w", padx=8, pady=(4, 4))
+    ctk.CTkLabel(right, text="Hovedbok (bilagslinjer)", font=style.FONT_TITLE_SMALL)\
+        .grid(row=0, column=0, sticky="w", padx=style.PAD_MD, pady=(style.PAD_XS, style.PAD_XS))
     right.grid_columnconfigure(0, weight=1)
     right.grid_columnconfigure(1, weight=0)
     right.grid_rowconfigure(1, weight=3, minsize=150)
     right.grid_rowconfigure(5, weight=1, minsize=80)
 
-    ctk.CTkLabel(right, text="Kommentar", font=FONT_TITLE_SMALL)\
-        .grid(row=4, column=0, columnspan=2, sticky="w", padx=(8, 6), pady=(8, 4))
-    app.comment_box = ctk.CTkTextbox(right, height=110, font=FONT_SMALL)
-    app.comment_box.grid(row=5, column=0, columnspan=2, sticky="nsew", padx=(8, 6), pady=(0, 0))
+    ctk.CTkLabel(right, text="Kommentar", font=style.FONT_TITLE_SMALL)\
+        .grid(row=4, column=0, columnspan=2, sticky="w", padx=(style.PAD_MD, style.PAD_SM), pady=(style.PAD_MD, style.PAD_XS))
+    app.comment_box = ctk.CTkTextbox(right, height=110, font=style.FONT_SMALL)
+    app.comment_box.grid(row=5, column=0, columnspan=2, sticky="nsew", padx=(style.PAD_MD, style.PAD_SM), pady=(0, 0))
 
     return paned
 
@@ -108,7 +101,7 @@ def build_bottom(app):
 
     panel = app.main_panel
     bottom = ctk.CTkFrame(panel)
-    bottom.grid(row=3, column=0, sticky="ew", padx=12, pady=(0, 0))
+    bottom.grid(row=3, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, 0))
     app.bottom_frame = bottom
 
     def _export_pdf():
@@ -126,7 +119,7 @@ def build_main(app):
     import customtkinter as ctk
 
     panel = ctk.CTkFrame(app, corner_radius=16)
-    panel.grid(row=0, column=1, sticky="nsew", padx=(0, 14), pady=14)
+    panel.grid(row=0, column=1, sticky="nsew", padx=(0, style.PAD_XL), pady=style.PAD_XL)
     panel.grid_columnconfigure(0, weight=1)
     panel.grid_rowconfigure(2, weight=1, minsize=300)
 
@@ -182,4 +175,4 @@ def build_ledger_widgets(app):
     update_treeview_stripes(app)
 
     app.ledger_sum = ctk.CTkLabel(right, text=" ", anchor="e", justify="right")
-    app.ledger_sum.grid(row=3, column=0, columnspan=2, sticky="ew", padx=(0, 12), pady=(6, 10))
+    app.ledger_sum.grid(row=3, column=0, columnspan=2, sticky="ew", padx=(0, style.PAD_LG), pady=(style.PAD_SM, 10))

@@ -4,6 +4,8 @@
 import os
 import re
 
+from .style import style
+
 # CustomTkinter importeres ved behov for raskere oppstart.
 _ctk_mod = None
 
@@ -22,38 +24,13 @@ def _ctk():
 APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 
-# Delte skrifttyper
-FONT_TITLE = None
-FONT_BODY = None
-FONT_TITLE_LITE = None
-FONT_TITLE_LARGE = None
-FONT_TITLE_SMALL = None
-FONT_BODY_BOLD = None
-FONT_SMALL = None
-FONT_SMALL_ITALIC = None
-
-# Standardstil for knapper
-BTN_FG = "#1f6aa5"
-BTN_HOVER = "#185a8b"
-BTN_RADIUS = 8
-
-
-# Farger per tema
-COLORS = {
-    "success": {"light": "#2ecc71", "dark": "#27ae60"},
-    "success_hover": {"light": "#29b765", "dark": "#219150"},
-    "error": {"light": "#e74c3c", "dark": "#c0392b"},
-    "error_hover": {"light": "#cf4334", "dark": "#992d22"},
-}
-
-
 def get_color(name: str) -> str:
     """Returner farge basert på gjeldende tema."""
     ctk = _ctk()
 
     mode = ctk.get_appearance_mode().lower()
     try:
-        return COLORS[name]["dark" if mode == "dark" else "light"]
+        return style.COLORS[name]["dark" if mode == "dark" else "light"]
     except KeyError as e:
         raise KeyError(f"Ukjent fargenavn: {name}") from e
 
@@ -63,10 +40,10 @@ def create_button(master, **kwargs):
     ctk = _ctk()
 
     options = {
-        "fg_color": BTN_FG,
-        "hover_color": BTN_HOVER,
-        "font": FONT_BODY,
-        "corner_radius": BTN_RADIUS,
+        "fg_color": style.BTN_FG,
+        "hover_color": style.BTN_HOVER,
+        "font": style.FONT_BODY,
+        "corner_radius": style.BTN_RADIUS,
     }
     options.update(kwargs)
     return ctk.CTkButton(master, **options)
@@ -147,24 +124,23 @@ class App:
 
     def _init_fonts(self):
         ctk = _ctk()
-        global FONT_TITLE, FONT_BODY, FONT_TITLE_LITE, FONT_TITLE_LARGE, FONT_TITLE_SMALL, \
-            FONT_BODY_BOLD, FONT_SMALL, FONT_SMALL_ITALIC
-        if FONT_TITLE is None:
-            FONT_TITLE = ctk.CTkFont(size=16, weight="bold")
-        if FONT_BODY is None:
-            FONT_BODY = ctk.CTkFont(size=14)
-        if FONT_TITLE_LITE is None:
-            FONT_TITLE_LITE = ctk.CTkFont(size=16)
-        if FONT_TITLE_LARGE is None:
-            FONT_TITLE_LARGE = ctk.CTkFont(size=18, weight="bold")
-        if FONT_TITLE_SMALL is None:
-            FONT_TITLE_SMALL = ctk.CTkFont(size=15, weight="bold")
-        if FONT_BODY_BOLD is None:
-            FONT_BODY_BOLD = ctk.CTkFont(size=14, weight="bold")
-        if FONT_SMALL is None:
-            FONT_SMALL = ctk.CTkFont(size=13)
-        if FONT_SMALL_ITALIC is None:
-            FONT_SMALL_ITALIC = ctk.CTkFont(size=12, slant="italic")
+        s = style
+        if s.FONT_TITLE is None:
+            s.FONT_TITLE = ctk.CTkFont(size=16, weight="bold")
+        if s.FONT_BODY is None:
+            s.FONT_BODY = ctk.CTkFont(size=14)
+        if s.FONT_TITLE_LITE is None:
+            s.FONT_TITLE_LITE = ctk.CTkFont(size=16)
+        if s.FONT_TITLE_LARGE is None:
+            s.FONT_TITLE_LARGE = ctk.CTkFont(size=18, weight="bold")
+        if s.FONT_TITLE_SMALL is None:
+            s.FONT_TITLE_SMALL = ctk.CTkFont(size=15, weight="bold")
+        if s.FONT_BODY_BOLD is None:
+            s.FONT_BODY_BOLD = ctk.CTkFont(size=14, weight="bold")
+        if s.FONT_SMALL is None:
+            s.FONT_SMALL = ctk.CTkFont(size=13)
+        if s.FONT_SMALL_ITALIC is None:
+            s.FONT_SMALL_ITALIC = ctk.CTkFont(size=12, slant="italic")
 
     def _ensure_helpers(self):
         """Importer tunge hjelpefunksjoner fra ``helpers`` ved første behov."""
@@ -325,7 +301,7 @@ class App:
             self.logo_img = None
             return
         if hasattr(self, "bottom_frame"):
-            ctk.CTkLabel(self.bottom_frame, text="", image=self.logo_img).pack(side="right", padx=(8,0))
+            ctk.CTkLabel(self.bottom_frame, text="", image=self.logo_img).pack(side="right", padx=(style.PAD_MD, 0))
 
     def _on_drop(self, event):
         path = event.data.strip("{}").strip()
