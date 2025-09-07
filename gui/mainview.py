@@ -9,14 +9,10 @@ from . import (
 )
 
 
-def build_main(app):
+def build_header(app):
     import customtkinter as ctk
 
-    panel = ctk.CTkFrame(app, corner_radius=16)
-    panel.grid(row=0, column=1, sticky="nsew", padx=(0, 14), pady=14)
-    panel.grid_columnconfigure(0, weight=1)
-    panel.grid_rowconfigure(2, weight=1, minsize=300)
-
+    panel = app.main_panel
     head = ctk.CTkFrame(panel)
     head.grid(row=0, column=0, sticky="ew", padx=12, pady=8)
     head.grid_columnconfigure(6, weight=1)
@@ -36,9 +32,16 @@ def build_main(app):
     app.inline_status = ctk.CTkLabel(head, text="", text_color=get_color("success"))
     app.inline_status.grid(row=0, column=5, padx=8, sticky="e")
 
+    return head
+
+
+def build_action_buttons(app):
+    import customtkinter as ctk
+
+    panel = app.main_panel
     btns = ctk.CTkFrame(panel)
     btns.grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 4))
-    btns.grid_columnconfigure((0,1,2,3,4), weight=1)
+    btns.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
 
     create_button(
         btns,
@@ -60,6 +63,13 @@ def build_main(app):
     app.btn_next = create_button(btns, text="➡ Neste", command=app.next)
     app.btn_next.grid(row=0, column=4, padx=6, pady=6, sticky="ew")
 
+    return btns
+
+
+def build_panes(app):
+    import customtkinter as ctk
+
+    panel = app.main_panel
     paned = ctk.CTkFrame(panel)
     paned.grid(row=2, column=0, sticky="nsew", padx=12, pady=(4, 6))
     paned.grid_columnconfigure((0, 1), weight=1, minsize=420)
@@ -72,14 +82,14 @@ def build_main(app):
     app.right_frame = right
 
     ctk.CTkLabel(left, text="Detaljer for bilag", font=FONT_TITLE_SMALL)\
-        .grid(row=0, column=0, sticky="w", padx=8, pady=(4,4))
+        .grid(row=0, column=0, sticky="w", padx=8, pady=(4, 4))
     left.grid_columnconfigure(0, weight=1)
     left.grid_rowconfigure(1, weight=1, minsize=120)
     app.detail_box = ctk.CTkTextbox(left, height=360, font=FONT_BODY)
-    app.detail_box.grid(row=1, column=0, sticky="nsew", padx=(8,6), pady=(0,8))
+    app.detail_box.grid(row=1, column=0, sticky="nsew", padx=(8, 6), pady=(0, 8))
 
     ctk.CTkLabel(right, text="Hovedbok (bilagslinjer)", font=FONT_TITLE_SMALL)\
-        .grid(row=0, column=0, sticky="w", padx=8, pady=(4,4))
+        .grid(row=0, column=0, sticky="w", padx=8, pady=(4, 4))
     right.grid_columnconfigure(0, weight=1)
     right.grid_columnconfigure(1, weight=0)
     right.grid_rowconfigure(1, weight=3, minsize=150)
@@ -90,16 +100,43 @@ def build_main(app):
     app.comment_box = ctk.CTkTextbox(right, height=110, font=FONT_SMALL)
     app.comment_box.grid(row=5, column=0, columnspan=2, sticky="nsew", padx=(8, 6), pady=(0, 0))
 
+    return paned
+
+
+def build_bottom(app):
+    import customtkinter as ctk
+
+    panel = app.main_panel
     bottom = ctk.CTkFrame(panel)
     bottom.grid(row=3, column=0, sticky="ew", padx=12, pady=(0, 0))
     app.bottom_frame = bottom
 
     def _export_pdf():
         from report import export_pdf
+
         export_pdf(app)
 
     create_button(bottom, text="📄 Eksporter PDF rapport", command=_export_pdf).pack(side="left")
     ctk.CTkLabel(bottom, text="").pack(side="left", expand=True, fill="x")
+
+    return bottom
+
+
+def build_main(app):
+    import customtkinter as ctk
+
+    panel = ctk.CTkFrame(app, corner_radius=16)
+    panel.grid(row=0, column=1, sticky="nsew", padx=(0, 14), pady=14)
+    panel.grid_columnconfigure(0, weight=1)
+    panel.grid_rowconfigure(2, weight=1, minsize=300)
+
+    app.main_panel = panel
+
+    build_header(app)
+    build_action_buttons(app)
+    build_panes(app)
+    build_bottom(app)
+
     return panel
 
 
