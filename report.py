@@ -286,5 +286,5 @@ def export_pdf(app):
     except Exception as e:  # pragma: no cover - direkte feil fra reportlab
         app._show_inline(f"Feil ved PDF-generering: {e}", ok=False)
     finally:
-        app._set_status("Ferdig")
+        app._set_status("")
 
