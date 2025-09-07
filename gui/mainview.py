@@ -119,7 +119,7 @@ def build_bottom(app):
 
     panel = app.main_panel
     bottom = ctk.CTkFrame(panel)
-    bottom.grid(row=3, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, 0))
+    bottom.grid(row=3, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_MD))
     app.bottom_frame = bottom
 
     def _export_pdf():
@@ -131,7 +131,9 @@ def build_bottom(app):
         finally:
             hide_busy(app)
 
-    create_button(bottom, text="📄 Eksporter PDF rapport", command=_export_pdf).pack(side="left")
+    create_button(
+        bottom, text="📄 Eksporter PDF rapport", command=_export_pdf
+    ).pack(side="left", padx=(style.PAD_MD, 0))
 
     app.status_label = ctk.CTkLabel(bottom, text="")
     app.status_label.pack(side="left", expand=True, fill="x", padx=style.PAD_SM)
