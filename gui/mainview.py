@@ -98,7 +98,6 @@ def build_panes(app):
 
 def build_bottom(app):
     import customtkinter as ctk
-    from tkinter import ttk
 
     panel = app.main_panel
     bottom = ctk.CTkFrame(panel)
@@ -119,18 +118,13 @@ def build_bottom(app):
     app.status_label = ctk.CTkLabel(bottom, text="")
     app.status_label.pack(side="left", expand=True, fill="x", padx=style.PAD_SM)
 
-    pb_style = ttk.Style()
-    pb_style.configure(
-        "green.Horizontal.TProgressbar",
-        background=style.get_color("success"),
-    )
-    app.progress_bar = ttk.Progressbar(
+    app.progress_bar = ctk.CTkProgressBar(
         bottom,
-        mode="determinate",
-        length=120,
-        maximum=100,
-        style="green.Horizontal.TProgressbar",
+        width=120,
+        progress_color=style.get_color("success"),
+        fg_color=style.get_color("bg"),
     )
+    app.progress_bar.set(0)
     app.progress_bar.pack(side="right", padx=style.PAD_SM)
     app.progress_bar.pack_forget()
 

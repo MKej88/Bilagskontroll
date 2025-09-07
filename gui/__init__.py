@@ -615,7 +615,7 @@ class App:
         if hasattr(self, "progress_bar"):
             if progress is not None:
                 self.progress_bar.pack(side="right", padx=style.PAD_SM)
-                self.progress_bar.configure(value=max(0, min(100, progress)))
+                self.progress_bar.set(max(0, min(1, progress / 100)))
                 self.progress_bar.update_idletasks()
             else:
                 self.progress_bar.pack_forget()
