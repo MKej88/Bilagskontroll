@@ -142,11 +142,11 @@ def build_sidebar(app):
     )
     info_lbl.grid(row=2, column=0, columnspan=2, padx=(style.PAD_MD, style.PAD_MD), pady=(0, style.PAD_MD), sticky="w")
 
-    card.grid_rowconfigure(20, weight=1)
-
     status_card = ctk.CTkFrame(card, corner_radius=12)
-    status_card.grid(row=100, column=0, padx=style.PAD_XL, pady=(style.PAD_MD, style.PAD_XL), sticky="ew")
+    status_card.grid(row=12, column=0, padx=style.PAD_XL, pady=(style.PAD_MD, style.PAD_MD), sticky="ew")
     status_card.grid_columnconfigure(0, weight=1)
+
+    card.grid_rowconfigure(13, weight=1)
 
     title_font = style.FONT_TITLE_LARGE
     body_font = style.FONT_BODY
@@ -171,5 +171,18 @@ def build_sidebar(app):
 
     app.lbl_st_gjen = ctk.CTkLabel(status_card, text="Gjenstår å kontrollere: –", font=body_font, anchor="center", justify="center")
     app.lbl_st_gjen.grid(row=6, column=0, sticky="ew", pady=(style.PAD_SM, PADDING_Y))
+
+    from PIL import Image
+
+    light_logo = Image.open("icons/borev_logo_lightmode.png")
+    dark_logo = Image.open("icons/borev_logo_darkmode.png")
+    app.sidebar_logo = ctk.CTkImage(light_image=light_logo, dark_image=dark_logo, size=(200, 60))
+    ctk.CTkLabel(card, image=app.sidebar_logo, text="").grid(
+        row=14,
+        column=0,
+        padx=style.PAD_XL,
+        pady=(0, style.PAD_XL),
+        sticky="ew",
+    )
 
     return card
