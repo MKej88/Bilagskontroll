@@ -79,10 +79,11 @@ def ledger_rows(app, invoice_value: str):
     key = only_digits(invoice_value)
     if not key:
         return []
-    idxs = app.gl_index.get(key, [])
-    if not idxs:
+    idxs = app.gl_index.get(key)
+    if idxs is None or len(idxs) == 0:
         return []
-    # Funksjonen muterer ikke app.gl_df, så kopi er unødvendig
+    # ``groupby().indices`` returnerer numpy-arrays; ``len`` fungerer for å
+    # sjekke tomme treff uten å utløse "ambiguous truth value".
     hits = app.gl_df.loc[idxs]
     rows = []
     for _, r in hits.iterrows():
