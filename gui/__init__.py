@@ -359,11 +359,11 @@ class App:
                 import pandas as pd
 
                 df = pd.read_excel(
-                    p, engine="openpyxl", header=None, nrows=10, dtype=str
+                    p, engine="openpyxl", usecols=["Fakturadato"], dtype=str
                 )
             except Exception:
                 continue
-            for cell in df.fillna("").astype(str).values.flatten():
+            for cell in df["Fakturadato"].dropna().astype(str).values:
                 m = re.search(r"(20\d{2})", cell)
                 if m:
                     years.add(m.group(1))
