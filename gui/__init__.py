@@ -276,6 +276,31 @@ class App:
         update_treeview_stripes(self)
         self.render()
 
+    def _open_theme_menu(self):
+        ctk = _ctk()
+        win = ctk.CTkToplevel(self)
+        win.title("Tema")
+        win.transient(self)
+        win.resizable(False, False)
+        try:
+            current = ctk.get_appearance_mode().capitalize()
+        except Exception:
+            current = "System"
+        if current not in ("System", "Light", "Dark"):
+            current = "System"
+        ctk.CTkLabel(win, text="Velg tema", font=style.FONT_BODY_BOLD).pack(
+            padx=style.PAD_MD, pady=(style.PAD_MD, style.PAD_SM)
+        )
+
+        def _apply(mode):
+            self._switch_theme(mode)
+            win.destroy()
+
+        seg = ctk.CTkSegmentedButton(win, values=["System", "Light", "Dark"], command=_apply)
+        seg.set(current)
+        seg.pack(padx=style.PAD_MD, pady=(0, style.PAD_MD))
+        win.grab_set()
+
     def _update_icon(self):
         ctk = _ctk()
         from helpers import resource_path

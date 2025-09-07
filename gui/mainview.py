@@ -25,6 +25,9 @@ def build_header(app):
     app.inline_status = ctk.CTkLabel(head, text="", text_color=style.get_color("success"))
     app.inline_status.grid(row=0, column=5, padx=style.PAD_MD, sticky="e")
 
+    app.theme_btn = create_button(head, text="Tema", command=app._open_theme_menu)
+    app.theme_btn.grid(row=0, column=7, padx=style.PAD_MD, sticky="e")
+
     return head
 
 

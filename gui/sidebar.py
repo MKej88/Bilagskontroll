@@ -147,12 +147,6 @@ def build_sidebar(app):
 
     card.grid_rowconfigure(20, weight=1)
 
-    ctk.CTkLabel(card, text="Tema", font=style.FONT_SMALL)\
-        .grid(row=101, column=0, padx=style.PAD_XL, pady=(0, 0), sticky="w")
-    theme = ctk.CTkSegmentedButton(card, values=["System", "Light", "Dark"], command=app._switch_theme)
-    theme.set("System")
-    theme.grid(row=102, column=0, padx=style.PAD_XL, pady=(style.PAD_XXS, style.PAD_XL), sticky="ew")
-
     status_card = ctk.CTkFrame(card, corner_radius=12)
     status_card.grid(row=100, column=0, padx=style.PAD_XL, pady=(style.PAD_MD, style.PAD_XL), sticky="ew")
     status_card.grid_columnconfigure(0, weight=1)
