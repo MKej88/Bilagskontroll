@@ -7,7 +7,8 @@ def test_calc_sum_net_all_uten_summeringsrad():
         'tekst': ['rad1', 'rad2', None],
         'netto': [100.0, 200.0, 0.0]
     })
-    assert calc_sum_net_all(df, 'netto') == 300.0
+    df['_netto_float'] = df['netto']
+    assert calc_sum_net_all(df) == 300.0
 
 
 def test_calc_sum_net_all_med_summeringsrader():
@@ -15,7 +16,8 @@ def test_calc_sum_net_all_med_summeringsrader():
         'tekst': ['rad1', 'Sum', 'rad2', 'SUM'],
         'netto': [100.0, 999.0, 200.0, 300.0]
     })
-    assert calc_sum_net_all(df, 'netto') == 300.0
+    df['_netto_float'] = df['netto']
+    assert calc_sum_net_all(df) == 300.0
 
 
 def test_calc_sum_net_all_kun_summeringsrad():
@@ -23,7 +25,8 @@ def test_calc_sum_net_all_kun_summeringsrad():
         'tekst': ['Sum'],
         'netto': [123.0]
     })
-    assert calc_sum_net_all(df, 'netto') == 0.0
+    df['_netto_float'] = df['netto']
+    assert calc_sum_net_all(df) == 0.0
 
 
 def test_calc_sum_net_all_beholder_siste_rad_uten_sum():
@@ -31,4 +34,5 @@ def test_calc_sum_net_all_beholder_siste_rad_uten_sum():
         'tekst': ['rad1', 'rad2', 'rad3'],
         'netto': [100.0, 200.0, 300.0]
     })
-    assert calc_sum_net_all(df, 'netto') == 600.0
+    df['_netto_float'] = df['netto']
+    assert calc_sum_net_all(df) == 600.0

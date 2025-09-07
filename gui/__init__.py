@@ -346,7 +346,7 @@ class App:
         import threading
 
         self._ensure_helpers()
-        from data_utils import load_invoice_df
+        from data_utils import load_invoice_df, _net_amount_from_row
 
         path = self.file_path_var.get()
         if not path:
@@ -387,6 +387,12 @@ class App:
                     return
                 self.invoice_col = guess_invoice_col(self.df.columns)
                 self.net_amount_col = guess_net_amount_col(self.df.columns)
+                try:
+                    self.df["_netto_float"] = self.df.apply(
+                        _net_amount_from_row, axis=1, args=(self.net_amount_col,)
+                    )
+                except Exception:
+                    self.df["_netto_float"] = None
                 self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
                 self._update_counts_labels()
                 self.render()
@@ -486,7 +492,11 @@ class App:
         n = max(1, min(n, len(self.df)))
         logger.info(f"Trekker utvalg på {n} bilag for år {year}")
         try:
-            self.sample_df = self.df.sample(n=n, random_state=year).reset_index(drop=True)
+            self.sample_df = (
+                self.df.sample(n=n, random_state=year)
+                .reset_index(drop=True)
+                .copy()
+            )
         except Exception as e:
             messagebox.showerror(APP_TITLE, f"Feil ved trekking av utvalg:\n{e}"); return
         self.decisions = [None]*len(self.sample_df); self.comments=[""]*len(self.sample_df); self.idx=0
@@ -541,8 +551,8 @@ class App:
         self._ensure_helpers()
         from data_utils import calc_sum_kontrollert, calc_sum_net_all
 
-        sum_k = calc_sum_kontrollert(self.sample_df, self.decisions, self.net_amount_col)
-        sum_a = calc_sum_net_all(self.df, self.net_amount_col)
+        sum_k = calc_sum_kontrollert(self.sample_df, self.decisions)
+        sum_a = calc_sum_net_all(self.df)
         pct = (sum_k / sum_a * 100.0) if sum_a else 0.0
         self.lbl_st_sum_kontrollert.configure(text=f"Sum kontrollert: {fmt_money(sum_k)} kr")
         self.lbl_st_sum_alle.configure(text=f"Sum alle bilag: {fmt_money(sum_a)} kr")

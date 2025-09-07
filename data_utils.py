@@ -141,31 +141,20 @@ def _net_amount_from_row(row: pd.Series, net_amount_col: Optional[str]) -> Optio
     return None
 
 
-def calc_sum_kontrollert(sample_df: Optional[pd.DataFrame], decisions: list, net_amount_col: Optional[str]) -> float:
-    if sample_df is None:
+def calc_sum_kontrollert(sample_df: Optional[pd.DataFrame], decisions: list) -> float:
+    """Summer netto-beløp for rader som er kontrollert."""
+    if sample_df is None or "_netto_float" not in sample_df.columns:
         return 0.0
-    total = 0.0
-    for i, d in enumerate(decisions):
-        if d is None:
-            continue
-        row = sample_df.iloc[i]
-        val = _net_amount_from_row(row, net_amount_col)
-        if val is not None:
-            total += val
-    return total
+    import pandas as pd
+
+    dec_ser = pd.Series(decisions).reindex(sample_df.index)
+    mask = dec_ser.notna()
+    return float(sample_df.loc[mask, "_netto_float"].sum())
 
 
-def calc_sum_net_all(
-    df: Optional[pd.DataFrame],
-    net_amount_col: Optional[str],
-    skip_last: bool = True,
-) -> float:
-    if (
-        df is None
-        or df.dropna(how="all").empty
-        or not net_amount_col
-        or net_amount_col not in df.columns
-    ):
+def calc_sum_net_all(df: Optional[pd.DataFrame], skip_last: bool = True) -> float:
+    """Summer netto-beløp for alle rader i ``df``."""
+    if df is None or df.dropna(how="all").empty or "_netto_float" not in df.columns:
         return 0.0
     df_eff = df.dropna(how="all").copy()
     if skip_last and len(df_eff) > 0:
@@ -175,6 +164,5 @@ def calc_sum_net_all(
     mask = ~df_eff.astype(str).apply(
         lambda c: c.str.contains(r"\bsum\b", case=False, na=False)
     ).any(axis=1)
-    ser = df_eff.loc[mask, net_amount_col].apply(parse_amount)
-    return ser.sum(skipna=True)
+    return float(df_eff.loc[mask, "_netto_float"].sum())
 

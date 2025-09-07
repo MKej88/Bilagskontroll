@@ -5,14 +5,13 @@ from tkinter import filedialog
 
 from helpers import (
     to_str,
-    parse_amount,
     fmt_money,
     fmt_pct,
     format_number_with_thousands,
     logger,
 )
 
-from data_utils import calc_sum_kontrollert, calc_sum_net_all, _net_amount_from_row
+from data_utils import calc_sum_kontrollert, calc_sum_net_all
 from report_utils import build_ledger_table
 
 try:  # pragma: no cover - valgfri avhengighet
@@ -70,24 +69,19 @@ def create_status_table(app, body):
     approved = sum(1 for d in app.decisions if d == "Godkjent")
     rejected = sum(1 for d in app.decisions if d == "Ikke godkjent")
     remaining = sum(1 for d in app.decisions if d is None)
-    sum_k = calc_sum_kontrollert(app.sample_df, app.decisions, app.net_amount_col)
-    sum_a = calc_sum_net_all(app.df, app.net_amount_col)
+    sum_k = calc_sum_kontrollert(app.sample_df, app.decisions)
+    sum_a = calc_sum_net_all(app.df)
     pct = (sum_k / sum_a * 100.0) if sum_a else 0.0
 
+    import pandas as pd
+    dec_ser = pd.Series(app.decisions).reindex(app.sample_df.index)
+
     def _sum_for_decision(dec_value):
-        total = 0.0
-        for i, d in enumerate(app.decisions):
-            if dec_value == "Godkjent" and d != "Godkjent":
-                continue
-            if dec_value == "Ikke godkjent" and d != "Ikke godkjent":
-                continue
-            if dec_value is None and d is not None:
-                continue
-            row = app.sample_df.iloc[i]
-            val = _net_amount_from_row(row, app.net_amount_col)
-            if val is not None:
-                total += val
-        return total
+        if dec_value is None:
+            mask = dec_ser.isna()
+        else:
+            mask = dec_ser == dec_value
+        return float(app.sample_df.loc[mask, "_netto_float"].sum())
 
     sum_approved = _sum_for_decision("Godkjent")
     sum_rejected = _sum_for_decision("Ikke godkjent")
@@ -139,23 +133,7 @@ def create_rejected_table(app, styles):
             continue
         row = app.sample_df.iloc[i]
         inv = to_str(row.get(app.invoice_col, ""))
-        val = None
-        if app.net_amount_col and app.net_amount_col in app.sample_df.columns:
-            val = parse_amount(row.get(app.net_amount_col))
-        if val is None:
-            for fb in [
-                "Beløp",
-                "Belop",
-                "Total",
-                "Sum",
-                "Nettobeløp",
-                "Netto beløp",
-                "Beløp eks mva",
-            ]:
-                if fb in app.sample_df.columns:
-                    val = parse_amount(row.get(fb))
-                    if val is not None:
-                        break
+        val = row.get("_netto_float")
         belop = fmt_money(val) if val is not None else ""
         com = app.comments[i].strip() if i < len(app.comments) else ""
         rejected_rows.append([inv, belop, com])

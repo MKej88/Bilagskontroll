@@ -17,6 +17,7 @@ class DummyWidget:
 class FakeApp:
     def __init__(self):
         self.df = pd.DataFrame({'Faktura':[1], 'Beløp':[100]})
+        self.df['_netto_float'] = self.df['Beløp'].astype(float)
         self.sample_df = self.df.copy()
         self.idx = 0
         self.invoice_col = 'Faktura'
