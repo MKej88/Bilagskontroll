@@ -61,6 +61,7 @@ class App:
 
         self._dnd_ready = False
         self._icon_ready = False
+        self._drop_zone = None
         self.title(APP_TITLE)
 
         screen_w = self.winfo_screenwidth()
@@ -232,6 +233,8 @@ class App:
         TkinterDnD._require(self)
         self._dnd = TkinterDnD
         self.drop_target_register("DND_Files")
+        self.dnd_bind("<<DragEnter>>", self._on_drag_enter)
+        self.dnd_bind("<<DragLeave>>", self._on_drag_leave)
         self.dnd_bind("<<Drop>>", self._on_drop)
         self._dnd_ready = True
 
@@ -303,7 +306,42 @@ class App:
         if hasattr(self, "bottom_frame"):
             ctk.CTkLabel(self.bottom_frame, text="", image=self.logo_img).pack(side="right", padx=(style.PAD_MD, 0))
 
+    def _show_drop_zone(self):
+        ctk = _ctk()
+        if self._drop_zone:
+            return
+        dz = ctk.CTkFrame(self, fg_color="transparent")
+        dz.place(relx=0, rely=0, relwidth=1, relheight=1)
+        dz.lift()
+        canvas = tk.Canvas(dz, bg="", highlightthickness=0)
+        canvas.pack(fill="both", expand=True)
+        fg = style.get_color("fg")
+
+        def draw(event=None):
+            w = canvas.winfo_width()
+            h = canvas.winfo_height()
+            canvas.delete("all")
+            canvas.create_rectangle(20, 20, w - 20, h - 20, dash=(5, 3), outline=fg, width=2)
+            canvas.create_text(w / 2, h / 2, text="Slipp Excel her", fill=fg, font=style.FONT_TITLE_LARGE)
+
+        canvas.bind("<Configure>", draw)
+        self._drop_zone = dz
+
+    def _hide_drop_zone(self):
+        if self._drop_zone:
+            self._drop_zone.destroy()
+            self._drop_zone = None
+
+    def _on_drag_enter(self, event):
+        self._show_drop_zone()
+        return event.action
+
+    def _on_drag_leave(self, event):
+        self._hide_drop_zone()
+        return event.action
+
     def _on_drop(self, event):
+        self._hide_drop_zone()
         path = event.data.strip("{}").strip()
         if not path.lower().endswith((".xlsx", ".xls")):
             return
