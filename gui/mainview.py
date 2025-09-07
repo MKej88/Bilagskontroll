@@ -65,7 +65,7 @@ def build_panes(app):
     panel = app.main_panel
     paned = ctk.CTkFrame(panel)
     paned.grid(row=2, column=0, sticky="nsew", padx=style.PAD_LG, pady=(style.PAD_XS, style.PAD_SM))
-    paned.grid_columnconfigure((0, 1), weight=1, minsize=420)
+    paned.grid_columnconfigure((0, 1), weight=1, minsize=400)
     paned.grid_rowconfigure(0, weight=1)
 
     left = ctk.CTkFrame(paned)
