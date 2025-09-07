@@ -319,6 +319,8 @@ class App:
         p = filedialog.askopenfilename(title="Velg Excel (fakturaliste)", filetypes=[("Excel","*.xlsx *.xls")])
         if not p: return
         self.file_path_var.set(p)
+        from .busy import show_busy
+        show_busy(self, "Laster fakturaliste...")
         self._load_excel()
 
     def choose_gl_file(self):
@@ -326,6 +328,8 @@ class App:
         p = filedialog.askopenfilename(title="Velg Hovedbok (Excel)", filetypes=[("Excel","*.xlsx *.xls")])
         if not p: return
         self.gl_path_var.set(p)
+        from .busy import show_busy
+        show_busy(self, "Laster hovedbok...")
         self._load_gl_excel()
 
     def destroy(self):
@@ -363,6 +367,8 @@ class App:
             if big and hasattr(self, "inline_status"):
                 self.inline_status.configure(text="")
             self._finish_progress()
+            from .busy import hide_busy
+            hide_busy(self)
 
         def worker():
             try:
@@ -423,6 +429,8 @@ class App:
             if big and hasattr(self, "inline_status"):
                 self.inline_status.configure(text="")
             self._finish_progress()
+            from .busy import hide_busy
+            hide_busy(self)
 
         def worker():
             try:
