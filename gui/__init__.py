@@ -347,12 +347,28 @@ class App:
 
     # Read
     def _update_year_options(self):
-        year = datetime.now().year
-        years = [str(year), str(year - 1)]
+        years: set[int] = set()
+        for df in (getattr(self, "df", None), getattr(self, "gl_df", None)):
+            if df is None or "Fakturadato" not in df.columns:
+                continue
+            for val in df["Fakturadato"].dropna().astype(str):
+                m = re.search(r"(19|20)\d{2}", val)
+                if m:
+                    years.add(int(m.group(0)))
+
+        now = datetime.now().year
+        if years:
+            filtered = sorted([y for y in years if y >= now - 1], reverse=True)
+            if not filtered:
+                filtered = sorted(years, reverse=True)[:2]
+            values = [str(y) for y in filtered]
+        else:
+            values = [str(now), str(now - 1)]
+
         if hasattr(self, "year_combo"):
-            self.year_combo.configure(values=years)
-        if getattr(self, "year_var", None) and self.year_var.get() not in years:
-            self.year_var.set(years[0])
+            self.year_combo.configure(values=values)
+        if getattr(self, "year_var", None) and self.year_var.get() not in values:
+            self.year_var.set(values[0] if values else "")
         from .sidebar import _toggle_sample_btn
         _toggle_sample_btn(self)
 
