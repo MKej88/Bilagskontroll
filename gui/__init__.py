@@ -448,6 +448,12 @@ class App:
                 self.gl_amount_col      = guess_col(cols, r"^bel(ø|o)p$", r"amount", r"sum")
                 self.gl_postedby_col    = guess_col(cols, r"postert\s*av", r"bokf(ø|o)rt\s*av", r"registrert\s*av", r"posted\s*by", r"created\s*by")
 
+                from helpers import only_digits
+                if self.gl_invoice_col in self.gl_df.columns:
+                    self.gl_df["_inv_norm"] = self.gl_df[self.gl_invoice_col].map(only_digits)
+                else:
+                    self.gl_df["_inv_norm"] = ""
+
                 from .ledger import populate_ledger_table
                 from .mainview import build_ledger_widgets
                 self.populate_ledger_table = populate_ledger_table
