@@ -98,6 +98,7 @@ def build_panes(app):
 
 def build_bottom(app):
     import customtkinter as ctk
+    from tkinter import ttk
 
     panel = app.main_panel
     bottom = ctk.CTkFrame(panel)
@@ -110,7 +111,13 @@ def build_bottom(app):
         export_pdf(app)
 
     create_button(bottom, text="📄 Eksporter PDF rapport", command=_export_pdf).pack(side="left")
-    ctk.CTkLabel(bottom, text="").pack(side="left", expand=True, fill="x")
+
+    app.status_label = ctk.CTkLabel(bottom, text="")
+    app.status_label.pack(side="left", expand=True, fill="x", padx=style.PAD_SM)
+
+    app.progress_bar = ttk.Progressbar(bottom, mode="indeterminate", length=120)
+    app.progress_bar.pack(side="right", padx=style.PAD_SM)
+    app.progress_bar.pack_forget()
 
     return bottom
 

@@ -356,6 +356,7 @@ class App:
         if big and hasattr(self, "inline_status"):
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
+        self._set_status("Laster fakturaliste...", True)
         try:
             df, cust = load_invoice_df(path, header_idx)
             self.antall_bilag = len(df.dropna(how="all"))
@@ -371,6 +372,7 @@ class App:
         finally:
             if big and hasattr(self, "inline_status"):
                 self.inline_status.configure(text="")
+            self._set_status("Ferdig")
 
         if self.df is None or self.df.dropna(how="all").empty:
             messagebox.showwarning(APP_TITLE, "Excel-filen ser tom ut."); return
@@ -518,6 +520,19 @@ class App:
             self.lbl_st_godkjent.configure(text="Godkjent: –")
             self.lbl_st_ikkegodkjent.configure(text="Ikke godkjent: –")
             self.lbl_st_gjen.configure(text="Gjenstår å kontrollere: –")
+
+    # Status
+    def _set_status(self, msg: str, progress: bool | None = None):
+        if hasattr(self, "status_label"):
+            self.status_label.configure(text=msg)
+            self.status_label.update_idletasks()
+        if hasattr(self, "progress_bar"):
+            if progress:
+                self.progress_bar.pack(side="right", padx=style.PAD_SM)
+                self.progress_bar.start()
+            else:
+                self.progress_bar.stop()
+                self.progress_bar.pack_forget()
 
     # PDF
     # Inline

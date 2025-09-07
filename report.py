@@ -256,6 +256,8 @@ def export_pdf(app):
         app._show_inline("Avbrutt", ok=False)
         return
 
+    app._set_status("Eksporterer PDF...", True)
+
     styles = getSampleStyleSheet()
     title = styles["Title"]
     body = styles["BodyText"]
@@ -283,4 +285,6 @@ def export_pdf(app):
         app._show_inline(f"Lagret PDF: {os.path.basename(save)}", ok=True)
     except Exception as e:  # pragma: no cover - direkte feil fra reportlab
         app._show_inline(f"Feil ved PDF-generering: {e}", ok=False)
+    finally:
+        app._set_status("Ferdig")
 
