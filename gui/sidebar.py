@@ -145,7 +145,13 @@ def build_sidebar(app):
     card.grid_rowconfigure(20, weight=1)
 
     status_card = ctk.CTkFrame(card, corner_radius=12)
-    status_card.grid(row=100, column=0, padx=style.PAD_XL, pady=(style.PAD_MD, style.PAD_XL), sticky="ew")
+    status_card.grid(
+        row=100,
+        column=0,
+        padx=style.PAD_XL,
+        pady=(style.PAD_MD, PADDING_Y),
+        sticky="ew",
+    )
     status_card.grid_columnconfigure(0, weight=1)
 
     title_font = style.FONT_TITLE_LARGE
@@ -171,5 +177,29 @@ def build_sidebar(app):
 
     app.lbl_st_gjen = ctk.CTkLabel(status_card, text="Gjenstår å kontrollere: –", font=body_font, anchor="center", justify="center")
     app.lbl_st_gjen.grid(row=6, column=0, sticky="ew", pady=(style.PAD_SM, PADDING_Y))
+
+    try:
+        from PIL import Image
+        from helpers import resource_path
+
+        img_light = Image.open(resource_path("icons/borev_logo_lightmode.png"))
+        img_dark = Image.open(resource_path("icons/borev_logo_darkmode.png"))
+
+        w, h = img_light.size
+        scaled_h = int(h * (260 / w))
+        app.sidebar_logo_img = ctk.CTkImage(
+            light_image=img_light,
+            dark_image=img_dark,
+            size=(260, scaled_h),
+        )
+        ctk.CTkLabel(card, text="", image=app.sidebar_logo_img).grid(
+            row=101,
+            column=0,
+            padx=style.PAD_XL,
+            pady=(0, PADDING_Y),
+            sticky="ew",
+        )
+    except Exception:
+        pass
 
     return card
