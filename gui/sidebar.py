@@ -20,34 +20,33 @@ def build_sidebar(app):
     app.file_path_var = ctk.StringVar(master=app, value="")
     create_button(card, text="Velg leverandørfakturaer (Excel)…", command=app.choose_file)\
         .grid(row=1, column=0, padx=style.PAD_XL, pady=(style.PAD_XS, style.PAD_XXS), sticky="ew")
-    app.inv_drop = ctk.CTkFrame(
-        card,
-        height=60,
-        corner_radius=style.BTN_RADIUS,
-        fg_color=style.get_color("bg"),
-        border_color=style.get_color("fg"),
-        border_width=1,
-    )
+    def _create_drop_zone(parent, text):
+        frame = ctk.CTkFrame(
+            parent,
+            height=70,
+            corner_radius=style.BTN_RADIUS,
+            fg_color=style.get_color("dnd_bg"),
+            border_color=style.get_color("dnd_border"),
+            border_width=2,
+        )
+        ctk.CTkLabel(
+            frame,
+            text=text,
+            anchor="center",
+            text_color=style.get_color("dnd_border"),
+        ).pack(expand=True, fill="both", padx=style.PAD_MD, pady=style.PAD_SM)
+        return frame
+
+    app.inv_drop = _create_drop_zone(card, "Dra og slipp fakturaliste her")
     app.inv_drop.grid(row=2, column=0, padx=style.PAD_XL, pady=(0, style.PAD_XXS), sticky="ew")
-    ctk.CTkLabel(app.inv_drop, text="Dra og slipp fakturaliste her", anchor="center")\
-        .pack(expand=True, fill="both", padx=style.PAD_MD, pady=style.PAD_SM)
     ctk.CTkLabel(card, textvariable=app.file_path_var, wraplength=260, anchor="w", justify="left")\
         .grid(row=3, column=0, padx=style.PAD_XL, pady=(0, style.PAD_SM), sticky="ew")
 
     app.gl_path_var = ctk.StringVar(master=app, value="")
     create_button(card, text="Velg hovedbok (Excel)…", command=app.choose_gl_file)\
         .grid(row=4, column=0, padx=style.PAD_XL, pady=(style.PAD_XXS, style.PAD_XXS), sticky="ew")
-    app.gl_drop = ctk.CTkFrame(
-        card,
-        height=60,
-        corner_radius=style.BTN_RADIUS,
-        fg_color=style.get_color("bg"),
-        border_color=style.get_color("fg"),
-        border_width=1,
-    )
+    app.gl_drop = _create_drop_zone(card, "Dra og slipp hovedbok her")
     app.gl_drop.grid(row=5, column=0, padx=style.PAD_XL, pady=(0, style.PAD_XXS), sticky="ew")
-    ctk.CTkLabel(app.gl_drop, text="Dra og slipp hovedbok her", anchor="center")\
-        .pack(expand=True, fill="both", padx=style.PAD_MD, pady=style.PAD_SM)
     ctk.CTkLabel(card, textvariable=app.gl_path_var, wraplength=260, anchor="w", justify="left")\
         .grid(row=6, column=0, padx=style.PAD_XL, pady=(0, style.PAD_SM), sticky="ew")
 

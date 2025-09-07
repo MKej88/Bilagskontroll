@@ -21,6 +21,9 @@ class Style:
             # Generelle farger
             "bg": {"light": "#ffffff", "dark": "#1e1e1e"},
             "fg": {"light": "#000000", "dark": "#e6e6e6"},
+            # Dra-og-slipp felt
+            "dnd_bg": {"light": "#f5f6f7", "dark": "#2b2b2b"},
+            "dnd_border": {"light": "#a8b1bb", "dark": "#4a4f55"},
             # Tabellfarger
             "table_bg": {"light": "#ffffff", "dark": "#1e1e1e"},
             "table_fg": {"light": "#000000", "dark": "#e6e6e6"},
