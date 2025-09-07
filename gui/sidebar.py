@@ -42,8 +42,11 @@ def build_sidebar(app):
         def _on_drag_enter(_):
             frame.configure(fg_color=highlight, border_color=highlight)
 
-        frame.dnd_bind("<<DragEnter>>", _on_drag_enter)
-        frame.dnd_bind("<<DragLeave>>", _reset_colors)
+        # Nokre TkDND-versjonar brukar DropEnter/DropLeave i staden for DragEnter/DragLeave
+        for evt in ("<<DragEnter>>", "<<DropEnter>>"):
+            frame.dnd_bind(evt, _on_drag_enter)
+        for evt in ("<<DragLeave>>", "<<DropLeave>>"):
+            frame.dnd_bind(evt, _reset_colors)
 
         ctk.CTkLabel(
             frame,
