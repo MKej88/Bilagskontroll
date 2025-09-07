@@ -322,11 +322,14 @@ class App:
         path = event.data.strip("{}").strip()
         if not path.lower().endswith((".xlsx", ".xls")):
             return
+        from .busy import show_busy
         if "hovedbok" in os.path.basename(path).lower():
             self.gl_path_var.set(path)
+            show_busy(self, "Laster hovedbok...")
             self._load_gl_excel()
         else:
             self.file_path_var.set(path)
+            show_busy(self, "Laster fakturaliste...")
             self._load_excel()
 
     # Files
