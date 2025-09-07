@@ -133,7 +133,7 @@ def build_bottom(app):
 
     create_button(
         bottom, text="📄 Eksporter PDF rapport", command=_export_pdf
-    ).pack(side="left", padx=(style.PAD_MD, 0))
+    ).pack(side="left", padx=(0, style.PAD_SM))
 
     app.status_label = ctk.CTkLabel(bottom, text="")
     app.status_label.pack(side="left", expand=True, fill="x", padx=style.PAD_SM)
