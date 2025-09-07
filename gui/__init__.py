@@ -310,11 +310,24 @@ class App:
         ctk = _ctk()
         if self._drop_zone:
             return
+        # Ignorer ``DragLeave``-event på hovudvindauget medan dropzonen er aktiv
+        self.dnd_bind("<<DragLeave>>", lambda e: e.action)
+
         dz = ctk.CTkFrame(self, fg_color="transparent")
         dz.place(relx=0, rely=0, relwidth=1, relheight=1)
         dz.lift()
+        dz.drop_target_register("DND_Files")
+        dz.dnd_bind("<<DragEnter>>", lambda e: e.action)
+        dz.dnd_bind("<<DragLeave>>", self._on_drag_leave)
+        dz.dnd_bind("<<Drop>>", self._on_drop)
+
         canvas = tk.Canvas(dz, bg="", highlightthickness=0)
         canvas.pack(fill="both", expand=True)
+        canvas.drop_target_register("DND_Files")
+        canvas.dnd_bind("<<DragEnter>>", lambda e: e.action)
+        canvas.dnd_bind("<<DragLeave>>", self._on_drag_leave)
+        canvas.dnd_bind("<<Drop>>", self._on_drop)
+
         fg = style.get_color("fg")
 
         def draw(event=None):
@@ -331,6 +344,8 @@ class App:
         if self._drop_zone:
             self._drop_zone.destroy()
             self._drop_zone = None
+        # Reaktiver ``DragLeave``-handtering på hovudvindauget
+        self.dnd_bind("<<DragLeave>>", self._on_drag_leave)
 
     def _on_drag_enter(self, event):
         self._show_drop_zone()
