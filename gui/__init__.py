@@ -720,9 +720,12 @@ class App:
                     for item in self.ledger_tree.get_children():
                         self.ledger_tree.delete(item)
                 if hasattr(self, "ledger_sum"):
-                    self.ledger_sum.configure(
-                        text="Last gjerne også inn en hovedbok for å se bilagslinjene."
+                    msg = (
+                        "Last gjerne også inn en hovedbok for å se bilagslinjene."
+                        if getattr(self, "gl_df", None) is None
+                        else ""
                     )
+                    self.ledger_sum.configure(text=msg)
 
             self.comment_box.delete("0.0","end")
             if self.comments and self.idx < len(self.comments) and self.comments[self.idx]:
@@ -734,9 +737,12 @@ class App:
                 for item in self.ledger_tree.get_children():
                     self.ledger_tree.delete(item)
             if hasattr(self, "ledger_sum"):
-                self.ledger_sum.configure(
-                    text="Last gjerne også inn en hovedbok for å se bilagslinjene."
+                msg = (
+                    "Last gjerne også inn en hovedbok for å se bilagslinjene."
+                    if getattr(self, "gl_df", None) is None
+                    else "Trekk utvalg for å se bilagslinjene."
                 )
+                self.ledger_sum.configure(text=msg)
             self.comment_box.delete("0.0","end")
 
         if self.sample_df is None or len(self.sample_df) == 0:
