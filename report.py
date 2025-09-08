@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 from datetime import datetime
+from pathlib import Path
 from tkinter import filedialog
+import webbrowser
 
 from helpers import (
     to_str,
@@ -261,6 +263,10 @@ def export_pdf(app):
         app._set_status("Eksporterer PDF...", 100)
         logger.info(f"PDF-rapport lagret til {save}")
         app._show_inline(f"Lagret PDF: {os.path.basename(save)}", ok=True)
+        try:
+            webbrowser.open(Path(save).resolve().as_uri())
+        except Exception as e:  # pragma: no cover - OS-avhengig
+            logger.error(f"Kunne ikke åpne PDF: {e}")
     except Exception as e:  # pragma: no cover - direkte feil fra reportlab
         app._show_inline(f"Feil ved PDF-generering: {e}", ok=False)
     finally:
