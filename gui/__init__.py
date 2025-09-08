@@ -24,6 +24,8 @@ def _ctk():
 
 APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
+MAX_APP_WIDTH = 1600
+MIN_APP_WIDTH = 1200
 
 # For bakoverkompatibilitet
 get_color = style.get_color
@@ -79,12 +81,12 @@ class App:
                 screen_h = work_area.bottom - work_area.top
                 origin_x = work_area.left
                 origin_y = work_area.top
-        width = int(screen_w * 0.8)
+        width = min(int(screen_w * 0.8), MAX_APP_WIDTH)
         height = int(screen_h * 0.9)
         x = origin_x + max((screen_w - width) // 2, 0)
         y = origin_y + max((screen_h - height) // 2, 0)
         self.geometry(f"{width}x{height}+{x}+{y}")
-        min_w = int(screen_w * 0.6)
+        min_w = min(int(screen_w * 0.6), MIN_APP_WIDTH)
         min_h = int(screen_h * 0.7)
         self.minsize(min_w, min_h)
 
