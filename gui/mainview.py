@@ -230,6 +230,9 @@ def build_ledger_widgets(app):
     apply_treeview_theme(app)
     update_treeview_stripes(app)
 
+    if app.ledger_tree.get_children():
+        sort_treeview(app.ledger_tree, app.ledger_cols[0], False, app)
+
     app.ledger_sum = ctk.CTkLabel(right, text=" ", anchor="e", justify="right")
     app.ledger_sum.grid(
         row=3,
