@@ -29,7 +29,7 @@ Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel�
 - Deaktiverer navigasjonsknappene ved første og siste bilag for å hindre ugyldig navigering
 - Validerer tallfelt i grensesnittet for å sikre gyldige inputverdier
 - PDF‑rapporten viser tidspunkt for når den ble generert
-- Logger hendelser til fil og oppretter loggkatalogen automatisk ved behov
+- Logger hendelser til fil i mappen `logs/` og oppretter loggkatalogen automatisk ved behov
 - Dra-og-slipp av filer viser en ventedialog mens filer lastes inn
 - Kolonnebredder i hovedboken tilpasser seg når vinduet endres
 - Grensesnittet støtter mørk modus

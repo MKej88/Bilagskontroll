@@ -1,0 +1,3 @@
+# Ignorerer loggfiler
+*
+!.gitignore
