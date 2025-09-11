@@ -1,5 +1,6 @@
 from . import create_button
 from .style import style, PADDING_Y
+from .card import Card
 
 
 def build_header(app):
@@ -174,7 +175,7 @@ def build_bottom(app):
 def build_main(app):
     import customtkinter as ctk
 
-    panel = ctk.CTkFrame(app, corner_radius=16)
+    panel = Card(app)
     panel.grid(row=0, column=1, sticky="nsew", padx=(0, style.PAD_XL), pady=style.PAD_XL)
     panel.grid_columnconfigure(0, weight=1)
     panel.grid_rowconfigure(2, weight=1, minsize=300)

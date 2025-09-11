@@ -2,6 +2,7 @@ import os
 from . import create_button
 from .style import style, PADDING_Y
 from .dropzone import DropZone
+from .card import Card
 
 SIDEBAR_LOGO_WIDTH = 200
 
@@ -11,10 +12,50 @@ def _toggle_sample_btn(app, *_):
     app.sample_btn.configure(state=state)
 
 
+def build_status_card(app, parent):
+    import customtkinter as ctk
+
+    status_card = Card(parent)
+    status_card.grid(
+        row=100,
+        column=0,
+        padx=style.PAD_XL,
+        pady=(style.PAD_MD, PADDING_Y),
+        sticky="ew",
+    )
+    status_card.grid_columnconfigure(0, weight=1)
+
+    title_font = style.FONT_TITLE_LARGE
+    body_font = style.FONT_BODY
+
+    ctk.CTkLabel(status_card, text="Status", font=title_font, anchor="center", justify="center") \
+        .grid(row=0, column=0, sticky="ew", pady=(PADDING_Y, style.PAD_SM))
+
+    app.lbl_st_sum_kontrollert = ctk.CTkLabel(status_card, text="Sum kontrollert: –", font=body_font, anchor="center", justify="center")
+    app.lbl_st_sum_kontrollert.grid(row=1, column=0, sticky="ew", pady=(0, style.PAD_XXS))
+
+    app.lbl_st_sum_alle = ctk.CTkLabel(status_card, text="Sum alle bilag: –", font=body_font, anchor="center", justify="center")
+    app.lbl_st_sum_alle.grid(row=2, column=0, sticky="ew", pady=(0, style.PAD_XXS))
+
+    app.lbl_st_pct = ctk.CTkLabel(status_card, text="% kontrollert av sum: –", font=body_font, anchor="center", justify="center")
+    app.lbl_st_pct.grid(row=3, column=0, sticky="ew", pady=(0, style.PAD_MD))
+
+    app.lbl_st_godkjent = ctk.CTkLabel(status_card, text="Godkjent: –", font=body_font, anchor="center", justify="center")
+    app.lbl_st_godkjent.grid(row=4, column=0, sticky="ew", pady=(0, style.PAD_XXS))
+
+    app.lbl_st_ikkegodkjent = ctk.CTkLabel(status_card, text="Ikke godkjent: –", font=body_font, anchor="center", justify="center")
+    app.lbl_st_ikkegodkjent.grid(row=5, column=0, sticky="ew", pady=(0, style.PAD_XXS))
+
+    app.lbl_st_gjen = ctk.CTkLabel(status_card, text="Gjenstår å kontrollere: –", font=body_font, anchor="center", justify="center")
+    app.lbl_st_gjen.grid(row=6, column=0, sticky="ew", pady=(style.PAD_SM, PADDING_Y))
+
+    return status_card
+
+
 def build_sidebar(app):
     import customtkinter as ctk
 
-    card = ctk.CTkFrame(app, corner_radius=16)
+    card = Card(app)
     card.grid(row=0, column=0, sticky="nsw", padx=style.PAD_XL, pady=style.PAD_XL)
 
     ctk.CTkLabel(card, text="⚙️ Datautvalg", font=style.FONT_TITLE_LARGE)\
@@ -135,39 +176,7 @@ def build_sidebar(app):
 
     card.grid_rowconfigure(20, weight=1)
 
-    status_card = ctk.CTkFrame(card, corner_radius=12)
-    status_card.grid(
-        row=100,
-        column=0,
-        padx=style.PAD_XL,
-        pady=(style.PAD_MD, PADDING_Y),
-        sticky="ew",
-    )
-    status_card.grid_columnconfigure(0, weight=1)
-
-    title_font = style.FONT_TITLE_LARGE
-    body_font = style.FONT_BODY
-
-    ctk.CTkLabel(status_card, text="Status", font=title_font, anchor="center", justify="center")\
-        .grid(row=0, column=0, sticky="ew", pady=(PADDING_Y, style.PAD_SM))
-
-    app.lbl_st_sum_kontrollert = ctk.CTkLabel(status_card, text="Sum kontrollert: –", font=body_font, anchor="center", justify="center")
-    app.lbl_st_sum_kontrollert.grid(row=1, column=0, sticky="ew", pady=(0, style.PAD_XXS))
-
-    app.lbl_st_sum_alle = ctk.CTkLabel(status_card, text="Sum alle bilag: –", font=body_font, anchor="center", justify="center")
-    app.lbl_st_sum_alle.grid(row=2, column=0, sticky="ew", pady=(0, style.PAD_XXS))
-
-    app.lbl_st_pct = ctk.CTkLabel(status_card, text="% kontrollert av sum: –", font=body_font, anchor="center", justify="center")
-    app.lbl_st_pct.grid(row=3, column=0, sticky="ew", pady=(0, style.PAD_MD))
-
-    app.lbl_st_godkjent = ctk.CTkLabel(status_card, text="Godkjent: –", font=body_font, anchor="center", justify="center")
-    app.lbl_st_godkjent.grid(row=4, column=0, sticky="ew", pady=(0, style.PAD_XXS))
-
-    app.lbl_st_ikkegodkjent = ctk.CTkLabel(status_card, text="Ikke godkjent: –", font=body_font, anchor="center", justify="center")
-    app.lbl_st_ikkegodkjent.grid(row=5, column=0, sticky="ew", pady=(0, style.PAD_XXS))
-
-    app.lbl_st_gjen = ctk.CTkLabel(status_card, text="Gjenstår å kontrollere: –", font=body_font, anchor="center", justify="center")
-    app.lbl_st_gjen.grid(row=6, column=0, sticky="ew", pady=(style.PAD_SM, PADDING_Y))
+    build_status_card(app, card)
 
     try:
         from PIL import Image
