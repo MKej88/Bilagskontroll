@@ -136,12 +136,14 @@ def ledger_rows(app, invoice_value: str):
 
 def autofit_tree_columns(tree, cols, total_width=None):
     import tkinter.font as tkfont
+    from tkinter import ttk
+    from .style import PADDING_X
 
-    body_font = tkfont.nametofont("TkDefaultFont")
-    try:
-        head_font = tkfont.nametofont("TkHeadingFont")
-    except Exception:
-        head_font = body_font
+    style = ttk.Style()
+    font_name = style.lookup(tree.cget("style"), "font") or "TkDefaultFont"
+    body_font = tkfont.nametofont(font_name)
+    head_font_name = style.lookup(f"{tree.cget('style')}.Heading", "font")
+    head_font = tkfont.nametofont(head_font_name) if head_font_name else body_font
 
     widths: list[int] = []
     for col in cols:
@@ -151,8 +153,9 @@ def autofit_tree_columns(tree, cols, total_width=None):
             px = body_font.measure(txt)
             if px > max_px:
                 max_px = px
-        max_px = max(70, min(max_px + 24, 500))
-        widths.append(max_px)
+        max_px += PADDING_X * 4
+        max_px = max(70, min(max_px, 500))
+        widths.append(int(max_px))
 
     if total_width:
         total_content = sum(widths)
@@ -161,7 +164,7 @@ def autofit_tree_columns(tree, cols, total_width=None):
             widths = [w + extra for w in widths]
 
     for col, w in zip(cols, widths):
-        tree.column(col, width=w)
+        tree.column(col, width=w, minwidth=w)
 
 
 def populate_ledger_table(app, invoice_value: str):
