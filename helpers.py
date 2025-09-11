@@ -65,6 +65,17 @@ _RE_FLOAT_SUFFIX = re.compile(r"\d+\.0")
 _RE_NUMBER = re.compile(r"-?\d+(?:[.,]\d+)?")
 _INVOICE_PATS = None
 
+# Forhåndskompiler mønstre for å finne nettobeløp
+NET_AMOUNT_PATS = [
+    re.compile(r"nettobel(ø|o)p"),
+    re.compile(r"netto.*bel(ø|o)p"),
+    re.compile(r"bel(ø|o)p\s*eks"),
+    re.compile(r"^netto$"),
+    re.compile(r"^bel(ø|o)p$"),
+    re.compile(r"^sum$"),
+    re.compile(r"total"),
+]
+
 
 def resource_path(relpath: str) -> str:
     base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
@@ -227,8 +238,12 @@ def guess_col(cols, *names_regex):
         ]
     for c in map(str, cols):
         lc = c.lower().strip()
-        if any(re.search(rgx, lc, re.IGNORECASE) for rgx in names_regex):
-            return c
+        for rgx in names_regex:
+            if isinstance(rgx, re.Pattern):
+                if rgx.search(lc):
+                    return c
+            elif re.search(rgx, lc, re.IGNORECASE):
+                return c
     return None
 
 
@@ -245,16 +260,7 @@ def guess_net_amount_col(cols):
     str | None
         Navn på kolonne som antas å inneholde nettobeløp.
     """
-    pats = [
-        r"nettobel(ø|o)p",
-        r"netto.*bel(ø|o)p",
-        r"bel(ø|o)p\s*eks",
-        r"^netto$",
-        r"^bel(ø|o)p$",
-        r"^sum$",
-        r"total",
-    ]
-    return guess_col(cols, *pats)
+    return guess_col(cols, *NET_AMOUNT_PATS)
 
 
 def fmt_pct(n):
