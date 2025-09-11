@@ -1,5 +1,14 @@
+import threading
+
 from . import _ctk
 from .style import PADDING_X, PADDING_Y
+
+
+def run_in_thread(func, *args):
+    """Start ``func`` i en bakgrunnstråd og returner trådobjektet."""
+    thread = threading.Thread(target=func, args=args, daemon=True)
+    thread.start()
+    return thread
 
 
 def show_busy(app, message: str):

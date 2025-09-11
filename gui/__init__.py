@@ -347,14 +347,11 @@ class App:
         path = event.data.strip("{}").strip()
         if not path.lower().endswith((".xlsx", ".xls")):
             return
-        from .busy import show_busy
         if "hovedbok" in os.path.basename(path).lower():
             self.gl_path_var.set(path)
-            show_busy(self, "Laster hovedbok...")
             self._load_gl_excel()
         else:
             self.file_path_var.set(path)
-            show_busy(self, "Laster fakturaliste...")
             self._load_excel()
 
     # Files
@@ -363,8 +360,6 @@ class App:
         p = filedialog.askopenfilename(title="Velg Excel (fakturaliste)", filetypes=[("Excel","*.xlsx *.xls")])
         if not p: return
         self.file_path_var.set(p)
-        from .busy import show_busy
-        show_busy(self, "Laster fakturaliste...")
         self._load_excel()
 
     def choose_gl_file(self):
@@ -372,8 +367,6 @@ class App:
         p = filedialog.askopenfilename(title="Velg Hovedbok (Excel)", filetypes=[("Excel","*.xlsx *.xls")])
         if not p: return
         self.gl_path_var.set(p)
-        from .busy import show_busy
-        show_busy(self, "Laster hovedbok...")
         self._load_gl_excel()
 
     def destroy(self):
@@ -422,10 +415,10 @@ class App:
 
     def _load_excel(self):
         from tkinter import messagebox
-        import threading
 
         self._ensure_helpers()
         from data_utils import load_invoice_df, _net_amount_from_row
+        from .busy import show_busy, hide_busy, run_in_thread
 
         path = self.file_path_var.get()
         if not path:
@@ -436,23 +429,20 @@ class App:
         if big and hasattr(self, "inline_status"):
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
-        self._start_progress("Laster fakturaliste...")
+        show_busy(self, "Laster fakturaliste...")
 
         def finalize():
             if big and hasattr(self, "inline_status"):
                 self.inline_status.configure(text="")
             self._finish_progress()
-            from .busy import hide_busy
             hide_busy(self)
 
         def worker():
+            self.after(0, lambda: self._start_progress("Laster fakturaliste..."))
             try:
                 df, cust = load_invoice_df(path, header_idx)
             except Exception as e:
-                def err():
-                    messagebox.showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}")
-                    finalize()
-                self.after(0, err)
+                self.after(0, lambda: (messagebox.showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}"), finalize()))
                 return
 
             def success():
@@ -482,14 +472,14 @@ class App:
 
             self.after(0, success)
 
-        threading.Thread(target=worker, daemon=True).start()
+        run_in_thread(worker)
 
     def _load_gl_excel(self):
         from tkinter import messagebox
-        import threading
 
         self._ensure_helpers()
         from data_utils import load_gl_df
+        from .busy import show_busy, hide_busy, run_in_thread
 
         path = self.gl_path_var.get()
         if not path:
@@ -499,23 +489,20 @@ class App:
         if big and hasattr(self, "inline_status"):
             self.inline_status.configure(text="laster inn fil...")
             self.inline_status.update_idletasks()
-        self._start_progress("Laster hovedbok...")
+        show_busy(self, "Laster hovedbok...")
 
         def finalize():
             if big and hasattr(self, "inline_status"):
                 self.inline_status.configure(text="")
             self._finish_progress()
-            from .busy import hide_busy
             hide_busy(self)
 
         def worker():
+            self.after(0, lambda: self._start_progress("Laster hovedbok..."))
             try:
                 gl = load_gl_df(path, nrows=10)
             except Exception as e:
-                def err():
-                    messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}")
-                    finalize()
-                self.after(0, err)
+                self.after(0, lambda: (messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}"), finalize()))
                 return
 
             def success():
@@ -559,7 +546,7 @@ class App:
 
             self.after(0, success)
 
-        threading.Thread(target=worker, daemon=True).start()
+        run_in_thread(worker)
 # Sampling / nav
     def _update_counts_labels(self):
         self.lbl_filecount.configure(text=f"Antall bilag: {self.antall_bilag}")
@@ -657,15 +644,24 @@ class App:
             if remaining == 0 and not self._pdf_prompt_shown:
                 from tkinter import messagebox
                 from report import export_pdf
-                from .busy import show_busy, hide_busy
+                from .busy import show_busy, hide_busy, run_in_thread
 
                 self._pdf_prompt_shown = True
                 if messagebox.askyesno(APP_TITLE, "Ønsker du å eksportere PDF rapport?"):
                     show_busy(self, "Eksporterer rapport...")
-                    try:
-                        export_pdf(self)
-                    finally:
+
+                    def finalize():
+                        self._finish_progress()
                         hide_busy(self)
+
+                    def worker():
+                        self.after(0, lambda: self._start_progress("Eksporterer rapport..."))
+                        try:
+                            export_pdf(self)
+                        finally:
+                            self.after(0, finalize)
+
+                    run_in_thread(worker)
         else:
             self.lbl_st_godkjent.configure(text="Godkjent: –")
             self.lbl_st_ikkegodkjent.configure(text="Ikke godkjent: –")
