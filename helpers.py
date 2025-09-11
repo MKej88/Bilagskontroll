@@ -104,6 +104,10 @@ def parse_amount(x):
     if not s or s.lower() == "nan":
         return None
     s = s.replace(",", ".")
+    if s.startswith("(") and s.endswith(")"):
+        inner = s[1:-1]
+        if inner.replace(".", "", 1).isdigit():
+            s = "-" + inner
     if s.endswith("-") and s[:-1].replace(".", "", 1).isdigit():
         s = "-" + s[:-1]
     try:
