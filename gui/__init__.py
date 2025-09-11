@@ -119,6 +119,7 @@ class App:
         self._progress_running = False
         self._progress_val = 0
         self._progress_msg = ""
+        self._pdf_prompt_shown = False
 
         self.logo_img = None
         self._theme_initialized = False
@@ -631,6 +632,18 @@ class App:
             self.lbl_st_godkjent.configure(text=f"Godkjent: {approved}")
             self.lbl_st_ikkegodkjent.configure(text=f"Ikke godkjent: {rejected}")
             self.lbl_st_gjen.configure(text=f"Gjenstår å kontrollere: {remaining}")
+            if remaining == 0 and not self._pdf_prompt_shown:
+                from tkinter import messagebox
+                from report import export_pdf
+                from .busy import show_busy, hide_busy
+
+                self._pdf_prompt_shown = True
+                if messagebox.askyesno(APP_TITLE, "Ønsker du å eksportere PDF rapport?"):
+                    show_busy(self, "Eksporterer rapport...")
+                    try:
+                        export_pdf(self)
+                    finally:
+                        hide_busy(self)
         else:
             self.lbl_st_godkjent.configure(text="Godkjent: –")
             self.lbl_st_ikkegodkjent.configure(text="Ikke godkjent: –")
