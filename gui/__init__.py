@@ -7,6 +7,11 @@ from datetime import datetime
 
 from .style import style
 
+try:
+    from settings import UI_SCALING
+except Exception:  # pragma: no cover - valfri innstilling
+    UI_SCALING = None
+
 # CustomTkinter importeres ved behov for raskere oppstart.
 _ctk_mod = None
 
@@ -264,6 +269,9 @@ class App:
             return
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
+        scale = UI_SCALING or (self.winfo_fpixels("1i") / 96)
+        ctk.set_widget_scaling(scale)
+        ctk.set_spacing_scaling(scale)
         self._theme_initialized = True
 
     def _switch_theme(self, mode):
