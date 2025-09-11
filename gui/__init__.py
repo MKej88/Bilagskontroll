@@ -329,7 +329,13 @@ class App:
             self.logo_img = None
             return
         if hasattr(self, "bottom_frame"):
-            ctk.CTkLabel(self.bottom_frame, text="", image=self.logo_img).pack(side="right", padx=(style.PAD_MD, 0))
+            ctk.CTkLabel(self.bottom_frame, text="", image=self.logo_img).grid(
+                row=0,
+                column=3,
+                padx=(style.PAD_MD, 0),
+                pady=style.PAD_SM,
+                sticky="e",
+            )
 
     def _on_drop(self, event):
         path = event.data.strip("{}").strip()
