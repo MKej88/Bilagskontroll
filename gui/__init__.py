@@ -270,15 +270,23 @@ class App:
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
         scale = UI_SCALING or (self.winfo_fpixels("1i") / 96)
-        ctk.set_widget_scaling(scale)
-        ctk.set_spacing_scaling(scale)
+        if hasattr(ctk, "set_widget_scaling"):
+            ctk.set_widget_scaling(scale)
+        elif hasattr(ctk, "set_scaling"):
+            ctk.set_scaling(scale)
+        if hasattr(ctk, "set_spacing_scaling"):
+            ctk.set_spacing_scaling(scale)
+        elif hasattr(ctk, "set_window_scaling"):
+            ctk.set_window_scaling(scale)
         self._theme_initialized = True
 
     def _switch_theme(self, mode):
         ctk = _ctk()
         self._init_theme()
-        modes = {"light": "light", "dark": "dark"}
-        ctk.set_appearance_mode(modes.get(mode.lower(), "system"))
+        mode = str(mode).lower()
+        if mode not in {"light", "dark", "system"}:
+            mode = "system"
+        ctk.set_appearance_mode(mode)
         if self._icon_ready:
             self._update_icon()
         from .ledger import apply_treeview_theme, update_treeview_stripes
@@ -327,7 +335,13 @@ class App:
             self.logo_img = None
             return
         if hasattr(self, "bottom_frame"):
-            ctk.CTkLabel(self.bottom_frame, text="", image=self.logo_img).pack(side="right", padx=(style.PAD_MD, 0))
+            ctk.CTkLabel(self.bottom_frame, text="", image=self.logo_img).grid(
+                row=0,
+                column=3,
+                padx=(style.PAD_MD, 0),
+                pady=style.PAD_SM,
+                sticky="e",
+            )
 
     def _on_drop(self, event):
         path = event.data.strip("{}").strip()
