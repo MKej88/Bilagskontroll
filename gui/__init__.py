@@ -270,8 +270,14 @@ class App:
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
         scale = UI_SCALING or (self.winfo_fpixels("1i") / 96)
-        ctk.set_widget_scaling(scale)
-        ctk.set_spacing_scaling(scale)
+        if hasattr(ctk, "set_widget_scaling"):
+            ctk.set_widget_scaling(scale)
+        elif hasattr(ctk, "set_scaling"):
+            ctk.set_scaling(scale)
+        if hasattr(ctk, "set_spacing_scaling"):
+            ctk.set_spacing_scaling(scale)
+        elif hasattr(ctk, "set_window_scaling"):
+            ctk.set_window_scaling(scale)
         self._theme_initialized = True
 
     def _switch_theme(self, mode):
