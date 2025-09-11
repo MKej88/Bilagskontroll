@@ -133,22 +133,23 @@ class App:
     def _init_fonts(self):
         ctk = _ctk()
         s = style
+        kwargs = {"family": s.FONT_FAMILY}
         if s.FONT_TITLE is None:
-            s.FONT_TITLE = ctk.CTkFont(size=16, weight="bold")
+            s.FONT_TITLE = ctk.CTkFont(size=16, weight="bold", **kwargs)
         if s.FONT_BODY is None:
-            s.FONT_BODY = ctk.CTkFont(size=14)
+            s.FONT_BODY = ctk.CTkFont(size=14, **kwargs)
         if s.FONT_TITLE_LITE is None:
-            s.FONT_TITLE_LITE = ctk.CTkFont(size=16)
+            s.FONT_TITLE_LITE = ctk.CTkFont(size=16, **kwargs)
         if s.FONT_TITLE_LARGE is None:
-            s.FONT_TITLE_LARGE = ctk.CTkFont(size=18, weight="bold")
+            s.FONT_TITLE_LARGE = ctk.CTkFont(size=18, weight="bold", **kwargs)
         if s.FONT_TITLE_SMALL is None:
-            s.FONT_TITLE_SMALL = ctk.CTkFont(size=15, weight="bold")
+            s.FONT_TITLE_SMALL = ctk.CTkFont(size=15, weight="bold", **kwargs)
         if s.FONT_BODY_BOLD is None:
-            s.FONT_BODY_BOLD = ctk.CTkFont(size=14, weight="bold")
+            s.FONT_BODY_BOLD = ctk.CTkFont(size=14, weight="bold", **kwargs)
         if s.FONT_SMALL is None:
-            s.FONT_SMALL = ctk.CTkFont(size=13)
+            s.FONT_SMALL = ctk.CTkFont(size=13, **kwargs)
         if s.FONT_SMALL_ITALIC is None:
-            s.FONT_SMALL_ITALIC = ctk.CTkFont(size=12, slant="italic")
+            s.FONT_SMALL_ITALIC = ctk.CTkFont(size=12, slant="italic", **kwargs)
 
     def _ensure_helpers(self):
         """Importer tunge hjelpefunksjoner fra ``helpers`` ved første behov."""

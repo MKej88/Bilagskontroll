@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.0.6
+
+### Endringer
+- GUI bruker nå skrifttypen "Helvetica" for et mer profesjonelt uttrykk
+
 ## 1.0.5
 
 ### Endringer

@@ -58,6 +58,8 @@ class Style:
         except KeyError as e:
             raise KeyError(f"Ukjent fargenavn: {name}") from e
 
+    # Skrifttyper
+    FONT_FAMILY: str = "Helvetica"
     # Skrifttyper (initialiseres lazily)
     FONT_TITLE: Optional[object] = None
     FONT_BODY: Optional[object] = None
