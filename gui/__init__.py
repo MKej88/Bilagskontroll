@@ -403,7 +403,7 @@ class App:
         import threading
 
         self._ensure_helpers()
-        from data_utils import load_invoice_df, _net_amount_from_row
+        from data_utils import load_invoice_df, _net_amount_from_row, validate_invoice_df
 
         path = self.file_path_var.get()
         if not path:
@@ -426,6 +426,7 @@ class App:
         def worker():
             try:
                 df, cust = load_invoice_df(path, header_idx)
+                warnings = validate_invoice_df(df)
             except Exception as e:
                 def err():
                     messagebox.showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}")
@@ -436,6 +437,8 @@ class App:
             def success():
                 self.antall_bilag = len(df.dropna(how="all"))
                 self.df = df
+                if warnings:
+                    messagebox.showwarning(APP_TITLE, "\n".join(warnings))
                 if cust:
                     self.kunde_var.set(cust)
                     if hasattr(self, "kunde_entry"):

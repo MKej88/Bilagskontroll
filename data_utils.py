@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Optional, List
 
-from helpers import parse_amount, logger
+from helpers import parse_amount, logger, guess_col, guess_net_amount_col
 
 
 FALLBACK_NET_COLUMNS: List[str] = [
@@ -41,6 +41,41 @@ def load_invoice_df(path: str, header_idx: int = 4) -> tuple[pd.DataFrame, Optio
     df = raw.iloc[header_idx + 1 :].reset_index(drop=True)
     df.columns = raw.iloc[header_idx]
     return df, kunde
+
+
+def validate_invoice_df(df: "pd.DataFrame") -> list[str]:
+    """Valider fakturalisten og rapporter avvik som advarsler."""
+    warnings: list[str] = []
+    invoice_col = guess_col(
+        df.columns,
+        r"^faktura\.?nr\.?$",
+        r"^fakturanr\.?$",
+        r"^faktura[ \._-]*nummer$",
+        r"^invoice.*(no|number)$",
+    )
+    if invoice_col is None:
+        warnings.append("Kolonne for fakturanummer mangler.")
+    else:
+        ser = df[invoice_col].dropna().astype(str).str.strip()
+        if ser[ser != ""].duplicated().any():
+            warnings.append("Duplikate fakturanumre funnet.")
+
+    amount_col = guess_net_amount_col(df.columns)
+    if amount_col is None:
+        warnings.append("Kolonne for beløp mangler.")
+    else:
+        def _invalid(val: object) -> bool:
+            if val is None:
+                return False
+            s = str(val).strip()
+            if not s:
+                return False
+            return parse_amount(s) is None
+
+        if df[amount_col].apply(_invalid).any():
+            warnings.append("Ugyldige beløp funnet.")
+
+    return warnings
 
 
 def load_gl_df(path: str, nrows: int = 10) -> pd.DataFrame:
