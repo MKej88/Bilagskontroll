@@ -136,12 +136,13 @@ def ledger_rows(app, invoice_value: str):
 
 def autofit_tree_columns(tree, cols, total_width=None):
     import tkinter.font as tkfont
+    from tkinter import ttk
 
-    body_font = tkfont.nametofont("TkDefaultFont")
-    try:
-        head_font = tkfont.nametofont("TkHeadingFont")
-    except Exception:
-        head_font = body_font
+    style = ttk.Style()
+    font_name = style.lookup(tree.cget("style"), "font") or "TkDefaultFont"
+    body_font = tkfont.nametofont(font_name)
+    head_font_name = style.lookup(f"{tree.cget('style')}.Heading", "font")
+    head_font = tkfont.nametofont(head_font_name) if head_font_name else body_font
 
     widths: list[int] = []
     for col in cols:
