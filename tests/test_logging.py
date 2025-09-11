@@ -4,6 +4,7 @@ from pathlib import Path
 
 import helpers
 
+
 def test_logger_delayed_file_creation(tmp_path, monkeypatch):
     logger = logging.getLogger("bilagskontroll")
     for handler in logger.handlers[:]:
@@ -13,7 +14,7 @@ def test_logger_delayed_file_creation(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     module = importlib.reload(helpers)
 
-    log_file = Path(tmp_path) / "bilagskontroll.log"
+    log_file = Path(tmp_path) / "logs" / "bilagskontroll.log"
     assert not log_file.exists()
 
     module.logger.info("første melding")

@@ -5,13 +5,13 @@ import sys
 import logging
 
 
-def setup_logger(log_path: str = "bilagskontroll.log") -> logging.Logger:
+def setup_logger(log_path: str = "logs/bilagskontroll.log") -> logging.Logger:
     """Sett opp logger med roterende filhåndtering.
 
     Parametere
     ----------
     log_path : str, optional
-        Sti til loggfilen. Standard er ``bilagskontroll.log``.
+        Sti til loggfilen. Standard er ``logs/bilagskontroll.log``.
 
     Returnerer
     ----------
