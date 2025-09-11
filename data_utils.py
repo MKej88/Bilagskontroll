@@ -157,12 +157,17 @@ def calc_sum_net_all(df: Optional[pd.DataFrame], skip_last: bool = True) -> floa
     if df is None or df.dropna(how="all").empty or "_netto_float" not in df.columns:
         return 0.0
     df_eff = df.dropna(how="all").copy()
+    sum_pattern = re.compile(r"\bsum\b", re.IGNORECASE)
     if skip_last and len(df_eff) > 0:
         last_row = df_eff.iloc[-1].astype(str)
-        if last_row.str.contains(r"\bsum\b", case=False).any():
+        if last_row.str.contains(sum_pattern).any():
             df_eff = df_eff.iloc[:-1]
-    mask = ~df_eff.astype(str).apply(
-        lambda c: c.str.contains(r"\bsum\b", case=False, na=False)
-    ).any(axis=1)
+    mask = ~(
+        df_eff.fillna("").astype(str)
+        .stack()
+        .str.contains(sum_pattern)
+        .groupby(level=0)
+        .any()
+    )
     return float(df_eff.loc[mask, "_netto_float"].sum())
 

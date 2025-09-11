@@ -36,3 +36,13 @@ def test_calc_sum_net_all_beholder_siste_rad_uten_sum():
     })
     df['_netto_float'] = df['netto']
     assert calc_sum_net_all(df) == 600.0
+
+
+def test_calc_sum_net_all_med_sum_i_annen_kolonne():
+    df = pd.DataFrame({
+        'tekst': ['rad1', 'rad2'],
+        'kommentar': ['ok', 'sum her'],
+        'netto': [100.0, 200.0]
+    })
+    df['_netto_float'] = df['netto']
+    assert calc_sum_net_all(df) == 100.0
