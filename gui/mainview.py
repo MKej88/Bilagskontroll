@@ -169,14 +169,13 @@ def build_bottom(app):
         fg_color=style.get_color("bg"),
     )
     app.progress_bar.set(0)
-    app.progress_bar.grid(
-        row=0,
-        column=2,
-        padx=style.PAD_SM,
-        pady=style.PAD_SM,
-        sticky="e",
-    )
-    app.progress_bar.grid_remove()
+    app.progress_bar_grid = {
+        "row": 0,
+        "column": 2,
+        "padx": style.PAD_SM,
+        "pady": style.PAD_SM,
+        "sticky": "e",
+    }
 
     return bottom
 
