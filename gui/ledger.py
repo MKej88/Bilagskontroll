@@ -65,7 +65,18 @@ def sort_treeview(tree, col, reverse, app):
     for idx, iid in enumerate(tree.get_children("")):
         tag = "even" if idx % 2 == 0 else "odd"
         tree.item(iid, tags=(tag,))
-    tree.heading(col, command=lambda: sort_treeview(tree, col, not reverse, app))
+    arrow = "↓" if reverse else "↑"
+    for c in LEDGER_COLS:
+        if c == col:
+            tree.heading(
+                c,
+                text=f"{c} {arrow}",
+                command=lambda c=c: sort_treeview(tree, c, not reverse, app),
+            )
+        else:
+            tree.heading(
+                c, text=c, command=lambda c=c: sort_treeview(tree, c, False, app)
+            )
     update_treeview_stripes(app)
 
 
