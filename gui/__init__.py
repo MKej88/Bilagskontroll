@@ -699,7 +699,7 @@ class App:
             self.status_label.update_idletasks()
         if hasattr(self, "progress_bar"):
             if progress is not None:
-                self.progress_bar.grid()
+                self.progress_bar.grid(**getattr(self, "progress_bar_grid", {}))
                 self.progress_bar.set(max(0, min(1, progress / 100)))
                 self.progress_bar.update_idletasks()
             else:
