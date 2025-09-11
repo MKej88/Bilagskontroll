@@ -3,7 +3,7 @@
 ## 1.0.6
 
 ### Endringer
-- GUI bruker nå skrifttypen "Segoe UI" for et mer profesjonelt uttrykk
+- GUI bruker nå skrifttypen "Helvetica" for et mer profesjonelt uttrykk
 
 ## 1.0.5
 
