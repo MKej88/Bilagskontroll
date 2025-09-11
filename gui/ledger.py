@@ -11,7 +11,11 @@ def apply_treeview_theme(app):
         ttk_style.theme_use("clam")
     except Exception:
         pass
-    font = app.detail_box.cget("font") if hasattr(app, "detail_box") else ctk.CTkFont(size=14)
+    font = (
+        app.detail_box.cget("font")
+        if hasattr(app, "detail_box")
+        else ctk.CTkFont(size=14, family=style.FONT_FAMILY)
+    )
     bg = style.get_color("table_bg")
     fg = style.get_color("table_fg")
     hb = style.get_color("table_header_bg")
