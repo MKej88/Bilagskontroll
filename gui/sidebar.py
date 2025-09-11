@@ -32,8 +32,14 @@ def build_sidebar(app):
 
     app.inv_drop = DropZone(card, "Dra og slipp fakturaliste her", _drop_invoice)
     app.inv_drop.grid(row=2, column=0, padx=style.PAD_XL, pady=(0, style.PAD_XXS), sticky="ew")
-    ctk.CTkLabel(card, textvariable=app.file_path_var, wraplength=260, anchor="w", justify="left")\
-        .grid(row=3, column=0, padx=style.PAD_XL, pady=(0, style.PAD_SM), sticky="ew")
+    ctk.CTkLabel(
+        card,
+        textvariable=app.file_path_var,
+        wraplength=260,
+        anchor="w",
+        justify="left",
+        font=style.FONT_BODY,
+    ).grid(row=3, column=0, padx=style.PAD_XL, pady=(0, style.PAD_SM), sticky="ew")
 
     app.gl_path_var = ctk.StringVar(master=app, value="")
     create_button(card, text="Velg hovedbok (Excel)…", command=app.choose_gl_file)\
@@ -48,15 +54,21 @@ def build_sidebar(app):
 
     app.gl_drop = DropZone(card, "Dra og slipp hovedbok her", _drop_gl)
     app.gl_drop.grid(row=5, column=0, padx=style.PAD_XL, pady=(0, style.PAD_XXS), sticky="ew")
-    ctk.CTkLabel(card, textvariable=app.gl_path_var, wraplength=260, anchor="w", justify="left")\
-        .grid(row=6, column=0, padx=style.PAD_XL, pady=(0, style.PAD_SM), sticky="ew")
+    ctk.CTkLabel(
+        card,
+        textvariable=app.gl_path_var,
+        wraplength=260,
+        anchor="w",
+        justify="left",
+        font=style.FONT_BODY,
+    ).grid(row=6, column=0, padx=style.PAD_XL, pady=(0, style.PAD_SM), sticky="ew")
 
     app.add_drop_target(app.inv_drop, app.inv_drop.on_drop)
     app.add_drop_target(app.gl_drop, app.gl_drop.on_drop)
 
     row_utv = ctk.CTkFrame(card)
     row_utv.grid(row=7, column=0, padx=style.PAD_XL, pady=(style.PAD_XS, 0), sticky="ew")
-    ctk.CTkLabel(row_utv, text="Antall tilfeldig utvalg").grid(
+    ctk.CTkLabel(row_utv, text="Antall tilfeldig utvalg", font=style.FONT_BODY).grid(
         row=0, column=0, padx=(style.PAD_MD, 0), sticky="w"
     )
 
@@ -73,7 +85,13 @@ def build_sidebar(app):
         validatecommand=(vcmd_int, "%P"),
     ).grid(row=0, column=1, padx=(style.PAD_MD, 0))
 
-    ctk.CTkLabel(row_utv, text="År").grid(row=1, column=0, padx=(style.PAD_MD, 0), pady=(style.PAD_SM, 0), sticky="w")
+    ctk.CTkLabel(row_utv, text="År", font=style.FONT_BODY).grid(
+        row=1,
+        column=0,
+        padx=(style.PAD_MD, 0),
+        pady=(style.PAD_SM, 0),
+        sticky="w",
+    )
 
     app.year_var = ctk.StringVar(master=app, value="")
     app.year_combo = ctk.CTkComboBox(
@@ -109,7 +127,13 @@ def build_sidebar(app):
         default_user = ""
     app.utfort_av_var = ctk.StringVar(master=app, value=default_user)
 
-    ctk.CTkLabel(opp, text="Kunde").grid(row=0, column=0, padx=(style.PAD_MD, style.PAD_MD), pady=(style.PAD_MD, style.PAD_XS), sticky="w")
+    ctk.CTkLabel(opp, text="Kunde", font=style.FONT_BODY).grid(
+        row=0,
+        column=0,
+        padx=(style.PAD_MD, style.PAD_MD),
+        pady=(style.PAD_MD, style.PAD_XS),
+        sticky="w",
+    )
     app.kunde_entry = ctk.CTkEntry(
         opp,
         textvariable=app.kunde_var,
@@ -117,7 +141,13 @@ def build_sidebar(app):
         state="disabled",
     )
     app.kunde_entry.grid(row=0, column=1, padx=(0, style.PAD_MD), pady=(style.PAD_MD, style.PAD_XS), sticky="ew")
-    ctk.CTkLabel(opp, text="Utført av").grid(row=1, column=0, padx=(style.PAD_MD, style.PAD_MD), pady=(style.PAD_XS, style.PAD_MD), sticky="w")
+    ctk.CTkLabel(opp, text="Utført av", font=style.FONT_BODY).grid(
+        row=1,
+        column=0,
+        padx=(style.PAD_MD, style.PAD_MD),
+        pady=(style.PAD_XS, style.PAD_MD),
+        sticky="w",
+    )
     ctk.CTkEntry(opp, textvariable=app.utfort_av_var).grid(row=1, column=1, padx=(0, style.PAD_MD), pady=(style.PAD_XS, style.PAD_MD), sticky="ew")
     info_lbl = ctk.CTkLabel(
         opp,
@@ -179,7 +209,12 @@ def build_sidebar(app):
             dark_image=img_dark,
             size=(SIDEBAR_LOGO_WIDTH, scaled_h),
         )
-        ctk.CTkLabel(card, text="", image=app.sidebar_logo_img).grid(
+        ctk.CTkLabel(
+            card,
+            text="",
+            image=app.sidebar_logo_img,
+            font=style.FONT_BODY,
+        ).grid(
             row=101,
             column=0,
             padx=style.PAD_XL,

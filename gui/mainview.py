@@ -19,13 +19,27 @@ def build_header(app):
     app.lbl_status.grid(row=0, column=1, padx=style.PAD_MD)
     app.lbl_invoice.grid(row=0, column=2, padx=style.PAD_MD)
     create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(style.PAD_MD,0))
-    app.copy_feedback = ctk.CTkLabel(head, text="", text_color=style.get_color("success"))
+    app.copy_feedback = ctk.CTkLabel(
+        head,
+        text="",
+        text_color=style.get_color("success"),
+        font=style.FONT_BODY,
+    )
     app.copy_feedback.grid(row=0, column=4, padx=style.PAD_MD, sticky="w")
 
-    app.inline_status = ctk.CTkLabel(head, text="", text_color=style.get_color("success"))
+    app.inline_status = ctk.CTkLabel(
+        head,
+        text="",
+        text_color=style.get_color("success"),
+        font=style.FONT_BODY,
+    )
     app.inline_status.grid(row=0, column=5, padx=style.PAD_MD, sticky="e")
 
-    ctk.CTkLabel(head, text="Temavalg").grid(row=0, column=7, padx=(style.PAD_MD, style.PAD_XS))
+    ctk.CTkLabel(head, text="Temavalg", font=style.FONT_BODY).grid(
+        row=0,
+        column=7,
+        padx=(style.PAD_MD, style.PAD_XS),
+    )
     app.theme_var = ctk.StringVar(value="System")
     app.theme_menu = ctk.CTkOptionMenu(
         head,
@@ -153,7 +167,7 @@ def build_bottom(app):
         sticky="w",
     )
 
-    app.status_label = ctk.CTkLabel(bottom, text="")
+    app.status_label = ctk.CTkLabel(bottom, text="", font=style.FONT_BODY)
     app.status_label.grid(
         row=0,
         column=1,
@@ -262,7 +276,13 @@ def build_ledger_widgets(app):
     if app.ledger_tree.get_children():
         sort_treeview(app.ledger_tree, app.ledger_cols[0], False, app)
 
-    app.ledger_sum = ctk.CTkLabel(right, text=" ", anchor="e", justify="right")
+    app.ledger_sum = ctk.CTkLabel(
+        right,
+        text=" ",
+        anchor="e",
+        justify="right",
+        font=style.FONT_BODY,
+    )
     app.ledger_sum.grid(
         row=3,
         column=0,
