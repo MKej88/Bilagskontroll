@@ -120,6 +120,7 @@ def build_bottom(app):
     panel = app.main_panel
     bottom = ctk.CTkFrame(panel)
     bottom.grid(row=3, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_MD))
+    bottom.grid_columnconfigure(1, weight=1)
     app.bottom_frame = bottom
 
     def _export_pdf():
@@ -131,12 +132,25 @@ def build_bottom(app):
         finally:
             hide_busy(app)
 
-    create_button(
+    export_btn = create_button(
         bottom, text="📄 Eksporter PDF rapport", command=_export_pdf
-    ).pack(side="left", padx=(style.PAD_MD, style.PAD_SM))
+    )
+    export_btn.grid(
+        row=0,
+        column=0,
+        padx=(style.PAD_MD, style.PAD_SM),
+        pady=style.PAD_SM,
+        sticky="w",
+    )
 
     app.status_label = ctk.CTkLabel(bottom, text="")
-    app.status_label.pack(side="left", expand=True, fill="x", padx=style.PAD_SM)
+    app.status_label.grid(
+        row=0,
+        column=1,
+        padx=style.PAD_SM,
+        pady=style.PAD_SM,
+        sticky="ew",
+    )
 
     app.progress_bar = ctk.CTkProgressBar(
         bottom,
@@ -145,8 +159,14 @@ def build_bottom(app):
         fg_color=style.get_color("bg"),
     )
     app.progress_bar.set(0)
-    app.progress_bar.pack(side="right", padx=style.PAD_SM)
-    app.progress_bar.pack_forget()
+    app.progress_bar.grid(
+        row=0,
+        column=2,
+        padx=style.PAD_SM,
+        pady=style.PAD_SM,
+        sticky="e",
+    )
+    app.progress_bar.grid_remove()
 
     return bottom
 
