@@ -125,12 +125,22 @@ def build_bottom(app):
 
     def _export_pdf():
         from report import export_pdf
-        from .busy import show_busy, hide_busy
+        from .busy import show_busy, hide_busy, run_in_thread
+
         show_busy(app, "Eksporterer rapport...")
-        try:
-            export_pdf(app)
-        finally:
+
+        def finalize():
+            app._finish_progress()
             hide_busy(app)
+
+        def worker():
+            app.after(0, lambda: app._start_progress("Eksporterer rapport..."))
+            try:
+                export_pdf(app)
+            finally:
+                app.after(0, finalize)
+
+        run_in_thread(worker)
 
     export_btn = create_button(
         bottom, text="📄 Eksporter PDF rapport", command=_export_pdf

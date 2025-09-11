@@ -28,8 +28,6 @@ def build_sidebar(app):
         if not path.lower().endswith((".xlsx", ".xls")):
             return
         app.file_path_var.set(path)
-        from .busy import show_busy
-        show_busy(app, "Laster fakturaliste...")
         app._load_excel()
 
     app.inv_drop = DropZone(card, "Dra og slipp fakturaliste her", _drop_invoice)
@@ -46,8 +44,6 @@ def build_sidebar(app):
         if not path.lower().endswith((".xlsx", ".xls")):
             return
         app.gl_path_var.set(path)
-        from .busy import show_busy
-        show_busy(app, "Laster hovedbok...")
         app._load_gl_excel()
 
     app.gl_drop = DropZone(card, "Dra og slipp hovedbok her", _drop_gl)
