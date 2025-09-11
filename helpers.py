@@ -88,6 +88,18 @@ def only_digits(s: str) -> str:
 
 
 def parse_amount(x):
+    """Tolk ``x`` som et beløp.
+
+    Parametere
+    ----------
+    x : enhver
+        Verdi som skal konverteres til tall.
+
+    Returnerer
+    ----------
+    float | None
+        Tallverdi om mulig, ellers ``None``.
+    """
     s = to_str(x).replace(" ", "").replace("\xa0", "")
     if not s or s.lower() == "nan":
         return None
@@ -101,6 +113,18 @@ def parse_amount(x):
 
 
 def fmt_money(x):
+    """Formater ``x`` som pengebeløp.
+
+    Parametere
+    ----------
+    x : enhver
+        Verdi som skal vises som beløp.
+
+    Returnerer
+    ----------
+    str
+        Streng med to desimaler, eller tom streng hvis ``x`` er ugyldig.
+    """
     v = parse_amount(x)
     if v is None:
         return ""
@@ -108,6 +132,18 @@ def fmt_money(x):
 
 
 def format_number_with_thousands(s):
+    """Legg til tusenskilletegn i et tall.
+
+    Parametere
+    ----------
+    s : str | tall
+        Streng eller tall som skal formateres.
+
+    Returnerer
+    ----------
+    str
+        Streng med mellomrom som tusenskille, eller uendret tekst.
+    """
     if s is None:
         return ""
     s = str(s).strip()
@@ -135,6 +171,18 @@ def format_number_with_thousands(s):
 
 
 def guess_invoice_col(cols):
+    """Gjett kolonnen som inneholder fakturanummer.
+
+    Parametere
+    ----------
+    cols : sekvens av str
+        Kolonnenavn som skal vurderes.
+
+    Returnerer
+    ----------
+    str
+        Navn på antatt fakturanummerkolonne.
+    """
     global _INVOICE_PATS
     if _INVOICE_PATS is None:
         _INVOICE_PATS = [
@@ -151,6 +199,20 @@ def guess_invoice_col(cols):
 
 
 def guess_col(cols, *names_regex):
+    """Finn første kolonne som matcher regex-mønstre.
+
+    Parametere
+    ----------
+    cols : sekvens av str
+        Kolonnenavn som skal sjekkes.
+    *names_regex : str
+        Regulære uttrykk som skal testes mot kolonnenavn.
+
+    Returnerer
+    ----------
+    str | None
+        Første kolonne som matcher, ellers ``None``.
+    """
     global _INVOICE_PATS
     if _INVOICE_PATS is None:
         _INVOICE_PATS = [
@@ -167,6 +229,18 @@ def guess_col(cols, *names_regex):
 
 
 def guess_net_amount_col(cols):
+    """Gjett kolonne for nettobeløp.
+
+    Parametere
+    ----------
+    cols : sekvens av str
+        Kolonnenavn som skal vurderes.
+
+    Returnerer
+    ----------
+    str | None
+        Navn på kolonne som antas å inneholde nettobeløp.
+    """
     pats = [
         r"nettobel(ø|o)p",
         r"netto.*bel(ø|o)p",
@@ -180,6 +254,18 @@ def guess_net_amount_col(cols):
 
 
 def fmt_pct(n):
+    """Formater tall som prosent med én desimal.
+
+    Parametere
+    ----------
+    n : float
+        Verdi som skal vises som prosent.
+
+    Returnerer
+    ----------
+    str
+        Prosentformat eller tom streng ved feil.
+    """
     try:
         return f"{n:.1f}%"
     except Exception:
