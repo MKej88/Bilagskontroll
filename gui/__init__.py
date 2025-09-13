@@ -3,7 +3,6 @@
 
 import os
 import re
-from datetime import datetime
 
 from .style import style
 
@@ -389,6 +388,7 @@ class App:
 
     # Read
     def _update_year_options(self):
+        from datetime import datetime
         years: set[int] = set()
         for df in (getattr(self, "df", None), getattr(self, "gl_df", None)):
             if df is None or "Fakturadato" not in df.columns:
