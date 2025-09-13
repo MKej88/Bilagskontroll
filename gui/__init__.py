@@ -49,6 +49,8 @@ def create_button(master, **kwargs):
     options.update(kwargs)
     return ctk.CTkButton(master, **options)
 
+from .mainview import update_status_label
+
 # ----------------- App -----------------
 class App:
     def __init__(self):
@@ -586,9 +588,11 @@ class App:
         }
 
     def set_decision_and_next(self, val, advance=True):
-        if self.sample_df is None: return
+        if self.sample_df is None:
+            return
         self.comments[self.idx] = self.comment_box.get("0.0", "end").strip()
         self.decisions[self.idx] = val
+        update_status_label(self, val)
         if advance and self.idx < len(self.sample_df) - 1:
             self.idx += 1
         self.render()
@@ -740,8 +744,12 @@ class App:
             self.lbl_count.configure(text=f"Bilag: {self.idx+1}/{len(self.sample_df)}")
             inv_val = to_str(self.sample_df.iloc[self.idx].get(self.invoice_col, "")) if len(self.sample_df)>0 else "—"
             self.lbl_invoice.configure(text=f"Fakturanr: {inv_val or '—'}")
-            st = self.decisions[self.idx] if (self.decisions and self.idx < len(self.decisions)) else None
-            self.lbl_status.configure(text=f"Status: {st or '—'}")
+            st = (
+                self.decisions[self.idx]
+                if (self.decisions and self.idx < len(self.decisions))
+                else None
+            )
+            update_status_label(self, st)
 
             row_dict = self._current_row_dict()
             self.detail_box.configure(state="normal"); self.detail_box.delete("0.0","end")
@@ -765,7 +773,9 @@ class App:
             if self.comments and self.idx < len(self.comments) and self.comments[self.idx]:
                 self.comment_box.insert("0.0", self.comments[self.idx])
         else:
-            self.lbl_count.configure(text="Bilag: –/–"); self.lbl_invoice.configure(text="Fakturanr: –"); self.lbl_status.configure(text="Status: –")
+            self.lbl_count.configure(text="Bilag: –/–")
+            self.lbl_invoice.configure(text="Fakturanr: –")
+            update_status_label(self, None)
             self.detail_box.configure(state="normal"); self.detail_box.delete("0.0","end"); self.detail_box.insert("0.0","Velg Excel-fil og lag et utvalg."); self.detail_box.configure(state="disabled")
             if hasattr(self, "ledger_tree"):
                 for item in self.ledger_tree.get_children():

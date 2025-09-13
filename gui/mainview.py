@@ -1,5 +1,16 @@
 from . import create_button
-from .style import style, PADDING_Y
+from .style import style
+
+
+def update_status_label(app, decision: str | None) -> None:
+    """Oppdater statusetiketten basert på valgt beslutning."""
+    if decision == "Godkjent":
+        color = style.get_color("success")
+    elif decision == "Ikke godkjent":
+        color = style.get_color("error")
+    else:
+        color = style.get_color("bg")
+    app.lbl_status.configure(text=decision or "–", fg_color=color)
 
 
 def build_header(app):
@@ -13,12 +24,19 @@ def build_header(app):
     head_font = style.FONT_TITLE_LITE
 
     app.lbl_count = ctk.CTkLabel(head, text="Bilag: –/–", font=style.FONT_TITLE)
-    app.lbl_status = ctk.CTkLabel(head, text="Status: –", font=head_font)
+    app.lbl_status = ctk.CTkLabel(
+        head,
+        text="–",
+        font=head_font,
+        fg_color=style.get_color("bg"),
+    )
     app.lbl_invoice = ctk.CTkLabel(head, text="Fakturanr: –", font=head_font)
     app.lbl_count.grid(row=0, column=0, padx=(style.PAD_XS, style.PAD_LG))
     app.lbl_status.grid(row=0, column=1, padx=style.PAD_MD)
     app.lbl_invoice.grid(row=0, column=2, padx=style.PAD_MD)
-    create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(style.PAD_MD,0))
+    create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(
+        row=0, column=3, padx=(style.PAD_MD, style.PAD_XXS)
+    )
     app.copy_feedback = ctk.CTkLabel(
         head,
         text="",
@@ -47,7 +65,7 @@ def build_header(app):
         values=["System", "Light", "Dark"],
         command=app._switch_theme,
     )
-    app.theme_menu.grid(row=0, column=8, padx=(0, style.PAD_MD))
+    app.theme_menu.grid(row=0, column=8, padx=(style.PAD_XXS, style.PAD_MD))
     app.theme_menu.set("System")
 
     return head
@@ -58,7 +76,13 @@ def build_action_buttons(app):
 
     panel = app.main_panel
     btns = ctk.CTkFrame(panel)
-    btns.grid(row=1, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_XS))
+    btns.grid(
+        row=1,
+        column=0,
+        sticky="ew",
+        padx=style.PAD_LG,
+        pady=(style.PAD_XXS, style.PAD_XS),
+    )
     btns.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
 
     create_button(
@@ -104,7 +128,13 @@ def build_panes(app):
     left.grid_columnconfigure(0, weight=1)
     left.grid_rowconfigure(1, weight=1, minsize=120)
     app.detail_box = ctk.CTkTextbox(left, height=360, font=style.FONT_BODY)
-    app.detail_box.grid(row=1, column=0, sticky="nsew", padx=(style.PAD_MD, style.PAD_SM), pady=(0, style.PAD_MD))
+    app.detail_box.grid(
+        row=1,
+        column=0,
+        sticky="nsew",
+        padx=(style.PAD_MD, style.PAD_SM),
+        pady=(style.PAD_XXS, style.PAD_MD),
+    )
 
     ctk.CTkLabel(right, text="Hovedbok (bilagslinjer)", font=style.FONT_TITLE_SMALL)\
         .grid(row=0, column=0, sticky="w", padx=style.PAD_MD, pady=(style.PAD_XS, style.PAD_XS))
@@ -122,7 +152,7 @@ def build_panes(app):
         columnspan=2,
         sticky="nsew",
         padx=(style.PAD_MD, style.PAD_SM),
-        pady=(0, style.PAD_MD),
+        pady=(style.PAD_XXS, style.PAD_MD),
     )
 
     return paned
@@ -133,7 +163,13 @@ def build_bottom(app):
 
     panel = app.main_panel
     bottom = ctk.CTkFrame(panel)
-    bottom.grid(row=3, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_MD))
+    bottom.grid(
+        row=3,
+        column=0,
+        sticky="ew",
+        padx=style.PAD_LG,
+        pady=(style.PAD_XXS, style.PAD_MD),
+    )
     bottom.grid_columnconfigure(1, weight=1)
     app.bottom_frame = bottom
 
@@ -198,7 +234,13 @@ def build_main(app):
     import customtkinter as ctk
 
     panel = ctk.CTkFrame(app, corner_radius=16)
-    panel.grid(row=0, column=1, sticky="nsew", padx=(0, style.PAD_XL), pady=style.PAD_XL)
+    panel.grid(
+        row=0,
+        column=1,
+        sticky="nsew",
+        padx=(style.PAD_XXS, style.PAD_XL),
+        pady=style.PAD_XL,
+    )
     panel.grid_columnconfigure(0, weight=1)
     panel.grid_rowconfigure(2, weight=1, minsize=300)
 
@@ -288,6 +330,6 @@ def build_ledger_widgets(app):
         column=0,
         columnspan=2,
         sticky="ew",
-        padx=(0, style.PAD_LG),
-        pady=(style.PAD_SM, PADDING_Y),
+        padx=(style.PAD_XXS, style.PAD_LG),
+        pady=(style.PAD_SM, style.PAD_MD),
     )
