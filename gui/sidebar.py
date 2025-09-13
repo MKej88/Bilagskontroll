@@ -197,7 +197,7 @@ def build_sidebar(app):
 
     try:
         from PIL import Image
-        from helpers import resource_path
+        from helpers_path import resource_path
 
         img_light = Image.open(resource_path("icons/borev_logo_lightmode.png"))
         img_dark = Image.open(resource_path("icons/borev_logo_darkmode.png"))

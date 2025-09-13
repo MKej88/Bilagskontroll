@@ -297,7 +297,7 @@ class App:
 
     def _update_icon(self):
         ctk = _ctk()
-        from helpers import resource_path
+        from helpers_path import resource_path
         try:
             dark = ctk.get_appearance_mode().lower() == "dark"
         except Exception:
@@ -316,7 +316,7 @@ class App:
 
     def load_logo_images(self):
         ctk = _ctk()
-        from helpers import resource_path
+        from helpers_path import resource_path
         try:
             from PIL import Image
             img_light = Image.open(resource_path("icons/bilagskontroll_logo_256.png"))
