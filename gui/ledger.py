@@ -143,10 +143,10 @@ def autofit_tree_columns(tree, cols, total_width=None):
     from tkinter import ttk
     from .style import PADDING_X
 
-    style = ttk.Style()
-    font_name = style.lookup(tree.cget("style"), "font") or "TkDefaultFont"
+    ttk_style = ttk.Style()
+    font_name = ttk_style.lookup(tree.cget("style"), "font") or "TkDefaultFont"
     body_font = tkfont.nametofont(font_name)
-    head_font_name = style.lookup(f"{tree.cget('style')}.Heading", "font")
+    head_font_name = ttk_style.lookup(f"{tree.cget('style')}.Heading", "font")
     head_font = tkfont.nametofont(head_font_name) if head_font_name else body_font
 
     widths: list[int] = []
