@@ -1,5 +1,7 @@
-import customtkinter as ctk
+from . import _ctk
 from .style import style
+
+ctk = _ctk()
 
 
 class DropZone(ctk.CTkFrame):
