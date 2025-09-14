@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from typing import Optional, List
+from decimal import Decimal
 
 from helpers import parse_amount, logger
 
@@ -128,7 +129,7 @@ def extract_customer_from_invoice_file(
 
 
 
-def _net_amount_from_row(row: pd.Series, net_amount_col: Optional[str]) -> Optional[float]:
+def _net_amount_from_row(row: pd.Series, net_amount_col: Optional[str]) -> Optional[Decimal]:
     """Hent netto beløp fra raden ved å sjekke prioriterte kolonner."""
     cols = []
     if net_amount_col:
@@ -142,21 +143,22 @@ def _net_amount_from_row(row: pd.Series, net_amount_col: Optional[str]) -> Optio
     return None
 
 
-def calc_sum_kontrollert(sample_df: Optional[pd.DataFrame], decisions: list) -> float:
+def calc_sum_kontrollert(sample_df: Optional[pd.DataFrame], decisions: list) -> Decimal:
     """Summer netto-beløp for rader som er kontrollert."""
     if sample_df is None or "_netto_float" not in sample_df.columns:
-        return 0.0
+        return Decimal("0")
     import pandas as pd
 
     dec_ser = pd.Series(decisions).reindex(sample_df.index)
     mask = dec_ser.notna()
-    return float(sample_df.loc[mask, "_netto_float"].sum())
+    vals = sample_df.loc[mask, "_netto_float"].dropna().tolist()
+    return sum(vals, Decimal("0"))
 
 
-def calc_sum_net_all(df: Optional[pd.DataFrame], skip_last: bool = True) -> float:
+def calc_sum_net_all(df: Optional[pd.DataFrame], skip_last: bool = True) -> Decimal:
     """Summer netto-beløp for alle rader i ``df``."""
     if df is None or df.dropna(how="all").empty or "_netto_float" not in df.columns:
-        return 0.0
+        return Decimal("0")
     df_eff = df.dropna(how="all").copy()
     sum_pattern = re.compile(r"\bsum\b", re.IGNORECASE)
     if skip_last and len(df_eff) > 0:
@@ -170,5 +172,6 @@ def calc_sum_net_all(df: Optional[pd.DataFrame], skip_last: bool = True) -> floa
         .groupby(level=0)
         .any()
     )
-    return float(df_eff.loc[mask, "_netto_float"].sum())
+    vals = df_eff.loc[mask, "_netto_float"].dropna().tolist()
+    return sum(vals, Decimal("0"))
 

@@ -4,6 +4,8 @@
 import os
 import re
 
+from decimal import Decimal
+
 from .style import style
 from helpers import logger
 from tkinter import TclError
@@ -638,10 +640,9 @@ class App:
     def _update_status_card(self):
         self._ensure_helpers()
         from data_utils import calc_sum_kontrollert, calc_sum_net_all
-
         sum_k = calc_sum_kontrollert(self.sample_df, self.decisions)
         sum_a = calc_sum_net_all(self.df)
-        pct = (sum_k / sum_a * 100.0) if sum_a else 0.0
+        pct = (sum_k / sum_a * Decimal("100")) if sum_a else Decimal("0")
         self.lbl_st_sum_kontrollert.configure(text=f"Sum kontrollert: {fmt_money(sum_k)} kr")
         self.lbl_st_sum_alle.configure(text=f"Sum alle bilag: {fmt_money(sum_a)} kr")
         self.lbl_st_pct.configure(text=f"% kontrollert av sum: {fmt_pct(pct)}")

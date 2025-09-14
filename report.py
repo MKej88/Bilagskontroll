@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, TclError
 import webbrowser
+from decimal import Decimal
 
 from helpers import (
     to_str,
@@ -71,7 +72,7 @@ def create_status_table(app, body):
     remaining = sum(1 for d in app.decisions if d is None)
     sum_k = calc_sum_kontrollert(app.sample_df, app.decisions)
     sum_a = calc_sum_net_all(app.df)
-    pct = (sum_k / sum_a * 100.0) if sum_a else 0.0
+    pct = (sum_k / sum_a * Decimal("100")) if sum_a else Decimal("0")
 
     import pandas as pd
     dec_ser = pd.Series(app.decisions).reindex(app.sample_df.index)
@@ -81,7 +82,8 @@ def create_status_table(app, body):
             mask = dec_ser.isna()
         else:
             mask = dec_ser == dec_value
-        return float(app.sample_df.loc[mask, "_netto_float"].sum())
+        vals = app.sample_df.loc[mask, "_netto_float"].dropna().tolist()
+        return sum(vals, Decimal("0"))
 
     sum_approved = _sum_for_decision("Godkjent")
     sum_rejected = _sum_for_decision("Ikke godkjent")

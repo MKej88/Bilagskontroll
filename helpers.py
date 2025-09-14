@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import logging
+from decimal import Decimal
 
 
 def setup_logger(log_path: str = "logs/bilagskontroll.log") -> logging.Logger:
@@ -103,7 +104,7 @@ def parse_amount(x):
 
     Returnerer
     ----------
-    float | None
+    Decimal | None
         Tallverdi om mulig, ellers ``None``.
     """
     s = to_str(x).replace(" ", "").replace("\xa0", "")
@@ -117,8 +118,8 @@ def parse_amount(x):
     if s.endswith("-") and s[:-1].replace(".", "", 1).isdigit():
         s = "-" + s[:-1]
     try:
-        return float(s)
-    except ValueError:
+        return Decimal(s)
+    except Exception:
         return None
 
 
