@@ -1,7 +1,10 @@
 import os
+import os
+
 from . import create_button
 from .style import style, PADDING_Y
 from .dropzone import DropZone
+from helpers import logger
 
 SIDEBAR_LOGO_WIDTH = 200
 
@@ -121,10 +124,7 @@ def build_sidebar(app):
     opp.grid_columnconfigure(1, weight=1)
 
     app.kunde_var = ctk.StringVar(master=app, value="")
-    try:
-        default_user = os.environ.get("USERNAME") or os.environ.get("USER") or ""
-    except Exception:
-        default_user = ""
+    default_user = os.environ.get("USERNAME") or os.environ.get("USER") or ""
     app.utfort_av_var = ctk.StringVar(master=app, value=default_user)
 
     ctk.CTkLabel(opp, text="Kunde", font=style.FONT_BODY).grid(
@@ -221,7 +221,7 @@ def build_sidebar(app):
             pady=(0, PADDING_Y),
             sticky="ew",
         )
-    except Exception:
-        pass
+    except (ImportError, OSError):
+        logger.exception("Kunne ikke laste sidebar-logo")
 
     return card

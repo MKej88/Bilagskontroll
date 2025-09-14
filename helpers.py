@@ -118,7 +118,7 @@ def parse_amount(x):
         s = "-" + s[:-1]
     try:
         return float(s)
-    except Exception:
+    except ValueError:
         return None
 
 
@@ -174,7 +174,7 @@ def format_number_with_thousands(s):
         intp = core
     try:
         intp = int(intp)
-    except Exception:
+    except ValueError:
         return s
     int_fmt = f"{intp:,}".replace(",", " ")
     return f"{int_fmt},{dec}" if dec is not None else int_fmt
@@ -273,5 +273,5 @@ def fmt_pct(n):
     """
     try:
         return f"{n:.1f}%"
-    except Exception:
+    except (TypeError, ValueError):
         return ""

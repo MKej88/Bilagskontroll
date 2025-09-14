@@ -97,7 +97,8 @@ def extract_customer_from_invoice_file(
             df = pd.read_excel(path, engine="openpyxl", header=None, nrows=2)
         else:
             df = df.head(2)
-    except Exception:
+    except (OSError, ValueError):
+        logger.exception("Kunne ikke lese kundedata")
         return None
     if df is None or len(df) < 2:
         return None

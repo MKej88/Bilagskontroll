@@ -2,14 +2,14 @@ LEDGER_COLS = ["Kontonr", "Konto", "Beskrivelse", "MVA", "MVA-beløp", "Beløp",
 
 
 def apply_treeview_theme(app):
-    from tkinter import ttk
+    from tkinter import ttk, TclError
     import customtkinter as ctk
     from .style import style
 
     ttk_style = ttk.Style()
     try:
         ttk_style.theme_use("clam")
-    except Exception:
+    except TclError:
         pass
     font = (
         app.detail_box.cget("font")

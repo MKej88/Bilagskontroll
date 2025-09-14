@@ -1,5 +1,7 @@
 import threading
+from tkinter import TclError
 
+from helpers import logger
 from . import _ctk
 from .style import PADDING_X, PADDING_Y
 
@@ -39,7 +41,7 @@ def hide_busy(app):
     if win is not None:
         try:
             win.grab_release()
-        except Exception:
-            pass
+        except TclError:
+            logger.debug("Kunne ikke frigjøre vinduets grab")
         win.destroy()
         app._busy_win = None
