@@ -1,5 +1,6 @@
 from helpers import parse_amount, fmt_money
 from gui.ledger import ledger_rows
+from decimal import Decimal
 
 
 def build_ledger_table(app, invoice_value: str, style_small):
@@ -9,10 +10,10 @@ def build_ledger_table(app, invoice_value: str, style_small):
     if not rows:
         return Paragraph("Ingen bokføringslinjer for dette fakturanummeret.", style_small)
     data = [["Kontonr", "Konto", "MVA", "MVA-beløp", "Beløp", "Postert av"]]
-    total = 0.0
+    total = Decimal("0")
     for r in rows:
         v = parse_amount(r["Beløp"])
-        total += v or 0.0
+        total += v if v is not None else Decimal("0")
         data.append([
             r["Kontonr"],
             r["Konto"],

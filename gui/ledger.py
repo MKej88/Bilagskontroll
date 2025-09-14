@@ -1,5 +1,7 @@
 LEDGER_COLS = ["Kontonr", "Konto", "Beskrivelse", "MVA", "MVA-beløp", "Beløp", "Postert av"]
 
+from decimal import Decimal
+
 
 def apply_treeview_theme(app):
     from tkinter import ttk, TclError
@@ -123,7 +125,10 @@ def ledger_rows(app, invoice_value: str):
         kre = parse_amount(r.get(app.gl_credit_col)) if app.gl_credit_col else None
         belop = parse_amount(r.get(app.gl_amount_col)) if app.gl_amount_col else None
         if belop is None and (deb is not None or kre is not None):
-            belop = (deb or 0.0) - (kre or 0.0)
+            belop = (
+                (deb if deb is not None else Decimal("0"))
+                - (kre if kre is not None else Decimal("0"))
+            )
         belop_str = fmt_money(belop)
         postert_av = to_str(r.get(app.gl_postedby_col, ""))
         rows.append({
@@ -181,11 +186,11 @@ def populate_ledger_table(app, invoice_value: str):
         msg = "Ingen hovedbok lastet." if app.gl_df is None else "Ingen bilagslinjer for dette bilagsnummeret."
         app.ledger_sum.configure(text=msg)
         return
-    total = 0.0
+    total = Decimal("0")
     for i, r in enumerate(rows):
         tags = ["even" if i % 2 == 0 else "odd"]
         v = parse_amount(r["Beløp"])
-        total += (v or 0.0)
+        total += (v if v is not None else Decimal("0"))
         app.ledger_tree.insert("", "end", values=[r[c] for c in app.ledger_cols], tags=tags)
     autofit_tree_columns(app.ledger_tree, app.ledger_cols)
     app.ledger_sum.configure(text=f"Sum beløp: {fmt_money(total)}   •   Linjer: {len(rows)}")
