@@ -4,6 +4,8 @@ from .style import PADDING_Y
 
 
 def build_header(app):
+    """Bygg overskrift med status, fakturanr og temavalg."""
+
     import customtkinter as ctk
 
     panel = app.main_panel
@@ -55,6 +57,8 @@ def build_header(app):
 
 
 def build_action_buttons(app):
+    """Opprett handling- og navigasjonsknapper."""
+
     import customtkinter as ctk
 
     panel = app.main_panel
@@ -86,6 +90,8 @@ def build_action_buttons(app):
 
 
 def build_panes(app):
+    """Bygg venstre og høyre panel for detaljer og hovedbok."""
+
     import customtkinter as ctk
 
     panel = app.main_panel
@@ -130,6 +136,8 @@ def build_panes(app):
 
 
 def build_bottom(app):
+    """Lag bunnseksjonen med eksportknapp og statusvisning."""
+
     import customtkinter as ctk
 
     panel = app.main_panel
@@ -196,6 +204,8 @@ def build_bottom(app):
 
 
 def build_main(app):
+    """Sett sammen hovedpanelet av alle delkomponenter."""
+
     import customtkinter as ctk
 
     panel = ctk.CTkFrame(app, corner_radius=16)
@@ -212,8 +222,9 @@ def build_main(app):
 
     return panel
 
-
 def resize_ledger_columns(app):
+    """Tilpass kolonner i hovedboktabellen ved endring av bredde."""
+
     from . import ledger
     width = app.ledger_tree.winfo_width()
     if getattr(app, "_prev_ledger_width", None) == width:
@@ -229,6 +240,8 @@ def resize_ledger_columns(app):
 
 
 def build_ledger_widgets(app):
+    """Bygg trevisning for hovedbok med rullefelt og summering."""
+
     from tkinter import ttk
     import customtkinter as ctk
     from .ledger import (
