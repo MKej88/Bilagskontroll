@@ -9,6 +9,17 @@ from helpers import logger
 SIDEBAR_LOGO_WIDTH = 200
 
 
+def parse_dropped_path(event):
+    """Hent og valider filsti fra et drop-event.
+
+    Returnerer filsti dersom den peker på en Excel-fil, ellers ``None``.
+    """
+    path = event.data.strip("{}").strip()
+    if not path.lower().endswith((".xlsx", ".xls")):
+        return None
+    return path
+
+
 def _toggle_sample_btn(app, *_):
     state = "normal" if app.sample_size_var.get() and app.year_var.get() else "disabled"
     app.sample_btn.configure(state=state)
@@ -27,8 +38,8 @@ def build_sidebar(app):
     create_button(card, text="Velg leverandørfakturaer (Excel)…", command=app.choose_file)\
         .grid(row=1, column=0, padx=style.PAD_XL, pady=(style.PAD_XS, style.PAD_XXS), sticky="ew")
     def _drop_invoice(event):
-        path = event.data.strip("{}").strip()
-        if not path.lower().endswith((".xlsx", ".xls")):
+        path = parse_dropped_path(event)
+        if not path:
             return
         app.file_path_var.set(path)
         app._load_excel()
@@ -49,8 +60,8 @@ def build_sidebar(app):
         .grid(row=4, column=0, padx=style.PAD_XL, pady=(style.PAD_XXS, style.PAD_XXS), sticky="ew")
 
     def _drop_gl(event):
-        path = event.data.strip("{}").strip()
-        if not path.lower().endswith((".xlsx", ".xls")):
+        path = parse_dropped_path(event)
+        if not path:
             return
         app.gl_path_var.set(path)
         app._load_gl_excel()
