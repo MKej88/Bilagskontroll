@@ -1,5 +1,6 @@
 from . import create_button
-from .style import style, PADDING_Y
+from .style import style
+from .style import PADDING_Y
 
 
 def build_header(app):
