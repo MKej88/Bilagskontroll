@@ -25,13 +25,15 @@ class DropZone(ctk.CTkFrame):
         self._dnd_border = dnd_border
         self._highlight = highlight
         self.drop_callback = drop_callback
+        self._label_text_color = dnd_border
 
-        ctk.CTkLabel(
+        self.label = ctk.CTkLabel(
             self,
             text=text,
             anchor="center",
-            text_color=dnd_border,
-        ).pack(expand=True, fill="both", padx=style.PAD_MD, pady=style.PAD_SM)
+            text_color=self._label_text_color,
+        )
+        self.label.pack(expand=True, fill="both", padx=style.PAD_MD, pady=style.PAD_SM)
 
         for evt in ("<<DragEnter>>", "<<DropEnter>>"):
             self.dnd_bind(evt, self._on_drag_enter)
@@ -40,9 +42,11 @@ class DropZone(ctk.CTkFrame):
 
     def _on_drag_enter(self, _):
         self.configure(fg_color=self._highlight, border_color=self._highlight)
+        self.label.configure(text_color=style.get_color_pair("fg"))
 
     def reset_colors(self, _=None):
         self.configure(fg_color=self._dnd_bg, border_color=self._dnd_border)
+        self.label.configure(text_color=self._label_text_color)
 
     def on_drop(self, event):
         self.reset_colors()
