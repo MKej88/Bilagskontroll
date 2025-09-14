@@ -2,7 +2,7 @@
 import os
 from datetime import datetime
 from pathlib import Path
-from tkinter import filedialog
+from tkinter import filedialog, TclError
 import webbrowser
 
 from helpers import (
@@ -38,7 +38,8 @@ def create_info_table(app, now):
     try:
         kunde = to_str(app.kunde_var.get()) if hasattr(app, "kunde_var") else ""
         utfort = to_str(app.utfort_av_var.get()) if hasattr(app, "utfort_av_var") else ""
-    except Exception:
+    except TclError:
+        logger.exception("Klarte ikke hente kundedata")
         kunde = utfort = ""
     if kunde:
         info_rows.append(["Kunde", kunde])
@@ -265,9 +266,10 @@ def export_pdf(app):
         app._show_inline(f"Lagret PDF: {os.path.basename(save)}", ok=True)
         try:
             webbrowser.open(Path(save).resolve().as_uri())
-        except Exception as e:  # pragma: no cover - OS-avhengig
+        except (webbrowser.Error, OSError) as e:  # pragma: no cover - OS-avhengig
             logger.error(f"Kunne ikke åpne PDF: {e}")
     except Exception as e:  # pragma: no cover - direkte feil fra reportlab
+        logger.exception("Feil ved PDF-generering")
         app._show_inline(f"Feil ved PDF-generering: {e}", ok=False)
     finally:
         app._set_status("")

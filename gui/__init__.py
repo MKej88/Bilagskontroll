@@ -5,10 +5,13 @@ import os
 import re
 
 from .style import style
+from helpers import logger
+from tkinter import TclError
 
 try:
     from settings import UI_SCALING
-except Exception:  # pragma: no cover - valfri innstilling
+except Exception as e:  # pragma: no cover - valfri innstilling
+    logger.warning(f"UI_SCALING kunne ikke lastes: {e}")
     UI_SCALING = None
 
 # CustomTkinter importeres ved behov for raskere oppstart.
@@ -187,7 +190,8 @@ class App:
     def _init_ui(self):
         try:
             from tkinterdnd2 import TkinterDnD
-        except Exception:
+        except ImportError as e:
+            logger.warning(f"tkinterdnd2 ikke tilgjengelig: {e}")
             TkinterDnD = None
 
         self._TkinterDnD = TkinterDnD
@@ -251,8 +255,8 @@ class App:
                 try:
                     widget.drop_target_register("DND_Files")
                     widget.dnd_bind("<<Drop>>", func)
-                except Exception:
-                    pass
+                except TclError as e:
+                    logger.debug(f"DnD-registrering feilet: {e}")
             else:
                 self.after(200, _register)
 
@@ -300,19 +304,20 @@ class App:
         from helpers_path import resource_path
         try:
             dark = ctk.get_appearance_mode().lower() == "dark"
-        except Exception:
+        except (AttributeError, TclError) as e:
+            logger.debug(f"Klarte ikke hente tema: {e}")
             dark = False
         ico = "icons/bilagskontroll_icon_darkmode.ico" if dark else "icons/bilagskontroll_logo.ico"
         png = "icons/bilagskontroll_icon_darkmode_256.png" if dark else "icons/bilagskontroll_logo_256.png"
         try:
             self.iconbitmap(resource_path(ico))
-        except Exception:
-            pass
+        except (TclError, OSError) as e:
+            logger.debug(f"Kunne ikke sette ikon: {e}")
         try:
             self.app_icon_img = tk.PhotoImage(file=resource_path(png))
             self.iconphoto(False, self.app_icon_img)
-        except Exception:
-            pass
+        except (TclError, OSError) as e:
+            logger.debug(f"Kunne ikke laste ikonbilde: {e}")
 
     def load_logo_images(self):
         ctk = _ctk()
@@ -322,7 +327,7 @@ class App:
             img_light = Image.open(resource_path("icons/bilagskontroll_logo_256.png"))
             try:
                 img_dark = Image.open(resource_path("icons/bilagskontroll_icon_darkmode_256.png"))
-            except Exception:
+            except OSError:
                 img_dark = None
             try:
                 if img_dark:
@@ -331,7 +336,8 @@ class App:
                     self.logo_img = ctk.CTkImage(light_image=img_light, size=(32, 32))
             except TypeError:
                 self.logo_img = ctk.CTkImage(img_light, size=(32, 32))
-        except Exception:
+        except (ImportError, OSError) as e:
+            logger.error(f"Kunne ikke laste logo: {e}")
             self.logo_img = None
             return
         if hasattr(self, "bottom_frame"):
@@ -374,17 +380,17 @@ class App:
         try:
             if hasattr(self, "ledger_tree") and hasattr(self, "_ledger_configure_id"):
                 self.ledger_tree.unbind("<Configure>", self._ledger_configure_id)
-        except Exception:
-            pass
+        except TclError as e:
+            logger.debug(f"Kunne ikke unbinde ledger: {e}")
         try:
             ctk.ScalingTracker.remove_window(self.destroy, self)
-        except Exception:
-            pass
+        except ValueError as e:
+            logger.debug(f"ScalingTracker.remove_window feilet: {e}")
         if self._dnd_ready:
             try:
                 self._dnd.Tk.destroy(self)
-            except Exception:
-                pass
+            except TclError as e:
+                logger.debug(f"DnD-destroy feilet: {e}")
 
     # Read
     def _update_year_options(self):
@@ -442,7 +448,8 @@ class App:
             self.after(0, lambda: self._start_progress("Laster fakturaliste..."))
             try:
                 df, cust = load_invoice_df(path, header_idx)
-            except Exception as e:
+            except (OSError, ValueError) as e:
+                logger.error(f"Klarte ikke lese Excel: {e}")
                 self.after(0, lambda: (messagebox.showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}"), finalize()))
                 return
 
@@ -463,7 +470,8 @@ class App:
                     self.df["_netto_float"] = self.df.apply(
                         _net_amount_from_row, axis=1, args=(self.net_amount_col,)
                     )
-                except Exception:
+                except (TypeError, ValueError):
+                    logger.exception("Kunne ikke beregne nettobeløp")
                     self.df["_netto_float"] = None
                 self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
                 self._update_counts_labels()
@@ -502,7 +510,8 @@ class App:
             self.after(0, lambda: self._start_progress("Laster hovedbok..."))
             try:
                 gl = load_gl_df(path, nrows=10)
-            except Exception as e:
+            except (OSError, ValueError) as e:
+                logger.error(f"Klarte ikke lese hovedbok: {e}")
                 self.after(0, lambda: (messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}"), finalize()))
                 return
 
@@ -560,7 +569,7 @@ class App:
         try:
             n = int(self.sample_size_var.get())
             year = int(self.year_var.get())
-        except Exception:
+        except ValueError:
             messagebox.showinfo(APP_TITLE, "Oppgi antall og år.")
             return
         n = max(1, min(n, len(self.df)))
@@ -571,7 +580,8 @@ class App:
                 .reset_index(drop=True)
                 .copy()
             )
-        except Exception as e:
+        except ValueError as e:
+            logger.error(f"Feil ved trekking av utvalg: {e}")
             messagebox.showerror(APP_TITLE, f"Feil ved trekking av utvalg:\n{e}"); return
         self.decisions = [None]*len(self.sample_df); self.comments=[""]*len(self.sample_df); self.idx=0
         self.render()
@@ -730,8 +740,10 @@ class App:
         return "\n".join(lines).strip()
 
     def _update_status_card_safe(self):
-        try: self._update_status_card()
-        except Exception: pass
+        try:
+            self._update_status_card()
+        except Exception:
+            logger.exception("Feil ved oppdatering av statuskort")
 
     def render(self):
         self._ensure_helpers()
