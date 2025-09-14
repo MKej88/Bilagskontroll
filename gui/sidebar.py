@@ -1,5 +1,4 @@
 import os
-import os
 
 from . import create_button
 from .style import style, PADDING_Y
