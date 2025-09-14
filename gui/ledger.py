@@ -148,6 +148,10 @@ def autofit_tree_columns(tree, cols, total_width=None):
     from tkinter import ttk
     from .style import PADDING_X
 
+    if total_width is None:
+        tree.update_idletasks()
+        total_width = tree.winfo_width()
+
     ttk_style = ttk.Style()
     font_name = ttk_style.lookup(tree.cget("style"), "font") or "TkDefaultFont"
     body_font = tkfont.nametofont(font_name)
@@ -155,6 +159,7 @@ def autofit_tree_columns(tree, cols, total_width=None):
     head_font = tkfont.nametofont(head_font_name) if head_font_name else body_font
 
     widths: list[int] = []
+    MIN_COL_WIDTH = PADDING_X * 4
     for col in cols:
         max_px = head_font.measure(col)
         for iid in tree.get_children(""):
@@ -163,12 +168,15 @@ def autofit_tree_columns(tree, cols, total_width=None):
             if px > max_px:
                 max_px = px
         max_px += PADDING_X * 4
-        max_px = max(70, min(max_px, 500))
+        max_px = max(MIN_COL_WIDTH, min(max_px, 500))
         widths.append(int(max_px))
 
-    if total_width:
-        total_content = sum(widths)
-        if total_content < total_width:
+    total_content = sum(widths)
+    if total_width and total_content:
+        if total_content > total_width:
+            ratio = total_width / total_content
+            widths = [max(int(w * ratio), MIN_COL_WIDTH) for w in widths]
+        elif total_content < total_width:
             extra = (total_width - total_content) // len(widths)
             widths = [w + extra for w in widths]
 
