@@ -46,6 +46,9 @@ class FakeApp:
         return ""
     def _update_status_card_safe(self):
         self.status_card_called = True
+    def _update_status_label(self, status, placeholder="—"):
+        text = status if status else placeholder
+        self.lbl_status.configure(text=text)
 
 
 def test_status_card_updates_after_sample():

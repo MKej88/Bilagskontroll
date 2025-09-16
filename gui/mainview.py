@@ -16,10 +16,19 @@ def build_header(app):
     head_font = style.FONT_TITLE_LITE
 
     app.lbl_count = ctk.CTkLabel(head, text="Bilag: –/–", font=style.FONT_TITLE)
-    app.lbl_status = ctk.CTkLabel(head, text="Status: –", font=head_font)
+    status_frame = ctk.CTkFrame(head, fg_color="transparent")
+    status_frame.grid(row=0, column=1, padx=style.PAD_MD, sticky="w")
+    app.lbl_status_label = ctk.CTkLabel(status_frame, text="Status:", font=head_font)
+    app.lbl_status_label.grid(row=0, column=0, padx=(0, style.PAD_XXS))
+    app.lbl_status = ctk.CTkLabel(
+        status_frame,
+        text="–",
+        font=head_font,
+        text_color=style.get_color("fg"),
+    )
+    app.lbl_status.grid(row=0, column=1)
     app.lbl_invoice = ctk.CTkLabel(head, text="Fakturanr: –", font=head_font)
     app.lbl_count.grid(row=0, column=0, padx=(style.PAD_XS, style.PAD_LG))
-    app.lbl_status.grid(row=0, column=1, padx=style.PAD_MD)
     app.lbl_invoice.grid(row=0, column=2, padx=style.PAD_MD)
     create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(style.PAD_MD,0))
     app.copy_feedback = ctk.CTkLabel(

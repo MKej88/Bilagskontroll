@@ -740,6 +740,24 @@ class App:
             lines.append(f"{key}: {disp}")
         return "\n".join(lines).strip()
 
+    def _update_status_label(self, status: str | None, placeholder: str = "—"):
+        if not hasattr(self, "lbl_status"):
+            return
+
+        text = status if status else placeholder
+
+        if status == "Godkjent":
+            font = style.FONT_TITLE or style.FONT_TITLE_LITE or style.FONT_BODY
+            color = style.get_color("success")
+        elif status == "Ikke godkjent":
+            font = style.FONT_TITLE or style.FONT_TITLE_LITE or style.FONT_BODY
+            color = style.get_color("error")
+        else:
+            font = style.FONT_TITLE_LITE or style.FONT_BODY
+            color = style.get_color("fg")
+
+        self.lbl_status.configure(text=text, font=font, text_color=color)
+
     def _update_status_card_safe(self):
         try:
             self._update_status_card()
@@ -754,7 +772,7 @@ class App:
             inv_val = to_str(self.sample_df.iloc[self.idx].get(self.invoice_col, "")) if len(self.sample_df)>0 else "—"
             self.lbl_invoice.configure(text=f"Fakturanr: {inv_val or '—'}")
             st = self.decisions[self.idx] if (self.decisions and self.idx < len(self.decisions)) else None
-            self.lbl_status.configure(text=f"Status: {st or '—'}")
+            self._update_status_label(st)
 
             row_dict = self._current_row_dict()
             self.detail_box.configure(state="normal"); self.detail_box.delete("0.0","end")
@@ -778,7 +796,9 @@ class App:
             if self.comments and self.idx < len(self.comments) and self.comments[self.idx]:
                 self.comment_box.insert("0.0", self.comments[self.idx])
         else:
-            self.lbl_count.configure(text="Bilag: –/–"); self.lbl_invoice.configure(text="Fakturanr: –"); self.lbl_status.configure(text="Status: –")
+            self.lbl_count.configure(text="Bilag: –/–")
+            self.lbl_invoice.configure(text="Fakturanr: –")
+            self._update_status_label(None, placeholder="–")
             self.detail_box.configure(state="normal"); self.detail_box.delete("0.0","end"); self.detail_box.insert("0.0","Velg Excel-fil og lag et utvalg."); self.detail_box.configure(state="disabled")
             if hasattr(self, "ledger_tree"):
                 for item in self.ledger_tree.get_children():
