@@ -1,64 +1,106 @@
 # Bilagskontroll
 
-Bilagskontroll er et skrivebordverktøy for å kontrollere leverandørbilag. Programmet gir et grafisk brukergrensesnitt for å trekke tilfeldige bilagsutvalg, gjennomgå hvert bilag og generere en rapport.
+Bilagskontroll er et skrivebordverktøy skrevet i ren Python for å kontrollere leverandørbilag. Applikasjonen tilbyr et moderne CustomTkinter-grensesnitt som hjelper deg å trekke tilfeldige bilagsutvalg, kontrollere hvert enkelt bilag og dokumentere funnene i en rapport.
 
-Programmet er skrevet i Python og bruker `pandas` til å lese og filtrere Excel‑data, `customtkinter` for et moderne og responsivt grensesnitt og `reportlab` for å lage PDF‑rapporter.
+## Oversikt
 
-## Struktur
+- Last inn fakturalister og hovedbok fra Excel.
+- Trekk et tilfeldig utvalg av bilag og få oversikt over hvor mange bilag som finnes i datagrunnlaget.
+- Gå gjennom hvert bilag, registrer status, legg inn kommentarer og åpne den originale fakturaen direkte fra appen.
+- Se bilagslinjer fra hovedboken for valgt faktura og summer netto-beløp både for utvalget og for hele datagrunnlaget.
+- Eksporter en PDF-rapport som dokumenterer resultatet av kontrollen og logg hendelser til disk.
 
-| Fil | Beskrivelse |
-| --- | ----------- |
-| `bilagskontroll.py` | Startfil som åpner GUI‑applikasjonen |
-| `gui/__init__.py`    | `App`‑klassen og sammensetting av grensesnittet |
-| `gui/sidebar.py`     | Sidepanel for filvalg og datautvalg |
-| `gui/mainview.py`    | Hovedvisning for kontroll av bilag |
-| `gui/ledger.py`      | Viser bilagslinjer fra hovedboken |
-| `data_utils.py`      | Data- og beregningslogikk |
-| `helpers.py`         | Hjelpefunksjoner for tekst, tall og kolonnevalg |
-| `report.py`          | Generering av PDF‑rapport |
-| `report_utils.py`    | Hjelpefunksjoner for PDF‑rapporten |
+## Viktige funksjoner
 
-## Funksjoner
+- Moderne og responsivt brukergrensesnitt bygget med CustomTkinter.
+- Automatisk gjenkjenning av kolonner for fakturanummer og nettobeløp.
+- Fremhever statuskortet med tydelige farger for godkjent og ikke godkjent.
+- Hurtiglenke som åpner fakturaen i PowerOffice direkte fra appen.
+- Drag-og-slipp av filer med tilhørende ventedialog ved lasting.
+- Kolonnebredder i hovedboken tilpasser seg vindusstørrelsen og støtter mørk modus.
+- PDF-rapport med tidsstempel og detaljerte summer for hvert bilag.
+- Logger hendelser i `logs/` og oppretter loggkatalogen automatisk.
 
-- Moderne GUI basert på CustomTkinter og Tkinter
-- Vindustittel "Bilagskontroll" for enkel identifikasjon
-- Trekker et tilfeldig utvalg av bilag og registrerer antall bilag i datakilden
-- Viser bilagslinjer fra hovedboken for valgt faktura
-- Hurtiglenke som åpner fakturaen i PowerOffice direkte fra appen
-- Eksport av en PDF‑rapport med status og detaljert informasjon for hvert bilag
-- Deaktiverer navigasjonsknappene ved første og siste bilag for å hindre ugyldig navigering
-- Validerer tallfelt i grensesnittet for å sikre gyldige inputverdier
-- PDF‑rapporten viser tidspunkt for når den ble generert
-- Logger hendelser til fil i mappen `logs/` og oppretter loggkatalogen automatisk ved behov
-- Dra-og-slipp av filer viser en ventedialog mens filer lastes inn
-- Kolonnebredder i hovedboken tilpasser seg når vinduet endres
-- Grensesnittet støtter mørk modus
+## Teknologier og avhengigheter
 
-## Avhengigheter
+- Python 3.9 eller nyere
+- [pandas](https://pypi.org/project/pandas/) – lesing og filtrering av Excel-data
+- [openpyxl](https://pypi.org/project/openpyxl/) – effektiv filsupport for Excel
+- [customtkinter](https://pypi.org/project/customtkinter/) – moderne GUI-komponenter
+- [tkinterdnd2](https://pypi.org/project/tkinterdnd2/) – valgfri dra-og-slipp støtte
+- [reportlab](https://pypi.org/project/reportlab/) – generering av PDF-rapporter
+- [pytest](https://pypi.org/project/pytest/) – kjøres for å teste prosjektet under utvikling
 
-- Python 3.x
-- [pandas](https://pypi.org/project/pandas/) – leser og håndterer Excel‑data
-- [customtkinter](https://pypi.org/project/customtkinter/) – gir et moderne brukergrensesnitt
-- [reportlab](https://pypi.org/project/reportlab/) – genererer PDF‑rapporten
+## Kom i gang
 
-## Installasjon
+### Oppsett av miljø
 
-```bash
-python -m venv venv
-source venv/bin/activate  # venv\Scripts\activate på Windows
-pip install pandas customtkinter reportlab
-```
+1. Sørg for at Python er installert (`python --version`).
+2. Lag et virtuelt miljø og installer avhengigheter:
 
-## Bruk
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # venv\Scripts\activate på Windows
+   pip install -U pip
+   pip install pandas openpyxl customtkinter tkinterdnd2 reportlab pytest
+   ```
 
-1. Start programmet:
+### Starte applikasjonen
+
+1. Aktiver det virtuelle miljøet hvis det ikke allerede er aktivt.
+2. Start programmet:
+
    ```bash
    python bilagskontroll.py
    ```
-2. Velg Excel-fil(er) for bilag og hovedbok.
-3. Angi størrelse på utvalg og år, og trykk **🎲 Lag utvalg**.
-4. Gå gjennom hvert bilag, marker status og legg inn eventuelle kommentarer.
-5. Eksporter PDF-rapport når kontrollen er ferdig.
+3. Velg Excel-fil(er) for bilag og hovedbok.
+4. Angi størrelse på utvalg og år, og trykk **🎲 Lag utvalg**.
+5. Gå gjennom hvert bilag, marker status og legg inn eventuelle kommentarer.
+6. Eksporter PDF-rapport når kontrollen er ferdig.
+
+### Konfigurasjon
+
+- **`settings.py`** kan brukes til å overstyre standardinnstillinger, f.eks. `UI_SCALING` for å endre skalering på høyoppløselige skjermer.
+- **`helpers_path.resource_path`** hjelper applikasjonen å finne ressurser (for eksempel ikoner) både i utvikling og når programmet pakkes til et kjørbart format.
+
+### Loggfiler
+
+Loggeren er konfigurert i `helpers.py` og skriver til `logs/bilagskontroll.log`. Katalogen opprettes automatisk hvis den ikke finnes.
+
+## Prosjektstruktur
+
+```
+.
+├── bilagskontroll.py        # Inngangspunkt som starter GUI-applikasjonen
+├── data_utils.py            # Laster Excel-data og utfører beregninger
+├── helpers.py               # Tekstformatering, logikk for tall og logging
+├── helpers_path.py          # Håndtering av ressursstier ved pakking
+├── report.py                # Sammensetting av PDF-rapport
+├── report_utils.py          # Hjelpefunksjoner for rapportgenerering
+├── settings.py              # Valgfrie brukerinnstillinger
+├── gui/
+│   ├── __init__.py          # App-klassen og hovedkomponentene i GUI-et
+│   ├── sidebar.py           # Sidepanel for filvalg og utvalg
+│   ├── mainview.py          # Hovedvisningen med statuskort og detaljer
+│   ├── ledger.py            # Viser hovedbokslinjer for valgt bilag
+│   ├── dropzone.py          # Dra-og-slipp logikk for filer
+│   ├── busy.py              # Ventedialog når data lastes
+│   └── style.py             # Felles farger, fonter og spacing-konstanter
+├── icons/                   # Ikoner brukt i applikasjonen
+├── logs/                    # Loggfiler genereres her
+├── tests/                   # Pytest-baserte enhetstester
+└── README.md
+```
+
+## Utvikling og testing
+
+Kjør enhetstestene før du leverer endringer:
+
+```bash
+pytest
+```
+
+Testene dekker blant annet lasting av hovedbok, summering av netto-beløp, statuskort-logikk og logging.
 
 ## Versjonsnotater
 
@@ -66,7 +108,8 @@ Se `CHANGELOG.md` for en detaljert oversikt over endringer mellom versjoner.
 
 ## Bidra
 
-Bidrag og forslag til forbedringer er velkomne. Lag gjerne en pull request med en kort beskrivelse av endringen.
+Forslag til forbedringer og feilrapporter er velkomne. Opprett gjerne en issue eller send inn en pull request med en kort beskrivelse av endringen.
 
 ## Lisens
+
 Prosjektet er lisensiert under MIT-lisensen.
