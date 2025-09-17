@@ -318,22 +318,48 @@ class App:
             dpi = 96.0
 
         if dpi <= 0:
-            return 1.0
+            dpi = 96.0
 
-        scale = dpi / 96.0
+        base_scale = dpi / 96.0
+
+        diag_in = None
         try:
-            width_in = screen_w / dpi
-            height_in = screen_h / dpi
-            diag = (width_in ** 2 + height_in ** 2) ** 0.5
-        except Exception:
-            diag = None
+            mm_w = float(self.winfo_screenmmwidth())
+            mm_h = float(self.winfo_screenmmheight())
+        except (TclError, ValueError):
+            mm_w = mm_h = 0.0
 
-        self._small_screen = bool(diag and diag <= 17)
+        if mm_w > 0 and mm_h > 0:
+            diag_in = ((mm_w ** 2 + mm_h ** 2) ** 0.5) / 25.4
 
-        if self._small_screen and scale > 1.0:
-            scale = 1.0
+        if diag_in is None:
+            try:
+                width_in = screen_w / dpi
+                height_in = screen_h / dpi
+                diag_in = (width_in ** 2 + height_in ** 2) ** 0.5
+            except Exception:
+                diag_in = None
 
-        return max(scale, 0.85)
+        target_scale = base_scale
+
+        if diag_in and diag_in <= 17.3:
+            self._small_screen = True
+            if base_scale >= 1.75:
+                target_scale = 0.8
+            elif base_scale >= 1.5:
+                target_scale = 0.85
+            elif base_scale >= 1.3:
+                target_scale = 0.9
+            elif base_scale >= 1.15:
+                target_scale = 0.95
+            else:
+                target_scale = min(base_scale, 1.0)
+        else:
+            self._small_screen = bool(diag_in and diag_in <= 18.5 and base_scale >= 1.25)
+            if self._small_screen:
+                target_scale = min(base_scale, 1.0)
+
+        return max(target_scale, 0.8)
 
     def _switch_theme(self, mode):
         ctk = _ctk()
