@@ -304,52 +304,83 @@ class App:
     def _update_icon(self):
         ctk = _ctk()
         from helpers_path import resource_path
+
         try:
-            dark = ctk.get_appearance_mode().lower() == "dark"
+            ctk.get_appearance_mode()
         except (AttributeError, TclError) as e:
             logger.debug(f"Klarte ikke hente tema: {e}")
-            dark = False
-        ico = "icons/bilagskontroll_icon_darkmode.ico" if dark else "icons/bilagskontroll_logo.ico"
-        png = "icons/bilagskontroll_icon_darkmode_256.png" if dark else "icons/bilagskontroll_logo_256.png"
+
+        ico = "icons/bilagskontroll_logo_all.ico"
+        ico_path = resource_path(ico)
         try:
-            self.iconbitmap(resource_path(ico))
+            self.iconbitmap(ico_path)
         except (TclError, OSError) as e:
             logger.debug(f"Kunne ikke sette ikon: {e}")
+
         try:
-            self.app_icon_img = tk.PhotoImage(file=resource_path(png))
+            from PIL import ImageTk
+
+            icon_rgba = self._load_logo_image(size=(256, 256))
+            if icon_rgba is None:
+                return
+            self.app_icon_img = ImageTk.PhotoImage(icon_rgba)
             self.iconphoto(False, self.app_icon_img)
+        except ImportError as e:
+            logger.debug(f"Kunne ikke importere PIL for ikon: {e}")
         except (TclError, OSError) as e:
             logger.debug(f"Kunne ikke laste ikonbilde: {e}")
+        except Exception as e:  # pragma: no cover - uventa PIL-feil
+            logger.debug(f"Kunne ikke konvertere ikon: {e}")
+
+    def _load_logo_image(self, size=None):
+        from helpers_path import resource_path
+
+        ico_path = resource_path("icons/bilagskontroll_logo_all.ico")
+        try:
+            from PIL import Image, ImageSequence
+        except ImportError:
+            return None
+
+        try:
+            with Image.open(ico_path) as ico_img:
+                frames = []
+                if getattr(ico_img, "n_frames", 1) > 1:
+                    for frame in ImageSequence.Iterator(ico_img):
+                        frames.append(frame.copy())
+                if not frames:
+                    frames = [ico_img.copy()]
+        except OSError as e:
+            logger.debug(f"Kunne ikke åpne logo-fil: {e}")
+            return None
+
+        try:
+            logo_img = max(frames, key=lambda img: img.width * img.height)
+            if logo_img.mode != "RGBA":
+                logo_img = logo_img.convert("RGBA")
+            if size:
+                resample_attr = getattr(getattr(Image, "Resampling", Image), "LANCZOS", None)
+                resample = resample_attr or getattr(Image, "LANCZOS", Image.BICUBIC)
+                logo_img = logo_img.resize(size, resample)
+            return logo_img
+        except Exception as e:  # pragma: no cover - robust ico-håndtering
+            logger.debug(f"Kunne ikke bearbeide logo: {e}")
+            return None
 
     def load_logo_images(self):
         ctk = _ctk()
-        from helpers_path import resource_path
-        try:
-            from PIL import Image
-            img_light = Image.open(resource_path("icons/bilagskontroll_logo_256.png"))
-            try:
-                img_dark = Image.open(resource_path("icons/bilagskontroll_icon_darkmode_256.png"))
-            except OSError:
-                img_dark = None
-            try:
-                if img_dark:
-                    self.logo_img = ctk.CTkImage(light_image=img_light, dark_image=img_dark, size=(32, 32))
-                else:
-                    self.logo_img = ctk.CTkImage(light_image=img_light, size=(32, 32))
-            except TypeError:
-                self.logo_img = ctk.CTkImage(img_light, size=(32, 32))
-        except (ImportError, OSError) as e:
-            logger.error(f"Kunne ikke laste logo: {e}")
+        logo_img = self._load_logo_image(size=(256, 256))
+        if logo_img is None:
+            logger.error("Kunne ikke laste logo: mangler PIL eller ugyldig ico-fil")
             self.logo_img = None
             return
-        if hasattr(self, "bottom_frame"):
-            ctk.CTkLabel(self.bottom_frame, text="", image=self.logo_img).grid(
-                row=0,
-                column=3,
-                padx=(style.PAD_MD, 0),
-                pady=style.PAD_SM,
-                sticky="e",
-            )
+        try:
+            self.logo_img = ctk.CTkImage(light_image=logo_img, size=(32, 32))
+        except TypeError:
+            self.logo_img = ctk.CTkImage(logo_img, size=(32, 32))
+        except Exception as e:  # pragma: no cover - CTkImage variasjoner
+            logger.error(f"Kunne ikke initialisere logo-bilde: {e}")
+            self.logo_img = None
+            return
 
     def _on_drop(self, event):
         path = event.data.strip("{}").strip()
