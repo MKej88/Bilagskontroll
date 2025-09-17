@@ -107,11 +107,20 @@ class App:
         height = int(screen_h * 0.9)
         min_w = min(int(screen_w * 0.6), MIN_APP_WIDTH)
         min_h = int(screen_h * 0.7)
-        if getattr(self, "_small_screen", False) and self._ui_scale and self._ui_scale > 1:
-            width = int(width / self._ui_scale)
-            height = int(height / self._ui_scale)
-            min_w = int(min_w / self._ui_scale)
-            min_h = int(min_h / self._ui_scale)
+        if getattr(self, "_small_screen", False) and self._ui_scale:
+            scale = float(self._ui_scale)
+            if scale > 1:
+                factor = 1 / scale
+            else:
+                factor = scale
+            width = int(width * factor)
+            height = int(height * factor)
+            min_w = int(min_w * factor)
+            min_h = int(min_h * factor)
+        min_w = max(min_w, 900)
+        min_h = max(min_h, 650)
+        width = min(max(width, min_w), screen_w)
+        height = min(max(height, min_h), screen_h)
         width, height = self._load_window_size(width, height, min_w, min_h, screen_w, screen_h)
         x = origin_x + max((screen_w - width) // 2, 0)
         y = origin_y + max((screen_h - height) // 2, 0)
