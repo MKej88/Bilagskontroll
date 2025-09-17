@@ -335,7 +335,7 @@ class App:
             with Image.open(ico_path) as icon_img:
                 icon_rgba = icon_img.convert("RGBA")
                 self.app_icon_img = ImageTk.PhotoImage(icon_rgba)
-            self.iconphoto(False, self.app_icon_img)
+            self.iconphoto(True, self.app_icon_img)
         except ImportError as e:
             logger.debug(f"Kunne ikke importere PIL for ikon: {e}")
         except (TclError, OSError) as e:
