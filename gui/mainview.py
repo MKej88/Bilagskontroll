@@ -1,4 +1,4 @@
-from . import create_button
+from . import DEFAULT_APPEARANCE_MODE, create_button
 from .style import style
 from .style import PADDING_Y
 
@@ -52,15 +52,16 @@ def build_header(app):
         column=7,
         padx=(style.PAD_MD, style.PAD_XS),
     )
-    app.theme_var = ctk.StringVar(value="System")
+    default_theme_label = DEFAULT_APPEARANCE_MODE.title()
+    app.theme_var = ctk.StringVar(value=default_theme_label)
     app.theme_menu = ctk.CTkOptionMenu(
         head,
         variable=app.theme_var,
-        values=["System", "Light", "Dark"],
+        values=["Light", "Dark"],
         command=app._switch_theme,
     )
     app.theme_menu.grid(row=0, column=8, padx=(0, style.PAD_MD))
-    app.theme_menu.set("System")
+    app.theme_menu.set(default_theme_label)
 
     return head
 

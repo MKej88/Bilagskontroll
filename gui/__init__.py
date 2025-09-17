@@ -19,6 +19,9 @@ except Exception as e:  # pragma: no cover - valfri innstilling
 # CustomTkinter importeres ved behov for raskere oppstart.
 _ctk_mod = None
 
+# Standard tema som brukes dersom brukeren ikke velger noe annet.
+DEFAULT_APPEARANCE_MODE = "light"
+
 
 def _ctk():
     """Importer ``customtkinter`` ved første kall og returner modulen."""
@@ -273,7 +276,7 @@ class App:
         ctk = _ctk()
         if getattr(self, "_theme_initialized", False):
             return
-        ctk.set_appearance_mode("system")
+        ctk.set_appearance_mode(DEFAULT_APPEARANCE_MODE)
         ctk.set_default_color_theme("blue")
         scale = UI_SCALING or (self.winfo_fpixels("1i") / 96)
         if hasattr(ctk, "set_widget_scaling"):
@@ -289,10 +292,12 @@ class App:
     def _switch_theme(self, mode):
         ctk = _ctk()
         self._init_theme()
-        mode = str(mode).lower()
-        if mode not in {"light", "dark", "system"}:
-            mode = "system"
+        mode = str(mode).strip().lower()
+        if mode not in {"light", "dark"}:
+            mode = DEFAULT_APPEARANCE_MODE
         ctk.set_appearance_mode(mode)
+        if hasattr(self, "theme_var"):
+            self.theme_var.set(mode.title())
         if self._icon_ready:
             self._update_icon()
         from .ledger import apply_treeview_theme, update_treeview_stripes
