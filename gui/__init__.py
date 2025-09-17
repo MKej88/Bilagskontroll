@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """GUI-moduler for Bilagskontroll."""
 
+import json
 import os
 import re
 
 from decimal import Decimal
+from pathlib import Path
 
 from .style import style
 from helpers import logger
@@ -35,6 +37,13 @@ APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 MAX_APP_WIDTH = 1600
 MIN_APP_WIDTH = 1200
+
+if os.name == "nt":
+    _CONFIG_DIR = Path(os.getenv("APPDATA") or Path.home()) / "Bilagskontroll"
+else:
+    _CONFIG_DIR = Path.home() / ".bilagskontroll"
+
+WINDOW_CONFIG_FILE = _CONFIG_DIR / "settings.json"
 
 # For bakoverkompatibilitet
 get_color = style.get_color
@@ -92,11 +101,12 @@ class App:
                 origin_y = work_area.top
         width = min(int(screen_w * 0.8), MAX_APP_WIDTH)
         height = int(screen_h * 0.9)
+        min_w = min(int(screen_w * 0.6), MIN_APP_WIDTH)
+        min_h = int(screen_h * 0.7)
+        width, height = self._load_window_size(width, height, min_w, min_h, screen_w, screen_h)
         x = origin_x + max((screen_w - width) // 2, 0)
         y = origin_y + max((screen_h - height) // 2, 0)
         self.geometry(f"{width}x{height}+{x}+{y}")
-        min_w = min(int(screen_w * 0.6), MIN_APP_WIDTH)
-        min_h = int(screen_h * 0.7)
         self.minsize(min_w, min_h)
 
         self.app_icon_img = None
@@ -379,6 +389,7 @@ class App:
 
     def destroy(self):
         ctk = _ctk()
+        self._save_window_size()
         try:
             if hasattr(self, "ledger_tree") and hasattr(self, "_ledger_configure_id"):
                 self.ledger_tree.unbind("<Configure>", self._ledger_configure_id)
@@ -393,6 +404,58 @@ class App:
                 self._dnd.Tk.destroy(self)
             except TclError as e:
                 logger.debug(f"DnD-destroy feilet: {e}")
+
+    def _load_window_size(self, width, height, min_w, min_h, screen_w, screen_h):
+        try:
+            with WINDOW_CONFIG_FILE.open("r", encoding="utf-8") as fh:
+                data = json.load(fh)
+        except FileNotFoundError:
+            return width, height
+        except (OSError, json.JSONDecodeError) as e:
+            logger.debug(f"Kunne ikke lese vindustørrelse: {e}")
+            return width, height
+
+        win_cfg = data.get("window", {}) if isinstance(data, dict) else {}
+        try:
+            saved_w = int(win_cfg.get("width", width))
+            saved_h = int(win_cfg.get("height", height))
+        except (TypeError, ValueError):
+            return width, height
+
+        saved_w = max(min(saved_w, screen_w), min_w)
+        saved_h = max(min(saved_h, screen_h), min_h)
+        return saved_w or width, saved_h or height
+
+    def _save_window_size(self):
+        try:
+            self.update_idletasks()
+            width = int(self.winfo_width())
+            height = int(self.winfo_height())
+        except (TclError, ValueError) as e:
+            logger.debug(f"Kunne ikke hente vindustørrelse: {e}")
+            return
+
+        if width <= 1 or height <= 1:
+            return
+
+        try:
+            with WINDOW_CONFIG_FILE.open("r", encoding="utf-8") as fh:
+                loaded = json.load(fh)
+                data = loaded if isinstance(loaded, dict) else {}
+        except FileNotFoundError:
+            data = {}
+        except (OSError, json.JSONDecodeError) as e:
+            logger.debug(f"Kunne ikke lese eksisterende innstillinger: {e}")
+            data = {}
+
+        data["window"] = {"width": width, "height": height}
+
+        try:
+            WINDOW_CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+            with WINDOW_CONFIG_FILE.open("w", encoding="utf-8") as fh:
+                json.dump(data, fh)
+        except OSError as e:
+            logger.debug(f"Kunne ikke lagre vindustørrelse: {e}")
 
     # Read
     def _update_year_options(self):
