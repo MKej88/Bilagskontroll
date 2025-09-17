@@ -88,6 +88,7 @@ class App:
 
         screen_w = self.winfo_screenwidth()
         screen_h = self.winfo_screenheight()
+        self._ui_scale = self._detect_ui_scale(screen_w, screen_h)
         origin_x = 0
         origin_y = 0
         if os.name == "nt":
@@ -106,6 +107,11 @@ class App:
         height = int(screen_h * 0.9)
         min_w = min(int(screen_w * 0.6), MIN_APP_WIDTH)
         min_h = int(screen_h * 0.7)
+        if getattr(self, "_small_screen", False) and self._ui_scale and self._ui_scale > 1:
+            width = int(width / self._ui_scale)
+            height = int(height / self._ui_scale)
+            min_w = int(min_w / self._ui_scale)
+            min_h = int(min_h / self._ui_scale)
         width, height = self._load_window_size(width, height, min_w, min_h, screen_w, screen_h)
         x = origin_x + max((screen_w - width) // 2, 0)
         y = origin_y + max((screen_h - height) // 2, 0)
@@ -288,7 +294,7 @@ class App:
             return
         ctk.set_appearance_mode(DEFAULT_APPEARANCE_MODE)
         ctk.set_default_color_theme("blue")
-        scale = UI_SCALING or (self.winfo_fpixels("1i") / 96)
+        scale = getattr(self, "_ui_scale", None) or UI_SCALING or (self.winfo_fpixels("1i") / 96)
         if hasattr(ctk, "set_widget_scaling"):
             ctk.set_widget_scaling(scale)
         elif hasattr(ctk, "set_scaling"):
@@ -298,6 +304,36 @@ class App:
         elif hasattr(ctk, "set_window_scaling"):
             ctk.set_window_scaling(scale)
         self._theme_initialized = True
+
+    def _detect_ui_scale(self, screen_w: int, screen_h: int) -> float:
+        """Bestem skalering tilpasset skjermstørrelse."""
+
+        self._small_screen = False
+        if UI_SCALING:
+            return UI_SCALING
+
+        try:
+            dpi = float(self.winfo_fpixels("1i"))
+        except (TclError, ValueError):
+            dpi = 96.0
+
+        if dpi <= 0:
+            return 1.0
+
+        scale = dpi / 96.0
+        try:
+            width_in = screen_w / dpi
+            height_in = screen_h / dpi
+            diag = (width_in ** 2 + height_in ** 2) ** 0.5
+        except Exception:
+            diag = None
+
+        self._small_screen = bool(diag and diag <= 17)
+
+        if self._small_screen and scale > 1.0:
+            scale = 1.0
+
+        return max(scale, 0.85)
 
     def _switch_theme(self, mode):
         ctk = _ctk()
