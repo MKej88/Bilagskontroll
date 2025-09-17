@@ -89,6 +89,7 @@ class App:
         screen_w = self.winfo_screenwidth()
         screen_h = self.winfo_screenheight()
         self._ui_scale = self._detect_ui_scale(screen_w, screen_h)
+        scale_ratio = getattr(self, "_ui_scale_ratio", 1.0)
         origin_x = 0
         origin_y = 0
         if os.name == "nt":
@@ -107,16 +108,16 @@ class App:
         height = int(screen_h * 0.9)
         min_w = min(int(screen_w * 0.6), MIN_APP_WIDTH)
         min_h = int(screen_h * 0.7)
-        if getattr(self, "_small_screen", False) and self._ui_scale:
-            scale = float(self._ui_scale)
-            if scale > 1:
-                factor = 1 / scale
-            else:
-                factor = scale
-            width = int(width * factor)
-            height = int(height * factor)
-            min_w = int(min_w * factor)
-            min_h = int(min_h * factor)
+        if getattr(self, "_small_screen", False):
+            width = min(width, int(screen_w * 0.65))
+            height = min(height, int(screen_h * 0.85))
+            min_w = min(min_w, int(screen_w * 0.55))
+            min_h = min(min_h, int(screen_h * 0.75))
+            if scale_ratio < 1:
+                width = int(width * scale_ratio)
+                height = int(height * scale_ratio)
+                min_w = int(min_w * scale_ratio)
+                min_h = int(min_h * scale_ratio)
         min_w = max(min_w, 900)
         min_h = max(min_h, 650)
         width = min(max(width, min_w), screen_w)
@@ -318,7 +319,9 @@ class App:
         """Bestem skalering tilpasset skjermstørrelse."""
 
         self._small_screen = False
+        self._ui_scale_ratio = 1.0
         if UI_SCALING:
+            self._ui_base_scale = UI_SCALING
             return UI_SCALING
 
         try:
@@ -330,6 +333,7 @@ class App:
             dpi = 96.0
 
         base_scale = dpi / 96.0
+        self._ui_base_scale = base_scale
 
         diag_in = None
         try:
@@ -341,7 +345,7 @@ class App:
         if mm_w > 0 and mm_h > 0:
             diag_in = ((mm_w ** 2 + mm_h ** 2) ** 0.5) / 25.4
 
-        if diag_in is None:
+        if not diag_in:
             try:
                 width_in = screen_w / dpi
                 height_in = screen_h / dpi
@@ -350,25 +354,48 @@ class App:
                 diag_in = None
 
         target_scale = base_scale
+        considered_small = False
 
-        if diag_in and diag_in <= 17.3:
-            self._small_screen = True
-            if base_scale >= 1.75:
-                target_scale = 0.8
-            elif base_scale >= 1.5:
-                target_scale = 0.85
-            elif base_scale >= 1.3:
-                target_scale = 0.9
-            elif base_scale >= 1.15:
-                target_scale = 0.95
-            else:
-                target_scale = min(base_scale, 1.0)
+        if diag_in:
+            if diag_in < 15.5 and base_scale >= 1.15:
+                considered_small = True
+                target_scale = base_scale * 0.68
+            elif diag_in < 17.3 and base_scale >= 1.2:
+                considered_small = True
+                target_scale = base_scale * 0.72
+            elif diag_in < 18.6 and base_scale >= 1.25:
+                considered_small = True
+                target_scale = base_scale * 0.8
         else:
-            self._small_screen = bool(diag_in and diag_in <= 18.5 and base_scale >= 1.25)
-            if self._small_screen:
-                target_scale = min(base_scale, 1.0)
+            diag_px = (screen_w ** 2 + screen_h ** 2) ** 0.5
+            full_hd_diag = (1920 ** 2 + 1080 ** 2) ** 0.5
+            if diag_px <= full_hd_diag and base_scale >= 1.3:
+                considered_small = True
+                target_scale = base_scale * 0.75
 
-        return max(target_scale, 0.8)
+        if considered_small:
+            self._small_screen = True
+            target_scale = min(target_scale, base_scale)
+            if base_scale <= 1.05:
+                target_scale = base_scale
+        else:
+            if base_scale >= 2.2:
+                target_scale = min(base_scale * 0.85, base_scale)
+
+        if base_scale >= 1.15:
+            target_scale = max(target_scale, 0.85)
+        else:
+            target_scale = max(target_scale, 0.9)
+
+        if base_scale > 0:
+            ratio = min(target_scale / base_scale, 1.0)
+        else:
+            ratio = 1.0
+        if ratio <= 0:
+            ratio = 1.0
+        self._ui_scale_ratio = ratio
+
+        return target_scale
 
     def _switch_theme(self, mode):
         ctk = _ctk()
