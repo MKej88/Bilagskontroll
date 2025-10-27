@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Tuple
+from typing import Dict
 
 
 # Standard padding for GUI-komponenter
@@ -15,6 +15,8 @@ class Style:
     BTN_FG: str = "#1f6aa5"
     BTN_HOVER: str = "#185a8b"
     BTN_RADIUS: int = 8
+
+    theme: str = "light"
 
     # Farger per tema
     COLORS: Dict[str, Dict[str, str]] = field(
@@ -40,35 +42,8 @@ class Style:
         }
     )
 
-    def get_color(self, name: str) -> str:
-        """Returner farge tilpasset valgt tema."""
-        import customtkinter as ctk
-
-        mode = ctk.get_appearance_mode().lower()
-        try:
-            return self.COLORS[name]["dark" if mode == "dark" else "light"]
-        except KeyError as e:
-            raise KeyError(f"Ukjent fargenavn: {name}") from e
-
-    def get_color_pair(self, name: str) -> Tuple[str, str]:
-        """Returner (lys, mørk) fargepar for CustomTkinter-komponenter."""
-        try:
-            col = self.COLORS[name]
-            return col["light"], col["dark"]
-        except KeyError as e:
-            raise KeyError(f"Ukjent fargenavn: {name}") from e
-
     # Skrifttyper
     FONT_FAMILY: str = "Helvetica"
-    # Skrifttyper (initialiseres lazily)
-    FONT_TITLE: Optional[object] = None
-    FONT_BODY: Optional[object] = None
-    FONT_TITLE_LITE: Optional[object] = None
-    FONT_TITLE_LARGE: Optional[object] = None
-    FONT_TITLE_SMALL: Optional[object] = None
-    FONT_BODY_BOLD: Optional[object] = None
-    FONT_SMALL: Optional[object] = None
-    FONT_SMALL_ITALIC: Optional[object] = None
 
     # Standard spacing
     PAD_XL: int = 14
@@ -78,5 +53,39 @@ class Style:
     PAD_XS: int = 4
     PAD_XXS: int = 2
 
+    def set_theme(self, mode: str) -> None:
+        mode = (mode or "").strip().lower()
+        if mode not in {"light", "dark"}:
+            mode = "light"
+        self.theme = mode
+
+    def get_color(self, name: str) -> str:
+        try:
+            return self.COLORS[name]["dark" if self.theme == "dark" else "light"]
+        except KeyError as exc:
+            raise KeyError(f"Ukjent fargenavn: {name}") from exc
+
 
 style = Style()
+
+
+def apply_palette(app) -> None:
+    """Oppdater Qt-paletten basert på valgt tema."""
+
+    from PyQt5 import QtGui
+
+    palette = app.palette()
+    bg = QtGui.QColor(style.get_color("bg"))
+    fg = QtGui.QColor(style.get_color("fg"))
+    palette.setColor(palette.Window, bg)
+    palette.setColor(palette.WindowText, fg)
+    palette.setColor(palette.Base, bg)
+    palette.setColor(palette.AlternateBase, QtGui.QColor(style.get_color("table_row_odd")))
+    palette.setColor(palette.ToolTipBase, bg)
+    palette.setColor(palette.ToolTipText, fg)
+    palette.setColor(palette.Text, fg)
+    palette.setColor(palette.Button, bg)
+    palette.setColor(palette.ButtonText, fg)
+    palette.setColor(palette.Highlight, QtGui.QColor(style.get_color("table_sel_bg")))
+    palette.setColor(palette.HighlightedText, QtGui.QColor(style.get_color("table_sel_fg")))
+    app.setPalette(palette)

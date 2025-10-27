@@ -1,237 +1,210 @@
-import os
+from __future__ import annotations
 
-from . import create_button
-from .style import style, PADDING_Y
-from .dropzone import DropZone
+from typing import Optional
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
 from helpers import logger
+from helpers_path import resource_path
+
+from .dropzone import DropZone
+from .style import PADDING_Y, style
 
 SIDEBAR_LOGO_WIDTH = 200
 
 
-def parse_dropped_path(event):
-    """Hent og valider filsti fra et drop-event.
-
-    Returnerer filsti dersom den peker på en Excel-fil, ellers ``None``.
-    """
-    path = event.data.strip("{}").strip()
+def parse_dropped_path(path: str) -> Optional[str]:
+    path = (path or "").strip().strip("{}")
     if not path.lower().endswith((".xlsx", ".xls")):
         return None
     return path
 
 
-def _toggle_sample_btn(app, *_):
-    state = "normal" if app.sample_size_var.get() and app.year_var.get() else "disabled"
-    app.sample_btn.configure(state=state)
+class SidebarWidget(QtWidgets.QWidget):
+    def __init__(self, app: "App"):
+        super().__init__(app)
+        self._app = app
 
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(style.PAD_XL, style.PAD_XL, style.PAD_XL, style.PAD_XL)
+        layout.setSpacing(style.PAD_MD)
 
-def build_sidebar(app):
-    import customtkinter as ctk
+        title = QtWidgets.QLabel("⚙️ Datautvalg", self)
+        title.setStyleSheet("font-weight: bold; font-size: 18px;")
+        layout.addWidget(title)
 
-    card = ctk.CTkFrame(app, corner_radius=16)
-    card.grid(row=0, column=0, sticky="nsw", padx=style.PAD_XL, pady=style.PAD_XL)
+        self.file_btn = QtWidgets.QPushButton("Velg leverandørfakturaer (Excel)…", self)
+        self.file_btn.clicked.connect(app.choose_file)
+        layout.addWidget(self.file_btn)
 
-    ctk.CTkLabel(card, text="⚙️ Datautvalg", font=style.FONT_TITLE_LARGE)\
-        .grid(row=0, column=0, padx=style.PAD_XL, pady=(style.PAD_XL, style.PAD_SM), sticky="w")
+        self.inv_drop = DropZone(self, "Dra og slipp fakturaliste her")
+        self.inv_drop.dropped.connect(self._on_invoice_drop)
+        layout.addWidget(self.inv_drop)
 
-    app.file_path_var = ctk.StringVar(master=app, value="")
-    create_button(card, text="Velg leverandørfakturaer (Excel)…", command=app.choose_file)\
-        .grid(row=1, column=0, padx=style.PAD_XL, pady=(style.PAD_XS, style.PAD_XXS), sticky="ew")
-    def _drop_invoice(event):
-        path = parse_dropped_path(event)
-        if not path:
-            return
-        app.file_path_var.set(path)
-        app._load_excel()
+        self.file_path_label = QtWidgets.QLabel("", self)
+        self.file_path_label.setWordWrap(True)
+        layout.addWidget(self.file_path_label)
 
-    app.inv_drop = DropZone(card, "Dra og slipp fakturaliste her", _drop_invoice)
-    app.inv_drop.grid(row=2, column=0, padx=style.PAD_XL, pady=(0, style.PAD_XXS), sticky="ew")
-    ctk.CTkLabel(
-        card,
-        textvariable=app.file_path_var,
-        wraplength=260,
-        anchor="w",
-        justify="left",
-        font=style.FONT_BODY,
-    ).grid(row=3, column=0, padx=style.PAD_XL, pady=(0, style.PAD_SM), sticky="ew")
+        self.gl_btn = QtWidgets.QPushButton("Velg hovedbok (Excel)…", self)
+        self.gl_btn.clicked.connect(app.choose_gl_file)
+        layout.addWidget(self.gl_btn)
 
-    app.gl_path_var = ctk.StringVar(master=app, value="")
-    create_button(card, text="Velg hovedbok (Excel)…", command=app.choose_gl_file)\
-        .grid(row=4, column=0, padx=style.PAD_XL, pady=(style.PAD_XXS, style.PAD_XXS), sticky="ew")
+        self.gl_drop = DropZone(self, "Dra og slipp hovedbok her")
+        self.gl_drop.dropped.connect(self._on_gl_drop)
+        layout.addWidget(self.gl_drop)
 
-    def _drop_gl(event):
-        path = parse_dropped_path(event)
-        if not path:
-            return
-        app.gl_path_var.set(path)
-        app._load_gl_excel()
+        self.gl_path_label = QtWidgets.QLabel("", self)
+        self.gl_path_label.setWordWrap(True)
+        layout.addWidget(self.gl_path_label)
 
-    app.gl_drop = DropZone(card, "Dra og slipp hovedbok her", _drop_gl)
-    app.gl_drop.grid(row=5, column=0, padx=style.PAD_XL, pady=(0, style.PAD_XXS), sticky="ew")
-    ctk.CTkLabel(
-        card,
-        textvariable=app.gl_path_var,
-        wraplength=260,
-        anchor="w",
-        justify="left",
-        font=style.FONT_BODY,
-    ).grid(row=6, column=0, padx=style.PAD_XL, pady=(0, style.PAD_SM), sticky="ew")
+        # Sample ruter
+        sample_box = QtWidgets.QGroupBox("Tilfeldig utvalg", self)
+        sample_layout = QtWidgets.QFormLayout(sample_box)
+        sample_layout.setContentsMargins(style.PAD_MD, style.PAD_MD, style.PAD_MD, style.PAD_MD)
+        sample_layout.setSpacing(style.PAD_SM)
 
-    app.add_drop_target(app.inv_drop, app.inv_drop.on_drop)
-    app.add_drop_target(app.gl_drop, app.gl_drop.on_drop)
+        self.sample_size_edit = QtWidgets.QLineEdit(self)
+        self.sample_size_edit.setValidator(QtGui.QIntValidator(0, 999999, self))
+        self.sample_size_edit.textChanged.connect(self._toggle_sample_btn)
+        sample_layout.addRow("Antall", self.sample_size_edit)
 
-    row_utv = ctk.CTkFrame(card)
-    row_utv.grid(row=7, column=0, padx=style.PAD_XL, pady=(style.PAD_XS, 0), sticky="ew")
-    ctk.CTkLabel(row_utv, text="Antall tilfeldig utvalg", font=style.FONT_BODY).grid(
-        row=0, column=0, padx=(style.PAD_MD, 0), sticky="w"
-    )
+        self.year_combo = QtWidgets.QComboBox(self)
+        self.year_combo.currentTextChanged.connect(self._toggle_sample_btn)
+        sample_layout.addRow("År", self.year_combo)
 
-    def _validate_int(P: str) -> bool:
-        return P.isdigit() or P == ""
+        layout.addWidget(sample_box)
 
-    vcmd_int = app.register(_validate_int)
-    app.sample_size_var = ctk.StringVar(master=app, value="")
-    ctk.CTkEntry(
-        row_utv,
-        width=80,
-        textvariable=app.sample_size_var,
-        validate="key",
-        validatecommand=(vcmd_int, "%P"),
-    ).grid(row=0, column=1, padx=(style.PAD_MD, 0))
+        self.sample_btn = QtWidgets.QPushButton("🎲 Lag utvalg", self)
+        self.sample_btn.setEnabled(False)
+        self.sample_btn.clicked.connect(app.make_sample)
+        layout.addWidget(self.sample_btn)
 
-    ctk.CTkLabel(row_utv, text="År", font=style.FONT_BODY).grid(
-        row=1,
-        column=0,
-        padx=(style.PAD_MD, 0),
-        pady=(style.PAD_SM, 0),
-        sticky="w",
-    )
+        self.filecount_label = QtWidgets.QLabel("Antall bilag: –", self)
+        layout.addWidget(self.filecount_label)
 
-    app.year_var = ctk.StringVar(master=app, value="")
-    app.year_combo = ctk.CTkComboBox(
-        row_utv,
-        width=80,
-        variable=app.year_var,
-        values=[],
-        state="readonly",
-        command=lambda _: _toggle_sample_btn(app),
-    )
-    app.year_combo.grid(row=1, column=1, padx=(style.PAD_MD, 0), pady=(style.PAD_SM, 0))
+        info_title = QtWidgets.QLabel("Oppdragsinfo", self)
+        info_title.setStyleSheet("font-weight: bold;")
+        layout.addWidget(info_title)
 
-    app.sample_btn = create_button(card, text="🎲 Lag utvalg", command=app.make_sample, state="disabled")
-    app.sample_btn.grid(row=8, column=0, padx=style.PAD_XL, pady=(style.PAD_MD, style.PAD_SM), sticky="ew")
+        info_frame = QtWidgets.QGroupBox(self)
+        info_layout = QtWidgets.QFormLayout(info_frame)
+        info_layout.setContentsMargins(style.PAD_MD, style.PAD_MD, style.PAD_MD, style.PAD_MD)
+        info_layout.setSpacing(style.PAD_SM)
 
-    app.sample_size_var.trace_add("write", lambda *_: _toggle_sample_btn(app))
-    app._update_year_options()
+        self.kunde_edit = QtWidgets.QLineEdit(self)
+        self.kunde_edit.setPlaceholderText("Hentes automatisk")
+        self.kunde_edit.setEnabled(False)
+        info_layout.addRow("Kunde", self.kunde_edit)
 
-    app.lbl_filecount = ctk.CTkLabel(card, text="Antall bilag: –", font=style.FONT_TITLE)
-    app.lbl_filecount.grid(row=9, column=0, padx=style.PAD_XL, pady=(style.PAD_XXS, style.PAD_XXS), sticky="w")
+        self.utfort_av_edit = QtWidgets.QLineEdit(self)
+        self.utfort_av_edit.textChanged.connect(lambda text: app.utfort_av_var.set(text))
+        info_layout.addRow("Utført av", self.utfort_av_edit)
 
-    ctk.CTkLabel(card, text="Oppdragsinfo", font=style.FONT_BODY_BOLD)\
-        .grid(row=10, column=0, padx=style.PAD_XL, pady=(style.PAD_MD, style.PAD_XXS), sticky="w")
-    opp = ctk.CTkFrame(card, corner_radius=8)
-    opp.grid(row=11, column=0, padx=style.PAD_XL, pady=(0, style.PAD_MD), sticky="ew")
-    opp.grid_columnconfigure(0, weight=0)
-    opp.grid_columnconfigure(1, weight=1)
+        info_hint = QtWidgets.QLabel("Kundenavn hentes automatisk", self)
+        info_hint.setWordWrap(True)
+        info_layout.addRow("", info_hint)
 
-    app.kunde_var = ctk.StringVar(master=app, value="")
-    default_user = os.environ.get("USERNAME") or os.environ.get("USER") or ""
-    app.utfort_av_var = ctk.StringVar(master=app, value=default_user)
+        layout.addWidget(info_frame)
 
-    ctk.CTkLabel(opp, text="Kunde", font=style.FONT_BODY).grid(
-        row=0,
-        column=0,
-        padx=(style.PAD_MD, style.PAD_MD),
-        pady=(style.PAD_MD, style.PAD_XS),
-        sticky="w",
-    )
-    app.kunde_entry = ctk.CTkEntry(
-        opp,
-        textvariable=app.kunde_var,
-        placeholder_text="Hentes automatisk",
-        state="disabled",
-    )
-    app.kunde_entry.grid(row=0, column=1, padx=(0, style.PAD_MD), pady=(style.PAD_MD, style.PAD_XS), sticky="ew")
-    ctk.CTkLabel(opp, text="Utført av", font=style.FONT_BODY).grid(
-        row=1,
-        column=0,
-        padx=(style.PAD_MD, style.PAD_MD),
-        pady=(style.PAD_XS, style.PAD_MD),
-        sticky="w",
-    )
-    ctk.CTkEntry(opp, textvariable=app.utfort_av_var).grid(row=1, column=1, padx=(0, style.PAD_MD), pady=(style.PAD_XS, style.PAD_MD), sticky="ew")
-    info_lbl = ctk.CTkLabel(
-        opp,
-        text="Kundenavn hentes automatisk",
-        font=style.FONT_SMALL_ITALIC,
-        anchor="w",
-        justify="left",
-        wraplength=240,
-    )
-    info_lbl.grid(row=2, column=0, columnspan=2, padx=(style.PAD_MD, style.PAD_MD), pady=(0, style.PAD_MD), sticky="w")
+        layout.addStretch(1)
 
-    card.grid_rowconfigure(20, weight=1)
+        status_frame = QtWidgets.QGroupBox("Status", self)
+        status_layout = QtWidgets.QVBoxLayout(status_frame)
+        status_layout.setContentsMargins(style.PAD_MD, style.PAD_MD, style.PAD_MD, style.PAD_MD)
+        status_layout.setSpacing(PADDING_Y)
 
-    status_card = ctk.CTkFrame(card, corner_radius=12)
-    status_card.grid(
-        row=100,
-        column=0,
-        padx=style.PAD_XL,
-        pady=(style.PAD_MD, PADDING_Y),
-        sticky="ew",
-    )
-    status_card.grid_columnconfigure(0, weight=1)
+        self.lbl_st_sum_kontrollert = QtWidgets.QLabel("Sum kontrollert: –", self)
+        self.lbl_st_sum_alle = QtWidgets.QLabel("Sum alle bilag: –", self)
+        self.lbl_st_pct = QtWidgets.QLabel("% kontrollert av sum: –", self)
+        self.lbl_st_godkjent = QtWidgets.QLabel("Godkjent: –", self)
+        self.lbl_st_ikkegodkjent = QtWidgets.QLabel("Ikke godkjent: –", self)
+        self.lbl_st_gjen = QtWidgets.QLabel("Gjenstår å kontrollere: –", self)
 
-    title_font = style.FONT_TITLE_LARGE
-    body_font = style.FONT_BODY
+        for lbl in (
+            self.lbl_st_sum_kontrollert,
+            self.lbl_st_sum_alle,
+            self.lbl_st_pct,
+            self.lbl_st_godkjent,
+            self.lbl_st_ikkegodkjent,
+            self.lbl_st_gjen,
+        ):
+            lbl.setAlignment(QtCore.Qt.AlignCenter)
+            status_layout.addWidget(lbl)
 
-    ctk.CTkLabel(status_card, text="Status", font=title_font, anchor="center", justify="center")\
-        .grid(row=0, column=0, sticky="ew", pady=(PADDING_Y, style.PAD_SM))
+        layout.addWidget(status_frame)
 
-    app.lbl_st_sum_kontrollert = ctk.CTkLabel(status_card, text="Sum kontrollert: –", font=body_font, anchor="center", justify="center")
-    app.lbl_st_sum_kontrollert.grid(row=1, column=0, sticky="ew", pady=(0, style.PAD_XXS))
+        # Logo
+        try:
+            logo_path = resource_path("icons/borev_logo_lightmode.png")
+            pix = QtGui.QPixmap(logo_path)
+            if not pix.isNull():
+                scaled = pix.scaledToWidth(SIDEBAR_LOGO_WIDTH, QtCore.Qt.SmoothTransformation)
+                logo = QtWidgets.QLabel(self)
+                logo.setPixmap(scaled)
+                logo.setAlignment(QtCore.Qt.AlignCenter)
+                layout.addWidget(logo)
+        except Exception:  # pragma: no cover - bare logging
+            logger.exception("Kunne ikke laste sidebar-logo")
 
-    app.lbl_st_sum_alle = ctk.CTkLabel(status_card, text="Sum alle bilag: –", font=body_font, anchor="center", justify="center")
-    app.lbl_st_sum_alle.grid(row=2, column=0, sticky="ew", pady=(0, style.PAD_XXS))
+        self._sync_from_app()
 
-    app.lbl_st_pct = ctk.CTkLabel(status_card, text="% kontrollert av sum: –", font=body_font, anchor="center", justify="center")
-    app.lbl_st_pct.grid(row=3, column=0, sticky="ew", pady=(0, style.PAD_MD))
+    def _sync_from_app(self) -> None:
+        app = self._app
+        self.file_path_label.setText(app.file_path_var.get())
+        self.gl_path_label.setText(app.gl_path_var.get())
+        self.sample_size_edit.setText(app.sample_size_var.get())
+        self.year_combo.setCurrentText(app.year_var.get())
+        self.kunde_edit.setText(app.kunde_var.get())
+        self.utfort_av_edit.setText(app.utfort_av_var.get())
+        app.lbl_st_sum_kontrollert = self.lbl_st_sum_kontrollert
+        app.lbl_st_sum_alle = self.lbl_st_sum_alle
+        app.lbl_st_pct = self.lbl_st_pct
+        app.lbl_st_godkjent = self.lbl_st_godkjent
+        app.lbl_st_ikkegodkjent = self.lbl_st_ikkegodkjent
+        app.lbl_st_gjen = self.lbl_st_gjen
+        app.sample_btn = self.sample_btn
+        app.year_combo = self.year_combo
+        app.kunde_entry = self.kunde_edit
+        app.utfort_av_edit = self.utfort_av_edit
+        app.lbl_filecount = self.filecount_label
 
-    app.lbl_st_godkjent = ctk.CTkLabel(status_card, text="Godkjent: –", font=body_font, anchor="center", justify="center")
-    app.lbl_st_godkjent.grid(row=4, column=0, sticky="ew", pady=(0, style.PAD_XXS))
+    def _toggle_sample_btn(self) -> None:
+        text = self.sample_size_edit.text().strip()
+        year = self.year_combo.currentText().strip()
+        enabled = bool(text) and bool(year)
+        self.sample_btn.setEnabled(enabled)
+        self._app.sample_size_var.set(text)
+        self._app.year_var.set(year)
 
-    app.lbl_st_ikkegodkjent = ctk.CTkLabel(status_card, text="Ikke godkjent: –", font=body_font, anchor="center", justify="center")
-    app.lbl_st_ikkegodkjent.grid(row=5, column=0, sticky="ew", pady=(0, style.PAD_XXS))
+    def _on_invoice_drop(self, path: str) -> None:
+        valid = parse_dropped_path(path)
+        if valid:
+            self._app.file_path_var.set(valid)
+            self.file_path_label.setText(valid)
+            self._app._load_excel()
 
-    app.lbl_st_gjen = ctk.CTkLabel(status_card, text="Gjenstår å kontrollere: –", font=body_font, anchor="center", justify="center")
-    app.lbl_st_gjen.grid(row=6, column=0, sticky="ew", pady=(style.PAD_SM, PADDING_Y))
+    def _on_gl_drop(self, path: str) -> None:
+        valid = parse_dropped_path(path)
+        if valid:
+            self._app.gl_path_var.set(valid)
+            self.gl_path_label.setText(valid)
+            self._app._load_gl_excel()
 
-    try:
-        from PIL import Image
-        from helpers_path import resource_path
+    # API for App
+    def update_invoice_path(self, path: str) -> None:
+        self.file_path_label.setText(path)
 
-        img_light = Image.open(resource_path("icons/borev_logo_lightmode.png"))
-        img_dark = Image.open(resource_path("icons/borev_logo_darkmode.png"))
+    def update_gl_path(self, path: str) -> None:
+        self.gl_path_label.setText(path)
 
-        w, h = img_light.size
-        scaled_h = int(h * (SIDEBAR_LOGO_WIDTH / w))
-        app.sidebar_logo_img = ctk.CTkImage(
-            light_image=img_light,
-            dark_image=img_dark,
-            size=(SIDEBAR_LOGO_WIDTH, scaled_h),
-        )
-        ctk.CTkLabel(
-            card,
-            text="",
-            image=app.sidebar_logo_img,
-            font=style.FONT_BODY,
-        ).grid(
-            row=101,
-            column=0,
-            padx=style.PAD_XL,
-            pady=(0, PADDING_Y),
-            sticky="ew",
-        )
-    except (ImportError, OSError):
-        logger.exception("Kunne ikke laste sidebar-logo")
+    def set_year_options(self, options: list[str]) -> None:
+        self.year_combo.blockSignals(True)
+        self.year_combo.clear()
+        self.year_combo.addItems(options)
+        self.year_combo.blockSignals(False)
+        if options:
+            self.year_combo.setCurrentIndex(0)
 
-    return card
+    def refresh_theme(self) -> None:
+        self.inv_drop.refresh_theme()
+        self.gl_drop.refresh_theme()

@@ -1,317 +1,187 @@
-from . import DEFAULT_APPEARANCE_MODE, create_button
-from .style import style
-from .style import PADDING_Y
+from __future__ import annotations
+
+from PyQt5 import QtWidgets
+
+from .ledger import LedgerTable
+from .style import PADDING_Y, style
 
 
-def build_header(app):
-    """Bygg overskrift med status, fakturanr og temavalg."""
+class PlainTextBox(QtWidgets.QPlainTextEdit):
+    def __init__(self, parent: QtWidgets.QWidget, read_only: bool = False):
+        super().__init__(parent)
+        self.setReadOnly(read_only)
+        self.setMinimumHeight(120)
 
-    import customtkinter as ctk
+    # Tk-kompatible hjelpere
+    def configure(self, **kwargs):
+        state = kwargs.get("state")
+        if state == "disabled":
+            self.setReadOnly(True)
+        elif state == "normal":
+            self.setReadOnly(False)
 
-    panel = app.main_panel
-    head = ctk.CTkFrame(panel)
-    head.grid(row=0, column=0, sticky="ew", padx=style.PAD_LG, pady=style.PAD_MD)
-    head.grid_columnconfigure(6, weight=1)
+    def delete(self, *_):
+        self.clear()
 
-    head_font = style.FONT_TITLE_LITE
+    def insert(self, *_args):
+        text = _args[-1] if _args else ""
+        self.setPlainText(text)
 
-    app.lbl_count = ctk.CTkLabel(head, text="Bilag: –/–", font=style.FONT_TITLE)
-    status_frame = ctk.CTkFrame(head, fg_color="transparent")
-    status_frame.grid(row=0, column=1, padx=style.PAD_MD, sticky="w")
-    app.lbl_status_label = ctk.CTkLabel(status_frame, text="Status:", font=head_font)
-    app.lbl_status_label.grid(row=0, column=0, padx=(0, style.PAD_XXS))
-    app.lbl_status = ctk.CTkLabel(
-        status_frame,
-        text="–",
-        font=head_font,
-        text_color=style.get_color("fg"),
-    )
-    app.lbl_status.grid(row=0, column=1)
-    app.lbl_invoice = ctk.CTkLabel(head, text="Fakturanr: –", font=head_font)
-    app.lbl_count.grid(row=0, column=0, padx=(style.PAD_XS, style.PAD_LG))
-    app.lbl_invoice.grid(row=0, column=2, padx=style.PAD_MD)
-    create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(style.PAD_MD,0))
-    app.copy_feedback = ctk.CTkLabel(
-        head,
-        text="",
-        text_color=style.get_color("success"),
-        font=style.FONT_BODY,
-    )
-    app.copy_feedback.grid(row=0, column=4, padx=style.PAD_MD, sticky="w")
-
-    app.inline_status = ctk.CTkLabel(
-        head,
-        text="",
-        text_color=style.get_color("success"),
-        font=style.FONT_BODY,
-    )
-    app.inline_status.grid(row=0, column=5, padx=style.PAD_MD, sticky="e")
-
-    ctk.CTkLabel(head, text="Temavalg", font=style.FONT_BODY).grid(
-        row=0,
-        column=7,
-        padx=(style.PAD_MD, style.PAD_XS),
-    )
-    default_theme_label = DEFAULT_APPEARANCE_MODE.title()
-    app.theme_var = ctk.StringVar(value=default_theme_label)
-    app.theme_menu = ctk.CTkOptionMenu(
-        head,
-        variable=app.theme_var,
-        values=["Light", "Dark"],
-        command=app._switch_theme,
-    )
-    app.theme_menu.grid(row=0, column=8, padx=(0, style.PAD_MD))
-    app.theme_menu.set(default_theme_label)
-
-    return head
+    def get(self, *_):
+        return self.toPlainText()
 
 
-def build_action_buttons(app):
-    """Opprett handling- og navigasjonsknapper."""
+class MainView(QtWidgets.QWidget):
+    def __init__(self, app: "App"):
+        super().__init__(app)
+        self._app = app
 
-    import customtkinter as ctk
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(0, style.PAD_XL, style.PAD_XL, style.PAD_XL)
+        layout.setSpacing(style.PAD_MD)
 
-    panel = app.main_panel
-    btns = ctk.CTkFrame(panel)
-    btns.grid(row=1, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_XS))
-    btns.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
+        header = self._build_header()
+        layout.addWidget(header)
 
-    create_button(
-        btns,
-        text="✅ Godkjent",
-        fg_color=style.get_color("success"),
-        hover_color=style.get_color("success_hover"),
-        command=lambda: app.set_decision_and_next("Godkjent"),
-    ).grid(row=0, column=0, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
-    create_button(
-        btns,
-        text="⛔ Ikke godkjent",
-        fg_color=style.get_color("error"),
-        hover_color=style.get_color("error_hover"),
-        command=lambda: app.set_decision_and_next("Ikke godkjent"),
-    ).grid(row=0, column=1, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
-    create_button(btns, text="🔗 Åpne PowerOffice", command=app.open_in_po).grid(row=0, column=2, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
-    app.btn_prev = create_button(btns, text="⬅ Forrige", command=app.prev)
-    app.btn_prev.grid(row=0, column=3, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
-    app.btn_next = create_button(btns, text="➡ Neste", command=app.next)
-    app.btn_next.grid(row=0, column=4, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
+        actions = self._build_action_buttons()
+        layout.addWidget(actions)
 
-    return btns
+        split = self._build_panes()
+        layout.addWidget(split, 1)
 
+        bottom = self._build_bottom()
+        layout.addWidget(bottom)
 
-def build_panes(app):
-    """Bygg venstre og høyre panel for detaljer og hovedbok."""
+    def _build_header(self) -> QtWidgets.QWidget:
+        app = self._app
+        widget = QtWidgets.QWidget(self)
+        layout = QtWidgets.QGridLayout(widget)
+        layout.setContentsMargins(style.PAD_LG, style.PAD_MD, style.PAD_LG, style.PAD_MD)
+        layout.setHorizontalSpacing(style.PAD_MD)
+        layout.setColumnStretch(6, 1)
 
-    import customtkinter as ctk
+        app.lbl_count = QtWidgets.QLabel("Bilag: –/–", widget)
+        layout.addWidget(app.lbl_count, 0, 0)
 
-    panel = app.main_panel
-    paned = ctk.CTkFrame(panel)
-    paned.grid(row=2, column=0, sticky="nsew", padx=style.PAD_LG, pady=(style.PAD_XS, style.PAD_SM))
-    paned.grid_columnconfigure((0, 1), weight=1, minsize=400)
-    paned.grid_rowconfigure(0, weight=1)
+        app.lbl_status_label = QtWidgets.QLabel("Status:", widget)
+        layout.addWidget(app.lbl_status_label, 0, 1)
 
-    left = ctk.CTkFrame(paned)
-    right = ctk.CTkFrame(paned)
-    left.grid(row=0, column=0, sticky="nsew")
-    right.grid(row=0, column=1, sticky="nsew")
-    app.right_frame = right
+        app.lbl_status = QtWidgets.QLabel("–", widget)
+        layout.addWidget(app.lbl_status, 0, 2)
 
-    ctk.CTkLabel(left, text="Detaljer for bilag", font=style.FONT_TITLE_SMALL)\
-        .grid(row=0, column=0, sticky="w", padx=style.PAD_MD, pady=(style.PAD_XS, style.PAD_XS))
-    left.grid_columnconfigure(0, weight=1)
-    left.grid_rowconfigure(1, weight=1, minsize=120)
-    app.detail_box = ctk.CTkTextbox(left, height=360, font=style.FONT_BODY)
-    app.detail_box.grid(row=1, column=0, sticky="nsew", padx=(style.PAD_MD, style.PAD_SM), pady=(0, style.PAD_MD))
+        app.lbl_invoice = QtWidgets.QLabel("Fakturanr: –", widget)
+        layout.addWidget(app.lbl_invoice, 0, 3)
 
-    ctk.CTkLabel(right, text="Hovedbok (bilagslinjer)", font=style.FONT_TITLE_SMALL)\
-        .grid(row=0, column=0, sticky="w", padx=style.PAD_MD, pady=(style.PAD_XS, style.PAD_XS))
-    right.grid_columnconfigure(0, weight=1)
-    right.grid_columnconfigure(1, weight=0)
-    right.grid_rowconfigure(1, weight=3, minsize=150)
-    right.grid_rowconfigure(5, weight=1, minsize=120)
+        copy_btn = QtWidgets.QPushButton("📋 Kopier fakturanr", widget)
+        copy_btn.clicked.connect(app.copy_invoice)
+        layout.addWidget(copy_btn, 0, 4)
 
-    ctk.CTkLabel(right, text="Kommentar", font=style.FONT_TITLE_SMALL)\
-        .grid(row=4, column=0, columnspan=2, sticky="w", padx=(style.PAD_MD, style.PAD_SM), pady=(style.PAD_MD, style.PAD_XS))
-    app.comment_box = ctk.CTkTextbox(right, font=style.FONT_SMALL)
-    app.comment_box.grid(
-        row=5,
-        column=0,
-        columnspan=2,
-        sticky="nsew",
-        padx=(style.PAD_MD, style.PAD_SM),
-        pady=(0, style.PAD_MD),
-    )
+        app.copy_feedback = QtWidgets.QLabel("", widget)
+        layout.addWidget(app.copy_feedback, 0, 5)
 
-    return paned
+        app.inline_status = QtWidgets.QLabel("", widget)
+        layout.addWidget(app.inline_status, 0, 6)
 
+        theme_label = QtWidgets.QLabel("Tema", widget)
+        layout.addWidget(theme_label, 0, 7)
 
-def build_bottom(app):
-    """Lag bunnseksjonen med eksportknapp og statusvisning."""
+        app.theme_menu = QtWidgets.QComboBox(widget)
+        app.theme_menu.addItems(["Light", "Dark"])
+        app.theme_menu.currentTextChanged.connect(app._switch_theme)
+        layout.addWidget(app.theme_menu, 0, 8)
 
-    import customtkinter as ctk
+        return widget
 
-    panel = app.main_panel
-    bottom = ctk.CTkFrame(panel)
-    bottom.grid(row=3, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_MD))
-    bottom.grid_columnconfigure(1, weight=1)
-    app.bottom_frame = bottom
+    def _build_action_buttons(self) -> QtWidgets.QWidget:
+        app = self._app
+        widget = QtWidgets.QWidget(self)
+        layout = QtWidgets.QHBoxLayout(widget)
+        layout.setContentsMargins(style.PAD_LG, 0, style.PAD_LG, 0)
+        layout.setSpacing(style.PAD_SM)
 
-    def _export_pdf():
-        from report import export_pdf
-        from .busy import show_busy, hide_busy, run_in_thread
+        approve = QtWidgets.QPushButton("✅ Godkjent", widget)
+        approve.clicked.connect(lambda: app.set_decision_and_next("Godkjent"))
+        layout.addWidget(approve)
 
-        show_busy(app, "Eksporterer rapport...")
+        reject = QtWidgets.QPushButton("⛔ Ikke godkjent", widget)
+        reject.clicked.connect(lambda: app.set_decision_and_next("Ikke godkjent"))
+        layout.addWidget(reject)
 
-        def finalize():
-            app._finish_progress()
-            hide_busy(app)
+        open_po = QtWidgets.QPushButton("🔗 Åpne PowerOffice", widget)
+        open_po.clicked.connect(app.open_in_po)
+        layout.addWidget(open_po)
 
-        def worker():
-            app.after(0, lambda: app._start_progress("Eksporterer rapport..."))
-            try:
-                export_pdf(app)
-            finally:
-                app.after(0, finalize)
+        app.btn_prev = QtWidgets.QPushButton("⬅ Forrige", widget)
+        app.btn_prev.clicked.connect(app.prev)
+        layout.addWidget(app.btn_prev)
 
-        run_in_thread(worker)
+        app.btn_next = QtWidgets.QPushButton("➡ Neste", widget)
+        app.btn_next.clicked.connect(app.next)
+        layout.addWidget(app.btn_next)
 
-    export_btn = create_button(
-        bottom, text="📄 Eksporter PDF rapport", command=_export_pdf
-    )
-    export_btn.grid(
-        row=0,
-        column=0,
-        padx=(style.PAD_MD, style.PAD_SM),
-        pady=style.PAD_SM,
-        sticky="w",
-    )
+        return widget
 
-    app.status_label = ctk.CTkLabel(bottom, text="", font=style.FONT_BODY)
-    app.status_label.grid(
-        row=0,
-        column=1,
-        padx=style.PAD_SM,
-        pady=style.PAD_SM,
-        sticky="ew",
-    )
+    def _build_panes(self) -> QtWidgets.QWidget:
+        app = self._app
+        widget = QtWidgets.QWidget(self)
+        layout = QtWidgets.QHBoxLayout(widget)
+        layout.setContentsMargins(style.PAD_LG, 0, style.PAD_LG, 0)
+        layout.setSpacing(style.PAD_MD)
 
-    app.progress_bar = ctk.CTkProgressBar(
-        bottom,
-        width=120,
-        progress_color=style.get_color("success"),
-        fg_color=style.get_color("bg"),
-    )
-    app.progress_bar.set(0)
-    app.progress_bar_grid = {
-        "row": 0,
-        "column": 2,
-        "padx": style.PAD_SM,
-        "pady": style.PAD_SM,
-        "sticky": "e",
-    }
+        # Venstre panel
+        left = QtWidgets.QWidget(widget)
+        left_layout = QtWidgets.QVBoxLayout(left)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(PADDING_Y)
 
-    return bottom
+        left_layout.addWidget(QtWidgets.QLabel("Detaljer for bilag", left))
 
+        app.detail_box = PlainTextBox(left, read_only=True)
+        left_layout.addWidget(app.detail_box, 1)
 
-def build_main(app):
-    """Sett sammen hovedpanelet av alle delkomponenter."""
+        layout.addWidget(left, 1)
 
-    import customtkinter as ctk
+        # Høyre panel
+        right = QtWidgets.QWidget(widget)
+        right_layout = QtWidgets.QVBoxLayout(right)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(PADDING_Y)
 
-    panel = ctk.CTkFrame(app, corner_radius=16)
-    panel.grid(row=0, column=1, sticky="nsew", padx=(0, style.PAD_XL), pady=style.PAD_XL)
-    panel.grid_columnconfigure(0, weight=1)
-    panel.grid_rowconfigure(2, weight=1, minsize=300)
+        right_layout.addWidget(QtWidgets.QLabel("Hovedbok (bilagslinjer)", right))
 
-    app.main_panel = panel
+        app.ledger_table = LedgerTable(right)
+        right_layout.addWidget(app.ledger_table, 3)
 
-    build_header(app)
-    build_action_buttons(app)
-    build_panes(app)
-    build_bottom(app)
+        app.ledger_sum = QtWidgets.QLabel("", right)
+        right_layout.addWidget(app.ledger_sum)
 
-    return panel
+        right_layout.addWidget(QtWidgets.QLabel("Kommentar", right))
 
-def resize_ledger_columns(app):
-    """Tilpass kolonner i hovedboktabellen ved endring av bredde."""
+        app.comment_box = PlainTextBox(right, read_only=False)
+        right_layout.addWidget(app.comment_box, 1)
 
-    from . import ledger
-    width = app.ledger_tree.winfo_width()
-    if getattr(app, "_prev_ledger_width", None) == width:
-        return
+        layout.addWidget(right, 1)
+        app.right_frame = right
+        return widget
 
-    app._prev_ledger_width = width
-    app.after(
-        100,
-        lambda: ledger.autofit_tree_columns(
-            app.ledger_tree, app.ledger_cols, width
-        ),
-    )
+    def _build_bottom(self) -> QtWidgets.QWidget:
+        app = self._app
+        widget = QtWidgets.QWidget(self)
+        layout = QtWidgets.QHBoxLayout(widget)
+        layout.setContentsMargins(style.PAD_LG, 0, style.PAD_LG, 0)
+        layout.setSpacing(style.PAD_SM)
 
+        export_btn = QtWidgets.QPushButton("📄 Eksporter PDF rapport", widget)
+        export_btn.clicked.connect(app.export_pdf)
+        layout.addWidget(export_btn)
 
-def build_ledger_widgets(app):
-    """Bygg trevisning for hovedbok med rullefelt og summering."""
+        app.status_label = QtWidgets.QLabel("", widget)
+        layout.addWidget(app.status_label, 1)
 
-    from tkinter import ttk
-    import customtkinter as ctk
-    from .ledger import (
-        LEDGER_COLS,
-        apply_treeview_theme,
-        update_treeview_stripes,
-        sort_treeview,
-    )
+        app.progress_bar = QtWidgets.QProgressBar(widget)
+        app.progress_bar.setMaximumWidth(200)
+        app.progress_bar.setRange(0, 100)
+        app.progress_bar.setVisible(False)
+        layout.addWidget(app.progress_bar)
 
-    right = app.right_frame
-    app.ledger_cols = LEDGER_COLS
-    app.ledger_tree = ttk.Treeview(
-        right, columns=LEDGER_COLS, show="headings", height=10, style="Custom.Treeview"
-    )
-    for col, w, anchor in [
-        ("Kontonr", 90, "w"),
-        ("Konto", 180, "w"),
-        ("Beskrivelse", 260, "w"),
-        ("MVA", 70, "w"),
-        ("MVA-beløp", 110, "e"),
-        ("Beløp", 110, "e"),
-        ("Postert av", 140, "w"),
-    ]:
-        app.ledger_tree.heading(
-            col,
-            text=col,
-            command=lambda c=col: sort_treeview(app.ledger_tree, c, False, app),
-        )
-        app.ledger_tree.column(col, width=w, minwidth=60, anchor=anchor, stretch=True)
-
-    yscroll = ctk.CTkScrollbar(right, orientation="vertical", command=app.ledger_tree.yview)
-    xscroll = ctk.CTkScrollbar(right, orientation="horizontal", command=app.ledger_tree.xview)
-    app.ledger_tree.configure(yscrollcommand=yscroll.set, xscrollcommand=xscroll.set)
-    app.ledger_tree.grid(row=1, column=0, sticky="nsew")
-    yscroll.grid(row=1, column=1, sticky="ns")
-    xscroll.grid(row=2, column=0, sticky="ew")
-
-    app._prev_ledger_width = None
-    app._ledger_configure_id = app.ledger_tree.bind(
-        "<Configure>", lambda e: resize_ledger_columns(app)
-    )
-
-    apply_treeview_theme(app)
-    update_treeview_stripes(app)
-
-    if app.ledger_tree.get_children():
-        sort_treeview(app.ledger_tree, app.ledger_cols[0], False, app)
-
-    app.ledger_sum = ctk.CTkLabel(
-        right,
-        text=" ",
-        anchor="e",
-        justify="right",
-        font=style.FONT_BODY,
-    )
-    app.ledger_sum.grid(
-        row=3,
-        column=0,
-        columnspan=2,
-        sticky="ew",
-        padx=(0, style.PAD_LG),
-        pady=(style.PAD_SM, PADDING_Y),
-    )
+        return widget

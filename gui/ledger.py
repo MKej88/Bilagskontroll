@@ -1,96 +1,73 @@
-LEDGER_COLS = ["Kontonr", "Konto", "Beskrivelse", "MVA", "MVA-beløp", "Beløp", "Postert av"]
+from __future__ import annotations
 
 from decimal import Decimal
+from typing import List
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+from helpers import fmt_money, only_digits, parse_amount, to_str
+from .style import style, PADDING_X, PADDING_Y
+
+LEDGER_COLS: List[str] = [
+    "Kontonr",
+    "Konto",
+    "Beskrivelse",
+    "MVA",
+    "MVA-beløp",
+    "Beløp",
+    "Postert av",
+]
 
 
-def apply_treeview_theme(app):
-    from tkinter import ttk, TclError
-    import customtkinter as ctk
-    from .style import style
+class LedgerTable(QtWidgets.QTableWidget):
+    """Tabell med hjelpefunksjoner for å etterligne Tkinter-API."""
 
-    ttk_style = ttk.Style()
-    try:
-        ttk_style.theme_use("clam")
-    except TclError:
-        pass
-    font = (
-        app.detail_box.cget("font")
-        if hasattr(app, "detail_box")
-        else ctk.CTkFont(size=14, family=style.FONT_FAMILY)
-    )
-    bg = style.get_color("table_bg")
-    fg = style.get_color("table_fg")
-    hb = style.get_color("table_header_bg")
-    sel_bg = style.get_color("table_sel_bg")
-    sel_fg = style.get_color("table_sel_fg")
-    ttk_style.configure(
-        "Custom.Treeview",
-        background=bg,
-        fieldbackground=bg,
-        foreground=fg,
-        rowheight=24,
-        borderwidth=0,
-        font=font,
-    )
-    ttk_style.configure(
-        "Custom.Treeview.Heading",
-        background=hb,
-        foreground=fg,
-        borderwidth=0,
-    )
-    ttk_style.map(
-        "Custom.Treeview",
-        background=[("selected", sel_bg)],
-        foreground=[("selected", sel_fg)],
-    )
-    app.ledger_tree.configure(style="Custom.Treeview")
+    def __init__(self, parent: QtWidgets.QWidget):
+        super().__init__(0, len(LEDGER_COLS), parent)
+        self.setHorizontalHeaderLabels(LEDGER_COLS)
+        self.setAlternatingRowColors(True)
+        self.verticalHeader().setVisible(False)
+        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.horizontalHeader().setStretchLastSection(True)
+        self.horizontalHeader().setHighlightSections(False)
+        self.refresh_theme()
 
+    # Tk-kompatible hjelpere
+    def get_children(self):  # noqa: D401 - beholder API
+        return range(self.rowCount())
 
-def update_treeview_stripes(app):
-    from .style import style
+    def delete(self, row, *_):  # noqa: D401 - beholder API
+        self.removeRow(row)
 
-    odd = style.get_color("table_row_odd")
-    even = style.get_color("table_row_even")
-    app.ledger_tree.tag_configure("odd", background=odd)
-    app.ledger_tree.tag_configure("even", background=even)
+    def insert(self, _parent, _index, values, tags=None):  # noqa: ANN001 - Tk API
+        row = self.rowCount()
+        self.insertRow(row)
+        for col, value in enumerate(values):
+            item = QtWidgets.QTableWidgetItem(str(value))
+            item.setFlags(item.flags() ^ QtCore.Qt.ItemIsEditable)
+            self.setItem(row, col, item)
+        if tags:
+            if "odd" in tags:
+                self.setRowBackground(row, style.get_color("table_row_odd"))
+            elif "even" in tags:
+                self.setRowBackground(row, style.get_color("table_row_even"))
 
+    def setRowBackground(self, row: int, color: str) -> None:  # noqa: N802 - Qt navnestil
+        for col in range(self.columnCount()):
+            item = self.item(row, col)
+            if item:
+                item.setBackground(QtGui.QColor(color))
 
-def sort_treeview(tree, col, reverse, app):
-    """Sorter rader i ``tree`` etter valgt kolonne."""
-    from helpers import parse_amount
-
-    data = []
-    for iid in tree.get_children(""):
-        cell = tree.set(iid, col)
-        num = parse_amount(cell)
-        sort_val = num if num is not None else str(cell).lower()
-        data.append((sort_val, iid))
-    data.sort(reverse=reverse)
-    for idx, (_, iid) in enumerate(data):
-        tree.move(iid, "", idx)
-    for idx, iid in enumerate(tree.get_children("")):
-        tag = "even" if idx % 2 == 0 else "odd"
-        tree.item(iid, tags=(tag,))
-    arrow = "↓" if reverse else "↑"
-    for c in LEDGER_COLS:
-        if c == col:
-            tree.heading(
-                c,
-                text=f"{c} {arrow}",
-                command=lambda c=c: sort_treeview(tree, c, not reverse, app),
-            )
-        else:
-            tree.heading(
-                c, text=c, command=lambda c=c: sort_treeview(tree, c, False, app)
-            )
-    update_treeview_stripes(app)
+    def refresh_theme(self) -> None:
+        self.setStyleSheet(
+            "QTableWidget {border: 1px solid transparent;}"
+            f"QHeaderView::section {{background-color: {style.get_color('table_header_bg')};"
+            f" padding: {PADDING_Y}px {PADDING_X}px; border: 0px;}}"
+        )
 
 
 def ledger_rows(app, invoice_value: str):
-    """Hent bilagslinjer for gitt bilagsnummer uten å endre ``gl_df``."""
-    import re
-    from helpers import to_str, only_digits, parse_amount, fmt_money
-
     if app.gl_df is None or not hasattr(app, "gl_index"):
         return []
     key = only_digits(invoice_value)
@@ -99,106 +76,55 @@ def ledger_rows(app, invoice_value: str):
     idxs = app.gl_index.get(key)
     if idxs is None or len(idxs) == 0:
         return []
-    # ``groupby().indices`` returnerer numpy-arrays; ``len`` fungerer for å
-    # sjekke tomme treff uten å utløse "ambiguous truth value".
     hits = app.gl_df.loc[idxs]
     rows = []
     for _, r in hits.iterrows():
         konto_nr = to_str(r.get(app.gl_accountno_col, ""))
-        if not konto_nr:
-            cand = to_str(r.get(app.gl_accountname_col, ""))
-            m = re.match(r"^\s*(\d{3,6})\b", cand)
-            if m:
-                konto_nr = m.group(1)
         konto_navn = to_str(r.get(app.gl_accountname_col, ""))
-        if not konto_navn:
-            combo = to_str(r.get(app.gl_accountno_col, ""))
-            m = re.match(r"^\s*(\d{3,6})\s*[-–:]?\s*(.+)$", combo)
-            if m:
-                if not konto_nr:
-                    konto_nr = m.group(1)
-                konto_navn = m.group(2)
+        if not konto_nr and konto_navn:
+            parts = konto_navn.split()
+            if parts and parts[0].isdigit():
+                konto_nr = parts[0]
+        if not konto_navn and konto_nr:
+            konto_navn = konto_nr
         beskr = to_str(r.get(app.gl_desc_col, "")) or to_str(r.get(app.gl_text_col, ""))
         mva_code = to_str(r.get(app.gl_vatcode_col, ""))
         mva_belop = fmt_money(r.get(app.gl_vatamount_col, ""))
-        deb = parse_amount(r.get(app.gl_debit_col)) if app.gl_debit_col else None
-        kre = parse_amount(r.get(app.gl_credit_col)) if app.gl_credit_col else None
         belop = parse_amount(r.get(app.gl_amount_col)) if app.gl_amount_col else None
-        if belop is None and (deb is not None or kre is not None):
-            belop = (
-                (deb if deb is not None else Decimal("0"))
-                - (kre if kre is not None else Decimal("0"))
-            )
+        if belop is None:
+            deb = parse_amount(r.get(app.gl_debit_col)) if app.gl_debit_col else None
+            kre = parse_amount(r.get(app.gl_credit_col)) if app.gl_credit_col else None
+            belop = (deb or Decimal("0")) - (kre or Decimal("0"))
         belop_str = fmt_money(belop)
         postert_av = to_str(r.get(app.gl_postedby_col, ""))
-        rows.append({
-            "Kontonr": konto_nr,
-            "Konto": konto_navn,
-            "Beskrivelse": beskr,
-            "MVA": mva_code,
-            "MVA-beløp": mva_belop,
-            "Beløp": belop_str,
-            "Postert av": postert_av,
-        })
+        rows.append(
+            {
+                "Kontonr": konto_nr,
+                "Konto": konto_navn,
+                "Beskrivelse": beskr,
+                "MVA": mva_code,
+                "MVA-beløp": mva_belop,
+                "Beløp": belop_str,
+                "Postert av": postert_av,
+            }
+        )
     return rows
 
 
-def autofit_tree_columns(tree, cols, total_width=None):
-    import tkinter.font as tkfont
-    from tkinter import ttk
-    from .style import PADDING_X
-
-    if total_width is None:
-        tree.update_idletasks()
-        total_width = tree.winfo_width()
-
-    ttk_style = ttk.Style()
-    font_name = ttk_style.lookup(tree.cget("style"), "font") or "TkDefaultFont"
-    body_font = tkfont.nametofont(font_name)
-    head_font_name = ttk_style.lookup(f"{tree.cget('style')}.Heading", "font")
-    head_font = tkfont.nametofont(head_font_name) if head_font_name else body_font
-
-    widths: list[int] = []
-    MIN_COL_WIDTH = PADDING_X * 4
-    for col in cols:
-        max_px = head_font.measure(col)
-        for iid in tree.get_children(""):
-            txt = str(tree.set(iid, col))
-            px = body_font.measure(txt)
-            if px > max_px:
-                max_px = px
-        max_px += PADDING_X * 4
-        max_px = max(MIN_COL_WIDTH, min(max_px, 500))
-        widths.append(int(max_px))
-
-    total_content = sum(widths)
-    if total_width and total_content:
-        if total_content > total_width:
-            ratio = total_width / total_content
-            widths = [max(int(w * ratio), MIN_COL_WIDTH) for w in widths]
-        elif total_content < total_width:
-            extra = (total_width - total_content) // len(widths)
-            widths = [w + extra for w in widths]
-
-    for col, w in zip(cols, widths):
-        tree.column(col, width=w, minwidth=w)
-
-
 def populate_ledger_table(app, invoice_value: str):
-    from helpers import parse_amount, fmt_money
-
-    for item in app.ledger_tree.get_children():
-        app.ledger_tree.delete(item)
+    table: LedgerTable = app.ledger_table
+    while table.rowCount():
+        table.removeRow(0)
     rows = ledger_rows(app, invoice_value)
     if not rows:
         msg = "Ingen hovedbok lastet." if app.gl_df is None else "Ingen bilagslinjer for dette bilagsnummeret."
-        app.ledger_sum.configure(text=msg)
+        app.ledger_sum.setText(msg)
         return
     total = Decimal("0")
     for i, r in enumerate(rows):
         tags = ["even" if i % 2 == 0 else "odd"]
-        v = parse_amount(r["Beløp"])
-        total += (v if v is not None else Decimal("0"))
-        app.ledger_tree.insert("", "end", values=[r[c] for c in app.ledger_cols], tags=tags)
-    autofit_tree_columns(app.ledger_tree, app.ledger_cols)
-    app.ledger_sum.configure(text=f"Sum beløp: {fmt_money(total)}   •   Linjer: {len(rows)}")
+        val = parse_amount(r["Beløp"])
+        total += val or Decimal("0")
+        table.insert("", "end", [r[c] for c in LEDGER_COLS], tags=tags)
+    table.resizeColumnsToContents()
+    app.ledger_sum.setText(f"Sum beløp: {fmt_money(total)}   •   Linjer: {len(rows)}")

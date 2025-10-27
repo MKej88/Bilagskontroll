@@ -1,47 +1,73 @@
-import threading
-from tkinter import TclError
+from __future__ import annotations
 
-from helpers import logger
-from . import _ctk
+import threading
+from typing import Callable, Optional
+
+from PyQt5 import QtCore, QtWidgets
+
 from .style import PADDING_X, PADDING_Y
 
 
-def run_in_thread(func, *args):
-    """Start ``func`` i en bakgrunnstråd og returner trådobjektet."""
-    thread = threading.Thread(target=func, args=args, daemon=True)
+class _Worker(QtCore.QThread):
+    finished = QtCore.pyqtSignal(object)
+    failed = QtCore.pyqtSignal(Exception)
+
+    def __init__(self, func: Callable, *args, **kwargs) -> None:
+        super().__init__()
+        self._func = func
+        self._args = args
+        self._kwargs = kwargs
+
+    def run(self) -> None:  # noqa: D401 - PyQt signatur
+        try:
+            result = self._func(*self._args, **self._kwargs)
+        except Exception as exc:  # pragma: no cover - propagert til GUI
+            self.failed.emit(exc)
+        else:
+            self.finished.emit(result)
+
+
+def run_in_thread(func: Callable, *args, **kwargs) -> threading.Thread:
+    """Behold API fra Tk-versjonen for bakoverkompatibilitet."""
+
+    thread = threading.Thread(target=func, args=args, kwargs=kwargs, daemon=True)
     thread.start()
     return thread
 
 
-def show_busy(app, message: str):
-    """Vis en modal ventedialog med en spinner og tekst."""
-    ctk = _ctk()
-    win = ctk.CTkToplevel(app)
-    win.title("")
-    win.resizable(False, False)
-    win.transient(app)
-    win.grab_set()
-
-    progress = ctk.CTkProgressBar(win, mode="indeterminate")
-    progress.pack(padx=PADDING_X * 2, pady=(PADDING_Y * 2, PADDING_Y), fill="x")
-    progress.start()
-    ctk.CTkLabel(win, text=message).pack(padx=PADDING_X * 2, pady=(0, PADDING_Y * 2))
-
-    app._busy_win = win
-    win.update_idletasks()
-    x = app.winfo_x() + app.winfo_width() // 2 - win.winfo_width() // 2
-    y = app.winfo_y() + app.winfo_height() // 2 - win.winfo_height() // 2
-    win.geometry(f"+{x}+{y}")
-    return win
+def start_worker(func: Callable, *args, on_success: Callable[[object], None], on_error: Callable[[Exception], None], **kwargs) -> _Worker:
+    worker = _Worker(func, *args, **kwargs)
+    worker.finished.connect(on_success)
+    worker.failed.connect(on_error)
+    worker.start()
+    return worker
 
 
-def hide_busy(app):
-    """Lukk ventedialogen hvis den er åpen."""
-    win = getattr(app, "_busy_win", None)
-    if win is not None:
-        try:
-            win.grab_release()
-        except TclError:
-            logger.debug("Kunne ikke frigjøre vinduets grab")
-        win.destroy()
-        app._busy_win = None
+def show_busy(parent: QtWidgets.QWidget, message: str) -> QtWidgets.QDialog:
+    dialog = QtWidgets.QDialog(parent)
+    dialog.setModal(True)
+    dialog.setWindowTitle("")
+    dialog.setWindowFlags(dialog.windowFlags() & ~QtCore.Qt.WindowContextHelpButtonHint)
+
+    layout = QtWidgets.QVBoxLayout(dialog)
+    layout.setContentsMargins(PADDING_X * 2, PADDING_Y * 2, PADDING_X * 2, PADDING_Y * 2)
+    layout.setSpacing(PADDING_Y * 2)
+
+    label = QtWidgets.QLabel(message, dialog)
+    layout.addWidget(label)
+
+    progress = QtWidgets.QProgressBar(dialog)
+    progress.setRange(0, 0)
+    layout.addWidget(progress)
+
+    dialog.resize(label.sizeHint().width() + PADDING_X * 4, dialog.sizeHint().height())
+    dialog.show()
+    parent._busy_dialog = dialog
+    return dialog
+
+
+def hide_busy(parent: QtWidgets.QWidget) -> None:
+    dialog: Optional[QtWidgets.QDialog] = getattr(parent, "_busy_dialog", None)
+    if dialog is not None:
+        dialog.accept()
+        parent._busy_dialog = None

@@ -1,54 +1,64 @@
-from . import _ctk
-from .style import style
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-ctk = _ctk()
+from .style import style, PADDING_X, PADDING_Y
 
 
-class DropZone(ctk.CTkFrame):
-    """En ramme for dra-og-slipp med fargeendring ved drag hendelser."""
+class DropZone(QtWidgets.QFrame):
+    """En enkel PyQt-dra-og-slipp-sone med visuell tilbakemelding."""
 
-    def __init__(self, parent, text: str, drop_callback):
-        dnd_bg = style.get_color_pair("dnd_bg")
-        dnd_border = style.get_color_pair("dnd_border")
-        highlight = style.get_color_pair("success")
+    dropped = QtCore.pyqtSignal(str)
 
-        super().__init__(
-            parent,
-            height=70,
-            corner_radius=style.BTN_RADIUS,
-            fg_color=dnd_bg,
-            border_color=dnd_border,
-            border_width=2,
+    def __init__(self, parent: QtWidgets.QWidget, text: str):
+        super().__init__(parent)
+        self._normal_border = style.get_color("dnd_border")
+        self._normal_bg = style.get_color("dnd_bg")
+        self._highlight = style.get_color("success")
+        self.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.setAcceptDrops(True)
+        self.setObjectName("dropZone")
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(PADDING_X * 2, PADDING_Y * 2, PADDING_X * 2, PADDING_Y * 2)
+        layout.setSpacing(PADDING_Y)
+
+        self._label = QtWidgets.QLabel(text, self)
+        self._label.setAlignment(QtCore.Qt.AlignCenter)
+        layout.addWidget(self._label)
+
+        self._update_colors(self._normal_bg, self._normal_border)
+
+    def refresh_theme(self) -> None:
+        self._normal_border = style.get_color("dnd_border")
+        self._normal_bg = style.get_color("dnd_bg")
+        self._highlight = style.get_color("success")
+        self._update_colors(self._normal_bg, self._normal_border)
+
+    def _update_colors(self, bg: str, border: str) -> None:
+        self.setStyleSheet(
+            f"#dropZone {{background-color: {bg}; border: 2px dashed {border}; border-radius: 8px;}}"
+            f"#dropZone QLabel {{color: {border};}}"
         )
 
-        self._dnd_bg = dnd_bg
-        self._dnd_border = dnd_border
-        self._highlight = highlight
-        self.drop_callback = drop_callback
-        self._label_text_color = dnd_border
+    def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:  # noqa: N802
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+            self._update_colors(self._highlight, self._highlight)
+            self._label.setStyleSheet(f"color: {style.get_color('fg')}")
+        else:
+            event.ignore()
 
-        self.label = ctk.CTkLabel(
-            self,
-            text=text,
-            anchor="center",
-            text_color=self._label_text_color,
-        )
-        self.label.pack(expand=True, fill="both", padx=style.PAD_MD, pady=style.PAD_SM)
+    def dragLeaveEvent(self, event: QtGui.QDragLeaveEvent) -> None:  # noqa: N802
+        super().dragLeaveEvent(event)
+        self._label.setStyleSheet("")
+        self._update_colors(self._normal_bg, self._normal_border)
 
-        for evt in ("<<DragEnter>>", "<<DropEnter>>"):
-            self.dnd_bind(evt, self._on_drag_enter)
-        for evt in ("<<DragLeave>>", "<<DropLeave>>"):
-            self.dnd_bind(evt, self.reset_colors)
-
-    def _on_drag_enter(self, _):
-        self.configure(fg_color=self._highlight, border_color=self._highlight)
-        self.label.configure(text_color=style.get_color_pair("fg"))
-
-    def reset_colors(self, _=None):
-        self.configure(fg_color=self._dnd_bg, border_color=self._dnd_border)
-        self.label.configure(text_color=self._label_text_color)
-
-    def on_drop(self, event):
-        self.reset_colors()
-        if self.drop_callback:
-            return self.drop_callback(event)
+    def dropEvent(self, event: QtGui.QDropEvent) -> None:  # noqa: N802
+        event.setDropAction(QtCore.Qt.CopyAction)
+        event.accept()
+        self._label.setStyleSheet("")
+        self._update_colors(self._normal_bg, self._normal_border)
+        for url in event.mimeData().urls():
+            path = url.toLocalFile()
+            if path:
+                self.dropped.emit(path)
+                break

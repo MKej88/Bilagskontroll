@@ -1,40 +1,43 @@
 # -*- coding: utf-8 -*-
-"""GUI-moduler for Bilagskontroll."""
+"""PyQt-basert GUI for Bilagskontroll."""
+
+from __future__ import annotations
 
 import json
 import os
 import re
-
+import sys
+from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
+from typing import Any, Optional
 
-from .style import style
-from helpers import logger
-from tkinter import TclError
+import pandas as pd
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-try:
-    from settings import UI_SCALING
-except Exception as e:  # pragma: no cover - valfri innstilling
-    logger.warning(f"UI_SCALING kunne ikke lastes: {e}")
-    UI_SCALING = None
-
-# CustomTkinter importeres ved behov for raskere oppstart.
-_ctk_mod = None
-
-# Standard tema som brukes dersom brukeren ikke velger noe annet.
-DEFAULT_APPEARANCE_MODE = "light"
-
-
-def _ctk():
-    """Importer ``customtkinter`` ved første kall og returner modulen."""
-    global _ctk_mod
-    if _ctk_mod is None:
-        import customtkinter as ctk
-
-        _ctk_mod = ctk
-    return _ctk_mod
-
-# Tkinter og CustomTkinter importeres lazily for raskere oppstart.
+from data_utils import (
+    _net_amount_from_row,
+    calc_sum_kontrollert,
+    calc_sum_net_all,
+    load_gl_df,
+    load_invoice_df,
+)
+from helpers import (
+    fmt_money,
+    fmt_pct,
+    format_number_with_thousands,
+    guess_col,
+    guess_invoice_col,
+    guess_net_amount_col,
+    logger,
+    only_digits,
+    to_str,
+)
+from .busy import hide_busy, show_busy, start_worker
+from .ledger import populate_ledger_table
+from .mainview import MainView
+from .sidebar import SidebarWidget
+from .style import apply_palette, style
 
 APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
@@ -48,82 +51,83 @@ else:
 
 WINDOW_CONFIG_FILE = _CONFIG_DIR / "settings.json"
 
-# For bakoverkompatibilitet
-get_color = style.get_color
+
+@dataclass
+class SimpleVar:
+    value: str = ""
+
+    def get(self) -> str:
+        return self.value
+
+    def set(self, value: str) -> None:
+        self.value = value
 
 
-def create_button(master, **kwargs):
-    """Opprett en knapp med felles stil."""
-    ctk = _ctk()
+def _set_text(widget: Any, text: str) -> None:
+    if hasattr(widget, "configure"):
+        widget.configure(text=text)
+    elif hasattr(widget, "setText"):
+        widget.setText(text)
 
-    options = {
-        "fg_color": style.BTN_FG,
-        "hover_color": style.BTN_HOVER,
-        "font": style.FONT_BODY,
-        "corner_radius": style.BTN_RADIUS,
-    }
-    options.update(kwargs)
-    return ctk.CTkButton(master, **options)
 
-# ----------------- App -----------------
-class App:
+def _set_enabled(widget: Any, enabled: bool) -> None:
+    if hasattr(widget, "configure"):
+        widget.configure(state="normal" if enabled else "disabled")
+    elif hasattr(widget, "setEnabled"):
+        widget.setEnabled(enabled)
+
+
+def _clear_text(widget: Any) -> None:
+    if hasattr(widget, "delete"):
+        widget.delete("0.0", "end")
+    elif hasattr(widget, "clear"):
+        widget.clear()
+
+
+def _insert_text(widget: Any, text: str) -> None:
+    if hasattr(widget, "insert"):
+        widget.insert("0.0", text)
+    elif hasattr(widget, "setPlainText"):
+        widget.setPlainText(text)
+
+
+def _get_text(widget: Any) -> str:
+    if hasattr(widget, "get"):
+        return widget.get("0.0", "end") if callable(widget.get) else str(widget.get)
+    if hasattr(widget, "toPlainText"):
+        return widget.toPlainText()
+    if hasattr(widget, "text"):
+        return widget.text()
+    return ""
+
+
+class App(QtWidgets.QMainWindow):
     def __init__(self):
-        import tkinter as tk
-        ctk = _ctk()
+        self._qt_app = QtWidgets.QApplication.instance()
+        self._owns_qt_app = False
+        if self._qt_app is None:
+            self._qt_app = QtWidgets.QApplication(sys.argv or ["Bilagskontroll"])
+            self._owns_qt_app = True
+        super().__init__()
+        self.setWindowTitle(APP_TITLE)
 
-        globals().update(tk=tk, ctk=ctk)
+        self._workers: list[QtCore.QThread] = []
+        self._progress_timer: Optional[QtCore.QTimer] = None
+        self._progress_running = False
+        self._progress_msg = ""
+        self._progress_val = 0
+        self._pdf_prompt_shown = False
+        self._busy_dialog: Optional[QtWidgets.QDialog] = None
 
-        # Endre klassen dynamisk slik at den arver fra ``CTk``.
-        cls = self.__class__
-        self.__class__ = type(cls.__name__, (ctk.CTk, cls), {})
-        ctk.CTk.__init__(self)
-
-        # Hjelpefunksjoner fra helpers importeres først ved behov for å
-        # unngå unødvendig overhead ved oppstart.
-        self._helpers_loaded = False
-
-        self._dnd_ready = False
-        self._icon_ready = False
-        self.title(APP_TITLE)
-
-        screen_w = self.winfo_screenwidth()
-        screen_h = self.winfo_screenheight()
-        origin_x = 0
-        origin_y = 0
-        if os.name == "nt":
-            import ctypes
-
-            work_area = ctypes.wintypes.RECT()
-            SPI_GETWORKAREA = 0x0030
-            if ctypes.windll.user32.SystemParametersInfoW(
-                SPI_GETWORKAREA, 0, ctypes.byref(work_area), 0
-            ):
-                screen_w = work_area.right - work_area.left
-                screen_h = work_area.bottom - work_area.top
-                origin_x = work_area.left
-                origin_y = work_area.top
-        width = min(int(screen_w * 0.8), MAX_APP_WIDTH)
-        height = int(screen_h * 0.9)
-        min_w = min(int(screen_w * 0.6), MIN_APP_WIDTH)
-        min_h = int(screen_h * 0.7)
-        width, height = self._load_window_size(width, height, min_w, min_h, screen_w, screen_h)
-        x = origin_x + max((screen_w - width) // 2, 0)
-        y = origin_y + max((screen_h - height) // 2, 0)
-        self.geometry(f"{width}x{height}+{x}+{y}")
-        self.minsize(min_w, min_h)
-
-        self.app_icon_img = None
-
-        self.df = None
-        self.sample_df = None
-        self.decisions, self.comments = [], []
+        self.df: Optional[pd.DataFrame] = None
+        self.sample_df: Optional[pd.DataFrame] = None
+        self.gl_df: Optional[pd.DataFrame] = None
+        self.gl_index: dict[str, Any] = {}
+        self.decisions: list[Optional[str]] = []
+        self.comments: list[str] = []
         self.idx = 0
-        self.invoice_col = None
-        self.net_amount_col = None
-        self.antall_bilag = 0
-
-        # GL
-        self.gl_df = None
+        self.invoice_col: Optional[str] = None
+        self.net_amount_col: Optional[str] = None
         self.gl_invoice_col = None
         self.gl_accountno_col = None
         self.gl_accountname_col = None
@@ -135,281 +139,62 @@ class App:
         self.gl_credit_col = None
         self.gl_amount_col = None
         self.gl_postedby_col = None
+        self.antall_bilag = 0
 
-        # Framdriftsindikator
-        self._progress_job = None
-        self._progress_running = False
-        self._progress_val = 0
-        self._progress_msg = ""
-        self._pdf_prompt_shown = False
+        default_user = os.environ.get("USERNAME") or os.environ.get("USER") or ""
+        self.file_path_var = SimpleVar()
+        self.gl_path_var = SimpleVar()
+        self.sample_size_var = SimpleVar()
+        self.year_var = SimpleVar()
+        self.kunde_var = SimpleVar()
+        self.utfort_av_var = SimpleVar(default_user)
 
-        self.logo_img = None
-        self._theme_initialized = False
-        self.after_idle(self._build_ui)
-
-    def _init_fonts(self):
-        ctk = _ctk()
-        s = style
-        kwargs = {"family": s.FONT_FAMILY}
-        if s.FONT_TITLE is None:
-            s.FONT_TITLE = ctk.CTkFont(size=16, weight="bold", **kwargs)
-        if s.FONT_BODY is None:
-            s.FONT_BODY = ctk.CTkFont(size=14, **kwargs)
-        if s.FONT_TITLE_LITE is None:
-            s.FONT_TITLE_LITE = ctk.CTkFont(size=16, **kwargs)
-        if s.FONT_TITLE_LARGE is None:
-            s.FONT_TITLE_LARGE = ctk.CTkFont(size=18, weight="bold", **kwargs)
-        if s.FONT_TITLE_SMALL is None:
-            s.FONT_TITLE_SMALL = ctk.CTkFont(size=15, weight="bold", **kwargs)
-        if s.FONT_BODY_BOLD is None:
-            s.FONT_BODY_BOLD = ctk.CTkFont(size=14, weight="bold", **kwargs)
-        if s.FONT_SMALL is None:
-            s.FONT_SMALL = ctk.CTkFont(size=13, **kwargs)
-        if s.FONT_SMALL_ITALIC is None:
-            s.FONT_SMALL_ITALIC = ctk.CTkFont(size=12, slant="italic", **kwargs)
-
-    def _ensure_helpers(self):
-        """Importer tunge hjelpefunksjoner fra ``helpers`` ved første behov."""
-        if getattr(self, "_helpers_loaded", False):
-            return
-        from helpers import (
-            to_str,
-            fmt_money,
-            format_number_with_thousands,
-            guess_invoice_col,
-            guess_col,
-            guess_net_amount_col,
-            fmt_pct,
-            logger,
-        )
-        globals().update(
-            to_str=to_str,
-            fmt_money=fmt_money,
-            format_number_with_thousands=format_number_with_thousands,
-            guess_invoice_col=guess_invoice_col,
-            guess_col=guess_col,
-            guess_net_amount_col=guess_net_amount_col,
-            fmt_pct=fmt_pct,
-            logger=logger,
-        )
-        self._helpers_loaded = True
-
-    def _build_ui(self):
-        """Startar eit minimums-UI og utset tunge delar."""
-        self._init_fonts()
-        self._init_ui()
-        self.after(0, self._build_sidebar)
-        self.after(0, self._build_main)
-        self.after_idle(self._post_init)
-
-    def _init_ui(self):
-        try:
-            from tkinterdnd2 import TkinterDnD
-        except ImportError as e:
-            logger.warning(f"tkinterdnd2 ikke tilgjengelig: {e}")
-            TkinterDnD = None
-
-        self._TkinterDnD = TkinterDnD
-
-        self.grid_columnconfigure(0, weight=0)
-        self.grid_columnconfigure(1, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-
-        self.bind("<Left>", lambda e: self.prev())
-        self.bind("<Right>", lambda e: self.next())
-        self.bind("<Control-o>", lambda e: self.open_in_po())
-
-        self.protocol("WM_DELETE_WINDOW", self.destroy)
-
-    def _build_sidebar(self):
-        from .sidebar import build_sidebar
-
-        self.sidebar = build_sidebar(self)
-        self.sample_size_var.set("")
-        self.year_var.set("")
-
-    def _build_main(self):
-        from .mainview import build_main
-
-        self.main = build_main(self)
-        if self.gl_df is not None:
-            self.after(0, self._build_ledger_widgets)
+        self._init_theme("Light")
+        self._init_geometry()
+        self._build_ui()
+        self._init_shortcuts()
         self.render()
 
-    def _build_ledger_widgets(self):
-        from .mainview import build_ledger_widgets
+    # Init
+    def _init_theme(self, default: str) -> None:
+        style.set_theme(default.lower())
+        apply_palette(self._qt_app)
 
-        build_ledger_widgets(self)
+    def _init_geometry(self) -> None:
+        screen = QtWidgets.QDesktopWidget().availableGeometry(self)
+        width = min(int(screen.width() * 0.8), MAX_APP_WIDTH)
+        height = int(screen.height() * 0.9)
+        min_w = min(int(screen.width() * 0.6), MIN_APP_WIDTH)
+        min_h = int(screen.height() * 0.7)
+        saved = self._load_window_size(width, height, min_w, min_h, screen.width(), screen.height())
+        self.resize(*saved)
+        self.setMinimumSize(min_w, min_h)
+        self.move(screen.center() - self.rect().center())
 
-    def _post_init(self):
-        self.after(200, self._init_theme)
-        self.after(200, self.load_logo_images)
-        self._init_dnd()
-        self.after(200, self._init_icon)
+    def _build_ui(self) -> None:
+        central = QtWidgets.QWidget(self)
+        layout = QtWidgets.QHBoxLayout(central)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        self.setCentralWidget(central)
 
-    def _init_dnd(self):
-        TkinterDnD = getattr(self, "_TkinterDnD", None)
-        if not TkinterDnD:
-            return
+        self.sidebar = SidebarWidget(self)
+        layout.addWidget(self.sidebar)
 
-        self.__class__ = type(
-            self.__class__.__name__, (self.__class__, TkinterDnD.DnDWrapper), {}
-        )
-        TkinterDnD.DnDWrapper.__init__(self)
-        TkinterDnD._require(self)
-        self._dnd = TkinterDnD
-        self.drop_target_register("DND_Files")
-        self.dnd_bind("<<Drop>>", self._on_drop)
-        self._dnd_ready = True
+        self.main_view = MainView(self)
+        layout.addWidget(self.main_view, 1)
 
-    def add_drop_target(self, widget, func):
-        """Registrer eit widget som mål for dra-og-slipp."""
+    def _init_shortcuts(self) -> None:
+        QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Left), self, self.prev)
+        QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Right), self, self.next)
+        QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+O"), self, self.open_in_po)
 
-        def _register():
-            if getattr(self, "_dnd_ready", False):
-                try:
-                    widget.drop_target_register("DND_Files")
-                    widget.dnd_bind("<<Drop>>", func)
-                except TclError as e:
-                    logger.debug(f"DnD-registrering feilet: {e}")
-            else:
-                self.after(200, _register)
-
-        _register()
-
-    def _init_icon(self):
-        self._update_icon()
-        self._icon_ready = True
-
-    # Theme
-    def _init_theme(self):
-        ctk = _ctk()
-        if getattr(self, "_theme_initialized", False):
-            return
-        ctk.set_appearance_mode(DEFAULT_APPEARANCE_MODE)
-        ctk.set_default_color_theme("blue")
-        scale = UI_SCALING or (self.winfo_fpixels("1i") / 96)
-        if hasattr(ctk, "set_widget_scaling"):
-            ctk.set_widget_scaling(scale)
-        elif hasattr(ctk, "set_scaling"):
-            ctk.set_scaling(scale)
-        if hasattr(ctk, "set_spacing_scaling"):
-            ctk.set_spacing_scaling(scale)
-        elif hasattr(ctk, "set_window_scaling"):
-            ctk.set_window_scaling(scale)
-        self._theme_initialized = True
-
-    def _switch_theme(self, mode):
-        ctk = _ctk()
-        self._init_theme()
-        mode = str(mode).strip().lower()
-        if mode not in {"light", "dark"}:
-            mode = DEFAULT_APPEARANCE_MODE
-        ctk.set_appearance_mode(mode)
-        if hasattr(self, "theme_var"):
-            self.theme_var.set(mode.title())
-        if self._icon_ready:
-            self._update_icon()
-        from .ledger import apply_treeview_theme, update_treeview_stripes
-
-        apply_treeview_theme(self)
-        update_treeview_stripes(self)
-        self.render()
-
-    def _update_icon(self):
-        ctk = _ctk()
-        from helpers_path import resource_path
-        try:
-            ctk.get_appearance_mode()
-        except (AttributeError, TclError) as e:
-            logger.debug(f"Klarte ikke hente tema: {e}")
-        ico = "icons/bilagskontroll_logo_all.ico"
-        ico_path = resource_path(ico)
-        try:
-            self.iconbitmap(ico_path)
-        except (TclError, OSError) as e:
-            logger.debug(f"Kunne ikke sette ikon: {e}")
-        try:
-            from PIL import Image, ImageTk
-
-            with Image.open(ico_path) as icon_img:
-                icon_rgba = icon_img.convert("RGBA")
-                self.app_icon_img = ImageTk.PhotoImage(icon_rgba)
-            self.iconphoto(False, self.app_icon_img)
-        except ImportError as e:
-            logger.debug(f"Kunne ikke importere PIL for ikon: {e}")
-        except (TclError, OSError) as e:
-            logger.debug(f"Kunne ikke laste ikonbilde: {e}")
-        except Exception as e:  # pragma: no cover - uventa PIL-feil
-            logger.debug(f"Kunne ikke konvertere ikon: {e}")
-
-    def load_logo_images(self):
-        ctk = _ctk()
-        from helpers_path import resource_path
-        try:
-            from PIL import Image
-            img = Image.open(resource_path("icons/bilagskontroll_logo_all.ico"))
-            try:
-                self.logo_img = ctk.CTkImage(light_image=img, size=(32, 32))
-            except TypeError:
-                self.logo_img = ctk.CTkImage(img, size=(32, 32))
-        except (ImportError, OSError) as e:
-            logger.error(f"Kunne ikke laste logo: {e}")
-            self.logo_img = None
-            return
-
-    def _on_drop(self, event):
-        path = event.data.strip("{}").strip()
-        if not path.lower().endswith((".xlsx", ".xls")):
-            return
-        if "hovedbok" in os.path.basename(path).lower():
-            self.gl_path_var.set(path)
-            self._load_gl_excel()
-        else:
-            self.file_path_var.set(path)
-            self._load_excel()
-
-    # Files
-    def choose_file(self):
-        from tkinter import filedialog
-        p = filedialog.askopenfilename(title="Velg Excel (fakturaliste)", filetypes=[("Excel","*.xlsx *.xls")])
-        if not p: return
-        self.file_path_var.set(p)
-        self._load_excel()
-
-    def choose_gl_file(self):
-        from tkinter import filedialog
-        p = filedialog.askopenfilename(title="Velg Hovedbok (Excel)", filetypes=[("Excel","*.xlsx *.xls")])
-        if not p: return
-        self.gl_path_var.set(p)
-        self._load_gl_excel()
-
-    def destroy(self):
-        ctk = _ctk()
-        self._save_window_size()
-        try:
-            if hasattr(self, "ledger_tree") and hasattr(self, "_ledger_configure_id"):
-                self.ledger_tree.unbind("<Configure>", self._ledger_configure_id)
-        except TclError as e:
-            logger.debug(f"Kunne ikke unbinde ledger: {e}")
-        try:
-            ctk.ScalingTracker.remove_window(self.destroy, self)
-        except ValueError as e:
-            logger.debug(f"ScalingTracker.remove_window feilet: {e}")
-        if self._dnd_ready:
-            try:
-                self._dnd.Tk.destroy(self)
-            except TclError as e:
-                logger.debug(f"DnD-destroy feilet: {e}")
-
+    # Konfig lagring
     def _load_window_size(self, width, height, min_w, min_h, screen_w, screen_h):
         try:
             with WINDOW_CONFIG_FILE.open("r", encoding="utf-8") as fh:
                 data = json.load(fh)
-        except FileNotFoundError:
-            return width, height
-        except (OSError, json.JSONDecodeError) as e:
-            logger.debug(f"Kunne ikke lese vindustørrelse: {e}")
+        except (FileNotFoundError, json.JSONDecodeError, OSError):
             return width, height
 
         win_cfg = data.get("window", {}) if isinstance(data, dict) else {}
@@ -423,49 +208,171 @@ class App:
         saved_h = max(min(saved_h, screen_h), min_h)
         return saved_w or width, saved_h or height
 
-    def _save_window_size(self):
-        try:
-            self.update_idletasks()
-            width = int(self.winfo_width())
-            height = int(self.winfo_height())
-        except (TclError, ValueError) as e:
-            logger.debug(f"Kunne ikke hente vindustørrelse: {e}")
-            return
-
-        if width <= 1 or height <= 1:
-            return
-
-        try:
-            with WINDOW_CONFIG_FILE.open("r", encoding="utf-8") as fh:
-                loaded = json.load(fh)
-                data = loaded if isinstance(loaded, dict) else {}
-        except FileNotFoundError:
-            data = {}
-        except (OSError, json.JSONDecodeError) as e:
-            logger.debug(f"Kunne ikke lese eksisterende innstillinger: {e}")
-            data = {}
-
-        data["window"] = {"width": width, "height": height}
-
+    def _save_window_size(self) -> None:
         try:
             WINDOW_CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+            data = {}
+            if WINDOW_CONFIG_FILE.exists():
+                with WINDOW_CONFIG_FILE.open("r", encoding="utf-8") as fh:
+                    loaded = json.load(fh)
+                    data = loaded if isinstance(loaded, dict) else {}
+            data["window"] = {"width": self.width(), "height": self.height()}
             with WINDOW_CONFIG_FILE.open("w", encoding="utf-8") as fh:
                 json.dump(data, fh)
-        except OSError as e:
-            logger.debug(f"Kunne ikke lagre vindustørrelse: {e}")
+        except OSError:
+            logger.debug("Kunne ikke lagre vindusstørrelse")
 
-    # Read
+    # Qt hooks
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:  # noqa: D401
+        self._save_window_size()
+        super().closeEvent(event)
+
+    # Offentlige APIer
+    def mainloop(self):
+        self.show()
+        if self._owns_qt_app:
+            self._qt_app.exec_()
+
+    # Filhåndtering
+    def choose_file(self):
+        path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, "Velg Excel (fakturaliste)", "", "Excel (*.xlsx *.xls)"
+        )
+        if path:
+            self.file_path_var.set(path)
+            self.sidebar.update_invoice_path(path)
+            self._load_excel()
+
+    def choose_gl_file(self):
+        path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, "Velg Hovedbok (Excel)", "", "Excel (*.xlsx *.xls)"
+        )
+        if path:
+            self.gl_path_var.set(path)
+            self.sidebar.update_gl_path(path)
+            self._load_gl_excel()
+
+    def _load_excel(self):
+        path = self.file_path_var.get()
+        if not path:
+            return
+        self._start_progress("Laster fakturaliste...")
+        self._busy_dialog = show_busy(self, "Laster fakturaliste...")
+
+        def worker():
+            df, cust = load_invoice_df(path, header_idx=4)
+            invoice_col = guess_invoice_col(df.columns)
+            net_amount_col = guess_net_amount_col(df.columns)
+            try:
+                df["_netto_float"] = df.apply(_net_amount_from_row, axis=1, args=(net_amount_col,))
+            except (TypeError, ValueError):
+                logger.exception("Kunne ikke beregne nettobeløp")
+                df["_netto_float"] = None
+            antall = len(df.dropna(how="all"))
+            return df, cust, invoice_col, net_amount_col, antall
+
+        def on_success(result):
+            df, cust, invoice_col, net_amount_col, antall = result
+            self.df = df
+            self.sample_df = None
+            self.decisions = []
+            self.comments = []
+            self.idx = 0
+            self.antall_bilag = antall
+            self.invoice_col = invoice_col
+            self.net_amount_col = net_amount_col
+            if cust:
+                self.kunde_var.set(cust)
+                self.sidebar.kunde_edit.setText(cust)
+            self._update_counts_labels()
+            self.render()
+            self._update_year_options()
+            self._finish_progress()
+            hide_busy(self)
+
+        def on_error(exc: Exception):
+            hide_busy(self)
+            self._finish_progress()
+            QtWidgets.QMessageBox.critical(self, APP_TITLE, f"Klarte ikke lese Excel:\n{exc}")
+
+        worker_thread = start_worker(worker, on_success=on_success, on_error=on_error)
+        self._workers.append(worker_thread)
+
+        def _cleanup():
+            try:
+                self._workers.remove(worker_thread)
+            except ValueError:
+                pass
+
+        worker_thread.finished.connect(_cleanup)
+
+    def _load_gl_excel(self):
+        path = self.gl_path_var.get()
+        if not path:
+            return
+        self._start_progress("Laster hovedbok...")
+        self._busy_dialog = show_busy(self, "Laster hovedbok...")
+
+        def worker():
+            gl = load_gl_df(path, nrows=10)
+            return gl
+
+        def on_success(gl: pd.DataFrame):
+            if gl is None or gl.dropna(how="all").empty:
+                QtWidgets.QMessageBox.warning(self, APP_TITLE, "Hovedboken ser tom ut.")
+            else:
+                self.gl_df = gl
+                cols = [str(c) for c in gl.columns]
+                self.gl_invoice_col = guess_invoice_col(cols)
+                self.gl_accountno_col = guess_col(cols, r"^kontonr\.?$", r"konto.*nummer", r"account.*(number|no)", r"acct.*no")
+                self.gl_accountname_col = guess_col(cols, r"^kontonavn$", r"konto\s*navn", r"^konto$", r"account.*name", r"(?:^| )navn$")
+                self.gl_text_col = guess_col(cols, r"^tekst$", r"text", r"posteringstekst")
+                self.gl_desc_col = guess_col(cols, r"beskrivelse", r"description", r"forklaring")
+                self.gl_vatcode_col = guess_col(cols, r"^mva(?!-)|mva[- ]?kode", r"^vat(?!.*amount)|tax code")
+                self.gl_vatamount_col = guess_col(cols, r"mva[- ]?bel(ø|o)p", r"vat amount", r"tax amount")
+                self.gl_debit_col = guess_col(cols, r"^debet$", r"debit")
+                self.gl_credit_col = guess_col(cols, r"^kredit$", r"credit")
+                self.gl_amount_col = guess_col(cols, r"^bel(ø|o)p$", r"amount", r"sum")
+                self.gl_postedby_col = guess_col(cols, r"postert\s*av", r"bokf(ø|o)rt\s*av", r"registrert\s*av", r"posted\s*by", r"created\s*by")
+                if self.gl_invoice_col in self.gl_df.columns:
+                    self.gl_df["_inv_norm"] = self.gl_df[self.gl_invoice_col].map(only_digits)
+                else:
+                    self.gl_df["_inv_norm"] = ""
+                self.gl_index = self.gl_df.groupby("_inv_norm").indices
+                if self.sample_df is not None:
+                    self.render()
+                self._update_year_options()
+            self._finish_progress()
+            hide_busy(self)
+
+        def on_error(exc: Exception):
+            hide_busy(self)
+            self._finish_progress()
+            QtWidgets.QMessageBox.critical(self, APP_TITLE, f"Klarte ikke lese hovedbok:\n{exc}")
+
+        worker_thread = start_worker(worker, on_success=on_success, on_error=on_error)
+        self._workers.append(worker_thread)
+
+        def _cleanup_gl():
+            try:
+                self._workers.remove(worker_thread)
+            except ValueError:
+                pass
+
+        worker_thread.finished.connect(_cleanup_gl)
+
+    # Årsliste
     def _update_year_options(self):
         from datetime import datetime
+
         years: set[int] = set()
-        for df in (getattr(self, "df", None), getattr(self, "gl_df", None)):
+        for df in (self.df, self.gl_df):
             if df is None or "Fakturadato" not in df.columns:
                 continue
             for val in df["Fakturadato"].dropna().astype(str):
                 m = re.search(r"(19|20)\d{2}", val)
                 if m:
                     years.add(int(m.group(0)))
-
         now = datetime.now().year
         if years:
             filtered = sorted([y for y in years if y >= now - 1], reverse=True)
@@ -474,182 +381,37 @@ class App:
             values = [str(y) for y in filtered]
         else:
             values = [str(now), str(now - 1)]
+        self.sidebar.set_year_options(values)
+        if values:
+            self.year_var.set(values[0])
 
-        if hasattr(self, "year_combo"):
-            self.year_combo.configure(values=values)
-        if getattr(self, "year_var", None) and self.year_var.get() not in values:
-            self.year_var.set(values[0] if values else "")
-        from .sidebar import _toggle_sample_btn
-        _toggle_sample_btn(self)
-
-    def _load_excel(self):
-        from tkinter import messagebox
-
-        self._ensure_helpers()
-        from data_utils import load_invoice_df, _net_amount_from_row
-        from .busy import show_busy, hide_busy, run_in_thread
-
-        path = self.file_path_var.get()
-        if not path:
-            return
-        logger.info(f"Laster fakturaliste fra {path}")
-        header_idx = 4
-        big = os.path.getsize(path) > 5 * 1024 * 1024
-        if big and hasattr(self, "inline_status"):
-            self.inline_status.configure(text="laster inn fil...")
-            self.inline_status.update_idletasks()
-        show_busy(self, "Laster fakturaliste...")
-
-        def finalize():
-            if big and hasattr(self, "inline_status"):
-                self.inline_status.configure(text="")
-            self._finish_progress()
-            hide_busy(self)
-
-        def worker():
-            self.after(0, lambda: self._start_progress("Laster fakturaliste..."))
-            try:
-                df, cust = load_invoice_df(path, header_idx)
-            except (OSError, ValueError) as e:
-                logger.error(f"Klarte ikke lese Excel: {e}")
-                self.after(0, lambda: (messagebox.showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}"), finalize()))
-                return
-
-            def success():
-                self.antall_bilag = len(df.dropna(how="all"))
-                self.df = df
-                if cust:
-                    self.kunde_var.set(cust)
-                    if hasattr(self, "kunde_entry"):
-                        self.kunde_entry.configure(state="disabled")
-                if self.df is None or self.df.dropna(how="all").empty:
-                    messagebox.showwarning(APP_TITLE, "Excel-filen ser tom ut.")
-                    finalize()
-                    return
-                self.invoice_col = guess_invoice_col(self.df.columns)
-                self.net_amount_col = guess_net_amount_col(self.df.columns)
-                try:
-                    self.df["_netto_float"] = self.df.apply(
-                        _net_amount_from_row, axis=1, args=(self.net_amount_col,)
-                    )
-                except (TypeError, ValueError):
-                    logger.exception("Kunne ikke beregne nettobeløp")
-                    self.df["_netto_float"] = None
-                self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
-                self._update_counts_labels()
-                self.render()
-                self._update_year_options()
-                finalize()
-
-            self.after(0, success)
-
-        run_in_thread(worker)
-
-    def _load_gl_excel(self):
-        from tkinter import messagebox
-
-        self._ensure_helpers()
-        from data_utils import load_gl_df
-        from .busy import show_busy, hide_busy, run_in_thread
-
-        path = self.gl_path_var.get()
-        if not path:
-            return
-        logger.info(f"Laster hovedbok fra {path}")
-        big = os.path.getsize(path) > 5 * 1024 * 1024
-        if big and hasattr(self, "inline_status"):
-            self.inline_status.configure(text="laster inn fil...")
-            self.inline_status.update_idletasks()
-        show_busy(self, "Laster hovedbok...")
-
-        def finalize():
-            if big and hasattr(self, "inline_status"):
-                self.inline_status.configure(text="")
-            self._finish_progress()
-            hide_busy(self)
-
-        def worker():
-            self.after(0, lambda: self._start_progress("Laster hovedbok..."))
-            try:
-                gl = load_gl_df(path, nrows=10)
-            except (OSError, ValueError) as e:
-                logger.error(f"Klarte ikke lese hovedbok: {e}")
-                self.after(0, lambda: (messagebox.showerror(APP_TITLE, f"Klarte ikke lese hovedbok:\n{e}"), finalize()))
-                return
-
-            def success():
-                if gl is None or gl.dropna(how="all").empty:
-                    messagebox.showwarning(APP_TITLE, "Hovedboken ser tom ut.")
-                    finalize()
-                    return
-
-                self.gl_df = gl
-                cols = [str(c) for c in gl.columns]
-                self.gl_invoice_col     = guess_invoice_col(cols)
-                self.gl_accountno_col   = guess_col(cols, r"^kontonr\.?$", r"konto.*nummer", r"account.*(number|no)", r"acct.*no")
-                self.gl_accountname_col = guess_col(cols, r"^kontonavn$", r"konto\s*navn", r"^konto$", r"account.*name", r"(?:^| )navn$")
-                self.gl_text_col        = guess_col(cols, r"^tekst$", r"text", r"posteringstekst")
-                self.gl_desc_col        = guess_col(cols, r"beskrivelse", r"description", r"forklaring")
-                self.gl_vatcode_col     = guess_col(cols, r"^mva(?!-)|mva[- ]?kode", r"^vat(?!.*amount)|tax code")
-                self.gl_vatamount_col   = guess_col(cols, r"mva[- ]?bel(ø|o)p", r"vat amount", r"tax amount")
-                self.gl_debit_col       = guess_col(cols, r"^debet$", r"debit")
-                self.gl_credit_col      = guess_col(cols, r"^kredit$", r"credit")
-                self.gl_amount_col      = guess_col(cols, r"^bel(ø|o)p$", r"amount", r"sum")
-                self.gl_postedby_col    = guess_col(cols, r"postert\s*av", r"bokf(ø|o)rt\s*av", r"registrert\s*av", r"posted\s*by", r"created\s*by")
-
-                from helpers import only_digits
-                if self.gl_invoice_col in self.gl_df.columns:
-                    self.gl_df["_inv_norm"] = self.gl_df[self.gl_invoice_col].map(only_digits)
-                else:
-                    self.gl_df["_inv_norm"] = ""
-                self.gl_index = self.gl_df.groupby("_inv_norm").indices
-
-                from .ledger import populate_ledger_table
-                from .mainview import build_ledger_widgets
-                self.populate_ledger_table = populate_ledger_table
-
-                if not hasattr(self, "ledger_tree"):
-                    build_ledger_widgets(self)
-
-                if self.sample_df is not None:
-                    self.render()
-                self._update_year_options()
-                finalize()
-
-            self.after(0, success)
-
-        run_in_thread(worker)
-# Sampling / nav
+    # Utvalg
     def _update_counts_labels(self):
-        self.lbl_filecount.configure(text=f"Antall bilag: {self.antall_bilag}")
-        
+        if hasattr(self, "lbl_filecount"):
+            _set_text(self.lbl_filecount, f"Antall bilag: {self.antall_bilag}")
+
     def make_sample(self):
-        from tkinter import messagebox
-        self._ensure_helpers()
         if self.df is None:
-            messagebox.showinfo(APP_TITLE, "Velg Excel først."); return
+            QtWidgets.QMessageBox.information(self, APP_TITLE, "Velg Excel først.")
+            return
         try:
             n = int(self.sample_size_var.get())
             year = int(self.year_var.get())
         except ValueError:
-            messagebox.showinfo(APP_TITLE, "Oppgi antall og år.")
+            QtWidgets.QMessageBox.information(self, APP_TITLE, "Oppgi antall og år.")
             return
         n = max(1, min(n, len(self.df)))
-        logger.info(f"Trekker utvalg på {n} bilag for år {year}")
         try:
-            self.sample_df = (
-                self.df.sample(n=n, random_state=year)
-                .reset_index(drop=True)
-                .copy()
-            )
-        except ValueError as e:
-            logger.error(f"Feil ved trekking av utvalg: {e}")
-            messagebox.showerror(APP_TITLE, f"Feil ved trekking av utvalg:\n{e}"); return
-        self.decisions = [None]*len(self.sample_df); self.comments=[""]*len(self.sample_df); self.idx=0
+            self.sample_df = self.df.sample(n=n, random_state=year).reset_index(drop=True).copy()
+        except ValueError as exc:
+            QtWidgets.QMessageBox.critical(self, APP_TITLE, f"Feil ved trekking av utvalg:\n{exc}")
+            return
+        self.decisions = [None] * len(self.sample_df)
+        self.comments = [""] * len(self.sample_df)
+        self.idx = 0
         self.render()
 
     def _current_row_dict(self):
-        self._ensure_helpers()
         row = self.sample_df.iloc[self.idx]
         return {
             str(c): to_str(row[c])
@@ -657,166 +419,145 @@ class App:
             if not str(c).startswith("_")
         }
 
-    def set_decision_and_next(self, val, advance=True):
-        if self.sample_df is None: return
-        self.comments[self.idx] = self.comment_box.get("0.0", "end").strip()
+    def set_decision_and_next(self, val: str, advance: bool = True):
+        if self.sample_df is None:
+            return
+        self.comments[self.idx] = _get_text(self.comment_box).strip()
         self.decisions[self.idx] = val
         if advance and self.idx < len(self.sample_df) - 1:
             self.idx += 1
         self.render()
 
     def prev(self):
-        if self.sample_df is None: return
-        self.comments[self.idx] = self.comment_box.get("0.0", "end").strip()
+        if self.sample_df is None:
+            return
+        self.comments[self.idx] = _get_text(self.comment_box).strip()
         self.idx = max(0, self.idx - 1)
         self.render()
 
     def next(self):
-        if self.sample_df is None: return
-        self.comments[self.idx] = self.comment_box.get("0.0", "end").strip()
+        if self.sample_df is None:
+            return
+        self.comments[self.idx] = _get_text(self.comment_box).strip()
         self.idx = min(len(self.sample_df) - 1, self.idx + 1)
         self.render()
 
-    # Open in PO: only open the URL present in current row
-    
+    # Diverse handlinger
     def open_in_po(self):
-        # Åpner alltid standard PowerOffice-rapport (uten å lete etter lenker i data)
         import webbrowser
 
         webbrowser.open(OPEN_PO_URL)
         self._show_inline("Åpner PowerOffice")
-    
+
     def copy_invoice(self):
-        self._ensure_helpers()
-        if self.sample_df is None: return
+        if self.sample_df is None:
+            return
         inv_val = to_str(self.sample_df.iloc[self.idx].get(self.invoice_col, ""))
         cleaned = re.sub(r"[^\d-]", "", inv_val)
-        self.clipboard_clear(); self.clipboard_append(cleaned if cleaned else inv_val)
-        self.copy_feedback.configure(text="Kopiert")
-        self.after(1500, lambda: self.copy_feedback.configure(text=""))
+        QtWidgets.QApplication.clipboard().setText(cleaned if cleaned else inv_val)
+        _set_text(self.copy_feedback, "Kopiert")
+        QtCore.QTimer.singleShot(1500, lambda: _set_text(self.copy_feedback, ""))
 
-    # Ledger
-    # Summary / status
+    def export_pdf(self):
+        from report import export_pdf
+
+        export_pdf(self)
+
+    # Statuskort
     def _update_status_card(self):
-        self._ensure_helpers()
-        from data_utils import calc_sum_kontrollert, calc_sum_net_all
         sum_k = calc_sum_kontrollert(self.sample_df, self.decisions)
         sum_a = calc_sum_net_all(self.df)
         pct = (sum_k / sum_a * Decimal("100")) if sum_a else Decimal("0")
-        self.lbl_st_sum_kontrollert.configure(text=f"Sum kontrollert: {fmt_money(sum_k)} kr")
-        self.lbl_st_sum_alle.configure(text=f"Sum alle bilag: {fmt_money(sum_a)} kr")
-        self.lbl_st_pct.configure(text=f"% kontrollert av sum: {fmt_pct(pct)}")
+        _set_text(self.lbl_st_sum_kontrollert, f"Sum kontrollert: {fmt_money(sum_k)} kr")
+        _set_text(self.lbl_st_sum_alle, f"Sum alle bilag: {fmt_money(sum_a)} kr")
+        _set_text(self.lbl_st_pct, f"% kontrollert av sum: {fmt_pct(pct)}")
         if self.sample_df is not None:
             approved = sum(1 for d in self.decisions if d == "Godkjent")
             rejected = sum(1 for d in self.decisions if d == "Ikke godkjent")
             remaining = sum(1 for d in self.decisions if d is None)
-            self.lbl_st_godkjent.configure(text=f"Godkjent: {approved}")
-            self.lbl_st_ikkegodkjent.configure(text=f"Ikke godkjent: {rejected}")
-            self.lbl_st_gjen.configure(text=f"Gjenstår å kontrollere: {remaining}")
+            _set_text(self.lbl_st_godkjent, f"Godkjent: {approved}")
+            _set_text(self.lbl_st_ikkegodkjent, f"Ikke godkjent: {rejected}")
+            _set_text(self.lbl_st_gjen, f"Gjenstår å kontrollere: {remaining}")
             if remaining == 0 and not self._pdf_prompt_shown:
-                from tkinter import messagebox
-                from report import export_pdf
-                from .busy import show_busy, hide_busy, run_in_thread
-
                 self._pdf_prompt_shown = True
-                if messagebox.askyesno(APP_TITLE, "Ønsker du å eksportere PDF rapport?"):
-                    show_busy(self, "Eksporterer rapport...")
-
-                    def finalize():
-                        self._finish_progress()
-                        hide_busy(self)
-
-                    def worker():
-                        self.after(0, lambda: self._start_progress("Eksporterer rapport..."))
-                        try:
-                            export_pdf(self)
-                        finally:
-                            self.after(0, finalize)
-
-                    run_in_thread(worker)
+                if QtWidgets.QMessageBox.question(
+                    self,
+                    APP_TITLE,
+                    "Ønsker du å eksportere PDF rapport?",
+                ) == QtWidgets.QMessageBox.Yes:
+                    self.export_pdf()
         else:
-            self.lbl_st_godkjent.configure(text="Godkjent: –")
-            self.lbl_st_ikkegodkjent.configure(text="Ikke godkjent: –")
-            self.lbl_st_gjen.configure(text="Gjenstår å kontrollere: –")
+            _set_text(self.lbl_st_godkjent, "Godkjent: –")
+            _set_text(self.lbl_st_ikkegodkjent, "Ikke godkjent: –")
+            _set_text(self.lbl_st_gjen, "Gjenstår å kontrollere: –")
 
-    # Status
-    def _start_progress(self, msg: str):
+    # Statuslinje
+    def _start_progress(self, msg: str) -> None:
         self._progress_msg = msg
         self._progress_val = 0
         self._progress_running = True
         self._set_status(msg, 0)
-        self._progress_job = self.after(100, self._progress_step)
+        if self._progress_timer is None:
+            self._progress_timer = QtCore.QTimer(self)
+            self._progress_timer.timeout.connect(self._progress_step)
+        self._progress_timer.start(100)
 
-    def _progress_step(self):
+    def _progress_step(self) -> None:
         if not self._progress_running:
             return
         self._progress_val = min(95, self._progress_val + 2)
         self._set_status(self._progress_msg, self._progress_val)
-        self._progress_job = self.after(100, self._progress_step)
 
-    def _finish_progress(self):
+    def _finish_progress(self) -> None:
         self._progress_running = False
-        if self._progress_job is not None:
-            self.after_cancel(self._progress_job)
-            self._progress_job = None
+        if self._progress_timer:
+            self._progress_timer.stop()
         self._set_status(self._progress_msg, 100)
-        self.after(500, lambda: self._set_status(""))
+        QtCore.QTimer.singleShot(500, lambda: self._set_status(""))
 
-    def _set_status(self, msg: str, progress: float | None = None):
+    def _set_status(self, msg: str, progress: Optional[float] = None) -> None:
         if hasattr(self, "status_label"):
             if progress is not None:
-                self.status_label.configure(text=f"{msg} {progress:.0f}%")
+                _set_text(self.status_label, f"{msg} {progress:.0f}%")
             else:
-                self.status_label.configure(text=msg)
-            self.status_label.update_idletasks()
+                _set_text(self.status_label, msg)
         if hasattr(self, "progress_bar"):
             if progress is not None:
-                self.progress_bar.grid(**getattr(self, "progress_bar_grid", {}))
-                self.progress_bar.set(max(0, min(1, progress / 100)))
-                self.progress_bar.update_idletasks()
+                self.progress_bar.setVisible(True)
+                self.progress_bar.setValue(int(max(0, min(100, progress))))
             else:
-                self.progress_bar.grid_remove()
+                self.progress_bar.setVisible(False)
 
-    # PDF
     # Inline
-    def _show_inline(self, msg: str, ok=True):
-        self.inline_status.configure(
-            text_color=(style.get_color("success") if ok else style.get_color("error"))
-        )
-        self.inline_status.configure(text=msg)
-        self.after(3500, lambda: self.inline_status.configure(text=""))
+    def _show_inline(self, msg: str, ok: bool = True) -> None:
+        color = style.get_color("success" if ok else "error")
+        if hasattr(self.inline_status, "setStyleSheet"):
+            self.inline_status.setStyleSheet(f"color: {color};")
+        _set_text(self.inline_status, msg)
+        QtCore.QTimer.singleShot(3500, lambda: _set_text(self.inline_status, ""))
 
-    # Details + render
+    # Detaljer
     def _details_text_for_row(self, row_dict):
-        self._ensure_helpers()
-        lines=[]
-        for k in self.sample_df.columns:
-            key=str(k)
+        lines = []
+        for key, val in row_dict.items():
             if key.startswith("_"):
                 continue
-            val=to_str(row_dict.get(key,"")).strip()
-            if not val: continue
-            disp = val if (key.lower().startswith("faktura") and "nr" in key.lower()) else format_number_with_thousands(val)
+            disp = val
+            if not key.lower().startswith("faktura") or "nr" not in key.lower():
+                disp = format_number_with_thousands(val)
             lines.append(f"{key}: {disp}")
         return "\n".join(lines).strip()
 
-    def _update_status_label(self, status: str | None, placeholder: str = "—"):
-        if not hasattr(self, "lbl_status"):
-            return
-
+    def _update_status_label(self, status: Optional[str], placeholder: str = "—"):
         text = status if status else placeholder
-
+        color = style.get_color("fg")
         if status == "Godkjent":
-            font = style.FONT_TITLE or style.FONT_TITLE_LITE or style.FONT_BODY
             color = style.get_color("success")
         elif status == "Ikke godkjent":
-            font = style.FONT_TITLE or style.FONT_TITLE_LITE or style.FONT_BODY
             color = style.get_color("error")
-        else:
-            font = style.FONT_TITLE_LITE or style.FONT_BODY
-            color = style.get_color("fg")
-
-        self.lbl_status.configure(text=text, font=font, text_color=color)
+        if hasattr(self.lbl_status, "setStyleSheet"):
+            self.lbl_status.setStyleSheet(f"color: {color}; font-weight: bold;")
+        _set_text(self.lbl_status, text)
 
     def _update_status_card_safe(self):
         try:
@@ -825,65 +566,74 @@ class App:
             logger.exception("Feil ved oppdatering av statuskort")
 
     def render(self):
-        self._ensure_helpers()
         self._update_counts_labels()
-        if self.sample_df is not None and len(self.sample_df)>0:
-            self.lbl_count.configure(text=f"Bilag: {self.idx+1}/{len(self.sample_df)}")
-            inv_val = to_str(self.sample_df.iloc[self.idx].get(self.invoice_col, "")) if len(self.sample_df)>0 else "—"
-            self.lbl_invoice.configure(text=f"Fakturanr: {inv_val or '—'}")
+        if self.sample_df is not None and len(self.sample_df) > 0:
+            _set_text(self.lbl_count, f"Bilag: {self.idx + 1}/{len(self.sample_df)}")
+            inv_val = to_str(self.sample_df.iloc[self.idx].get(self.invoice_col, ""))
+            _set_text(self.lbl_invoice, f"Fakturanr: {inv_val or '—'}")
             st = self.decisions[self.idx] if (self.decisions and self.idx < len(self.decisions)) else None
             self._update_status_label(st)
-
             row_dict = self._current_row_dict()
-            self.detail_box.configure(state="normal"); self.detail_box.delete("0.0","end")
-            self.detail_box.insert("0.0", self._details_text_for_row(row_dict)); self.detail_box.configure(state="disabled")
-
-            if hasattr(self, "populate_ledger_table") and hasattr(self, "ledger_tree"):
-                self.populate_ledger_table(self, inv_val)
+            _clear_text(self.detail_box)
+            _insert_text(self.detail_box, self._details_text_for_row(row_dict))
+            if hasattr(self, "ledger_table") and self.gl_df is not None:
+                populate_ledger_table(self, inv_val)
             else:
-                if hasattr(self, "ledger_tree"):
-                    for item in self.ledger_tree.get_children():
-                        self.ledger_tree.delete(item)
+                if hasattr(self, "ledger_table"):
+                    while self.ledger_table.rowCount():
+                        self.ledger_table.removeRow(0)
                 if hasattr(self, "ledger_sum"):
                     msg = (
                         "Last gjerne også inn en hovedbok for å se bilagslinjene."
-                        if getattr(self, "gl_df", None) is None
+                        if self.gl_df is None
                         else ""
                     )
-                    self.ledger_sum.configure(text=msg)
-
-            self.comment_box.delete("0.0","end")
+                    _set_text(self.ledger_sum, msg)
+            _clear_text(self.comment_box)
             if self.comments and self.idx < len(self.comments) and self.comments[self.idx]:
-                self.comment_box.insert("0.0", self.comments[self.idx])
+                _insert_text(self.comment_box, self.comments[self.idx])
         else:
-            self.lbl_count.configure(text="Bilag: –/–")
-            self.lbl_invoice.configure(text="Fakturanr: –")
+            _set_text(self.lbl_count, "Bilag: –/–")
+            _set_text(self.lbl_invoice, "Fakturanr: –")
             self._update_status_label(None, placeholder="–")
-            self.detail_box.configure(state="normal"); self.detail_box.delete("0.0","end"); self.detail_box.insert("0.0","Velg Excel-fil og lag et utvalg."); self.detail_box.configure(state="disabled")
-            if hasattr(self, "ledger_tree"):
-                for item in self.ledger_tree.get_children():
-                    self.ledger_tree.delete(item)
+            _clear_text(self.detail_box)
+            _insert_text(self.detail_box, "Velg Excel-fil og lag et utvalg.")
+            if hasattr(self, "ledger_table"):
+                while self.ledger_table.rowCount():
+                    self.ledger_table.removeRow(0)
             if hasattr(self, "ledger_sum"):
                 msg = (
                     "Last gjerne også inn en hovedbok for å se bilagslinjene."
-                    if getattr(self, "gl_df", None) is None
+                    if self.gl_df is None
                     else "Trekk utvalg for å se bilagslinjene."
                 )
-                self.ledger_sum.configure(text=msg)
-            self.comment_box.delete("0.0","end")
+                _set_text(self.ledger_sum, msg)
+            _clear_text(self.comment_box)
 
         if self.sample_df is None or len(self.sample_df) == 0:
-            self.btn_prev.configure(state="disabled")
-            self.btn_next.configure(state="disabled")
+            _set_enabled(self.btn_prev, False)
+            _set_enabled(self.btn_next, False)
         else:
-            self.btn_prev.configure(state="normal" if self.idx > 0 else "disabled")
-            self.btn_next.configure(state="normal" if self.idx < len(self.sample_df) - 1 else "disabled")
+            _set_enabled(self.btn_prev, self.idx > 0)
+            _set_enabled(self.btn_next, self.idx < len(self.sample_df) - 1)
 
-        if (
-            (self.df is not None and len(self.df) > 0)
-            or (self.sample_df is not None and len(self.sample_df) > 0)
-        ):
+        if (self.df is not None and len(self.df) > 0) or (self.sample_df is not None and len(self.sample_df) > 0):
             self._update_status_card_safe()
 
-if __name__ == "__main__":
-    App().mainloop()
+    def _switch_theme(self, mode: str) -> None:
+        mode = (mode or "").strip()
+        style.set_theme(mode.lower())
+        apply_palette(self._qt_app)
+        if hasattr(self.theme_menu, "blockSignals"):
+            self.theme_menu.blockSignals(True)
+            idx = 0 if mode.lower() != "dark" else 1
+            self.theme_menu.setCurrentIndex(idx)
+            self.theme_menu.blockSignals(False)
+        if hasattr(self.sidebar, "refresh_theme"):
+            self.sidebar.refresh_theme()
+        if hasattr(self, "ledger_table") and hasattr(self.ledger_table, "refresh_theme"):
+            self.ledger_table.refresh_theme()
+        self.render()
+
+
+__all__ = ["App", "SimpleVar"]
