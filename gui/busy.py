@@ -48,12 +48,15 @@ def show_busy(parent: QtWidgets.QWidget, message: str) -> QtWidgets.QDialog:
     dialog.setModal(True)
     dialog.setWindowTitle("")
     dialog.setWindowFlags(dialog.windowFlags() & ~QtCore.Qt.WindowContextHelpButtonHint)
+    dialog.setObjectName("BusyDialog")
+    dialog.setAttribute(QtCore.Qt.WA_StyledBackground, True)
 
     layout = QtWidgets.QVBoxLayout(dialog)
     layout.setContentsMargins(PADDING_X * 2, PADDING_Y * 2, PADDING_X * 2, PADDING_Y * 2)
     layout.setSpacing(PADDING_Y * 2)
 
     label = QtWidgets.QLabel(message, dialog)
+    label.setProperty("role", "muted")
     layout.addWidget(label)
 
     progress = QtWidgets.QProgressBar(dialog)

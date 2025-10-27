@@ -20,20 +20,29 @@ def parse_dropped_path(path: str) -> Optional[str]:
     return path
 
 
-class SidebarWidget(QtWidgets.QWidget):
+class SidebarWidget(QtWidgets.QFrame):
     def __init__(self, app: "App"):
         super().__init__(app)
         self._app = app
+        self.setObjectName("Sidebar")
+        self.setAttribute(QtCore.Qt.WA_StyledBackground, True)
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(style.PAD_XL, style.PAD_XL, style.PAD_XL, style.PAD_XL)
-        layout.setSpacing(style.PAD_MD)
+        layout.setSpacing(style.PAD_LG)
 
-        title = QtWidgets.QLabel("⚙️ Datautvalg", self)
-        title.setStyleSheet("font-weight: bold; font-size: 18px;")
+        title = QtWidgets.QLabel("Datautvalg", self)
+        title.setObjectName("SidebarTitle")
         layout.addWidget(title)
 
-        self.file_btn = QtWidgets.QPushButton("Velg leverandørfakturaer (Excel)…", self)
+        description = QtWidgets.QLabel("Velg eller slipp filer for å komme i gang.", self)
+        description.setObjectName("SidebarDescription")
+        description.setWordWrap(True)
+        layout.addWidget(description)
+
+        self.file_btn = QtWidgets.QPushButton("Velg leverandørfakturaer …", self)
+        self.file_btn.setProperty("role", "primary")
+        self.file_btn.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_FileIcon))
         self.file_btn.clicked.connect(app.choose_file)
         layout.addWidget(self.file_btn)
 
@@ -42,10 +51,13 @@ class SidebarWidget(QtWidgets.QWidget):
         layout.addWidget(self.inv_drop)
 
         self.file_path_label = QtWidgets.QLabel("", self)
+        self.file_path_label.setObjectName("PathLabel")
         self.file_path_label.setWordWrap(True)
         layout.addWidget(self.file_path_label)
 
-        self.gl_btn = QtWidgets.QPushButton("Velg hovedbok (Excel)…", self)
+        self.gl_btn = QtWidgets.QPushButton("Velg hovedbok …", self)
+        self.gl_btn.setProperty("role", "secondary")
+        self.gl_btn.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_DriveHDIcon))
         self.gl_btn.clicked.connect(app.choose_gl_file)
         layout.addWidget(self.gl_btn)
 
@@ -54,10 +66,10 @@ class SidebarWidget(QtWidgets.QWidget):
         layout.addWidget(self.gl_drop)
 
         self.gl_path_label = QtWidgets.QLabel("", self)
+        self.gl_path_label.setObjectName("PathLabel")
         self.gl_path_label.setWordWrap(True)
         layout.addWidget(self.gl_path_label)
 
-        # Sample ruter
         sample_box = QtWidgets.QGroupBox("Tilfeldig utvalg", self)
         sample_layout = QtWidgets.QFormLayout(sample_box)
         sample_layout.setContentsMargins(style.PAD_MD, style.PAD_MD, style.PAD_MD, style.PAD_MD)
@@ -74,19 +86,17 @@ class SidebarWidget(QtWidgets.QWidget):
 
         layout.addWidget(sample_box)
 
-        self.sample_btn = QtWidgets.QPushButton("🎲 Lag utvalg", self)
+        self.sample_btn = QtWidgets.QPushButton("Lag utvalg", self)
+        self.sample_btn.setProperty("role", "primary")
         self.sample_btn.setEnabled(False)
         self.sample_btn.clicked.connect(app.make_sample)
         layout.addWidget(self.sample_btn)
 
         self.filecount_label = QtWidgets.QLabel("Antall bilag: –", self)
+        self.filecount_label.setObjectName("PathLabel")
         layout.addWidget(self.filecount_label)
 
-        info_title = QtWidgets.QLabel("Oppdragsinfo", self)
-        info_title.setStyleSheet("font-weight: bold;")
-        layout.addWidget(info_title)
-
-        info_frame = QtWidgets.QGroupBox(self)
+        info_frame = QtWidgets.QGroupBox("Oppdragsinfo", self)
         info_layout = QtWidgets.QFormLayout(info_frame)
         info_layout.setContentsMargins(style.PAD_MD, style.PAD_MD, style.PAD_MD, style.PAD_MD)
         info_layout.setSpacing(style.PAD_SM)
@@ -102,13 +112,14 @@ class SidebarWidget(QtWidgets.QWidget):
 
         info_hint = QtWidgets.QLabel("Kundenavn hentes automatisk", self)
         info_hint.setWordWrap(True)
+        info_hint.setProperty("role", "muted")
         info_layout.addRow("", info_hint)
 
         layout.addWidget(info_frame)
-
         layout.addStretch(1)
 
         status_frame = QtWidgets.QGroupBox("Status", self)
+        status_frame.setObjectName("SidebarStatus")
         status_layout = QtWidgets.QVBoxLayout(status_frame)
         status_layout.setContentsMargins(style.PAD_MD, style.PAD_MD, style.PAD_MD, style.PAD_MD)
         status_layout.setSpacing(PADDING_Y)
@@ -133,19 +144,11 @@ class SidebarWidget(QtWidgets.QWidget):
 
         layout.addWidget(status_frame)
 
-        # Logo
-        try:
-            logo_path = resource_path("icons/borev_logo_lightmode.png")
-            pix = QtGui.QPixmap(logo_path)
-            if not pix.isNull():
-                scaled = pix.scaledToWidth(SIDEBAR_LOGO_WIDTH, QtCore.Qt.SmoothTransformation)
-                logo = QtWidgets.QLabel(self)
-                logo.setPixmap(scaled)
-                logo.setAlignment(QtCore.Qt.AlignCenter)
-                layout.addWidget(logo)
-        except Exception:  # pragma: no cover - bare logging
-            logger.exception("Kunne ikke laste sidebar-logo")
+        self.logo_label = QtWidgets.QLabel(self)
+        self.logo_label.setAlignment(QtCore.Qt.AlignCenter)
+        layout.addWidget(self.logo_label)
 
+        self._update_logo()
         self._sync_from_app()
 
     def _sync_from_app(self) -> None:
@@ -190,7 +193,6 @@ class SidebarWidget(QtWidgets.QWidget):
             self.gl_path_label.setText(valid)
             self._app._load_gl_excel()
 
-    # API for App
     def update_invoice_path(self, path: str) -> None:
         self.file_path_label.setText(path)
 
@@ -208,3 +210,18 @@ class SidebarWidget(QtWidgets.QWidget):
     def refresh_theme(self) -> None:
         self.inv_drop.refresh_theme()
         self.gl_drop.refresh_theme()
+        self._update_logo()
+
+    def _update_logo(self) -> None:
+        try:
+            logo_name = "icons/borev_logo_darkmode.png" if style.theme == "dark" else "icons/borev_logo_lightmode.png"
+            logo_path = resource_path(logo_name)
+            pix = QtGui.QPixmap(logo_path)
+            if pix.isNull():
+                self.logo_label.clear()
+                return
+            scaled = pix.scaledToWidth(SIDEBAR_LOGO_WIDTH, QtCore.Qt.SmoothTransformation)
+            self.logo_label.setPixmap(scaled)
+        except Exception:  # pragma: no cover - logging av feil
+            logger.exception("Kunne ikke laste sidebar-logo")
+            self.logo_label.clear()

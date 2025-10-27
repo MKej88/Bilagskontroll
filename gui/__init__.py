@@ -10,9 +10,8 @@ import sys
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
-import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from data_utils import (
@@ -37,7 +36,10 @@ from .busy import hide_busy, show_busy, start_worker
 from .ledger import populate_ledger_table
 from .mainview import MainView
 from .sidebar import SidebarWidget
-from .style import apply_palette, style
+from .style import apply_palette, apply_stylesheet, style
+
+if TYPE_CHECKING:  # pragma: no cover - kun for typehinting
+    import pandas as pd
 
 APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
@@ -110,6 +112,7 @@ class App(QtWidgets.QMainWindow):
             self._owns_qt_app = True
         super().__init__()
         self.setWindowTitle(APP_TITLE)
+        self.setAttribute(QtCore.Qt.WA_StyledBackground, True)
 
         self._workers: list[QtCore.QThread] = []
         self._progress_timer: Optional[QtCore.QTimer] = None
@@ -153,12 +156,20 @@ class App(QtWidgets.QMainWindow):
         self._init_geometry()
         self._build_ui()
         self._init_shortcuts()
-        self.render()
+        QtCore.QTimer.singleShot(0, self._after_init)
 
     # Init
     def _init_theme(self, default: str) -> None:
         style.set_theme(default.lower())
         apply_palette(self._qt_app)
+        apply_stylesheet(self._qt_app)
+
+    def _after_init(self) -> None:
+        self.render()
+        if hasattr(self.sidebar, "refresh_theme"):
+            self.sidebar.refresh_theme()
+        if hasattr(self.main_view, "refresh_theme"):
+            self.main_view.refresh_theme()
 
     def _init_geometry(self) -> None:
         screen = QtWidgets.QDesktopWidget().availableGeometry(self)
@@ -624,6 +635,7 @@ class App(QtWidgets.QMainWindow):
         mode = (mode or "").strip()
         style.set_theme(mode.lower())
         apply_palette(self._qt_app)
+        apply_stylesheet(self._qt_app)
         if hasattr(self.theme_menu, "blockSignals"):
             self.theme_menu.blockSignals(True)
             idx = 0 if mode.lower() != "dark" else 1
@@ -631,6 +643,8 @@ class App(QtWidgets.QMainWindow):
             self.theme_menu.blockSignals(False)
         if hasattr(self.sidebar, "refresh_theme"):
             self.sidebar.refresh_theme()
+        if hasattr(self.main_view, "refresh_theme"):
+            self.main_view.refresh_theme()
         if hasattr(self, "ledger_table") and hasattr(self.ledger_table, "refresh_theme"):
             self.ledger_table.refresh_theme()
         self.render()

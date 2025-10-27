@@ -24,6 +24,7 @@ class LedgerTable(QtWidgets.QTableWidget):
 
     def __init__(self, parent: QtWidgets.QWidget):
         super().__init__(0, len(LEDGER_COLS), parent)
+        self.setObjectName("LedgerTable")
         self.setHorizontalHeaderLabels(LEDGER_COLS)
         self.setAlternatingRowColors(True)
         self.verticalHeader().setVisible(False)
@@ -61,9 +62,17 @@ class LedgerTable(QtWidgets.QTableWidget):
 
     def refresh_theme(self) -> None:
         self.setStyleSheet(
-            "QTableWidget {border: 1px solid transparent;}"
-            f"QHeaderView::section {{background-color: {style.get_color('table_header_bg')};"
-            f" padding: {PADDING_Y}px {PADDING_X}px; border: 0px;}}"
+            "QTableWidget {"
+            f"background-color: {style.get_color('panel_bg')};"
+            f"border: 1px solid {style.get_color('panel_border')};"
+            f"border-radius: {style.CARD_RADIUS}px;"
+            f"gridline-color: {style.get_color('panel_border')};"
+            "}"
+            f"QHeaderView::section {{background-color: {style.get_color('button_bg')};"
+            f" color: {style.get_color('button_fg')};"
+            f" padding: {PADDING_Y}px {PADDING_X}px; border: none; font-weight: 600;}}"
+            f"QTableWidget::item:selected {{background-color: {style.get_color('table_sel_bg')};"
+            f" color: {style.get_color('table_sel_fg')};}}"
         )
 
 
