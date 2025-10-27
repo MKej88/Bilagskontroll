@@ -12,9 +12,13 @@ class Style:
     """Samler felles stilkonfigurasjon for GUI."""
 
     # Knappestil
-    BTN_FG: str = "#1f6aa5"
-    BTN_HOVER: str = "#185a8b"
-    BTN_RADIUS: int = 8
+    BTN_FG: str = "#0f4c81"
+    BTN_HOVER: str = "#0d3e6a"
+    BTN_RADIUS: int = 10
+
+    # Generelle hjørneradier
+    CARD_RADIUS: int = 16
+    SECTION_RADIUS: int = 12
 
     # Farger per tema
     COLORS: Dict[str, Dict[str, str]] = field(
@@ -25,10 +29,22 @@ class Style:
             "error_hover": {"light": "#cf4334", "dark": "#992d22"},
             # Generelle farger
             "bg": {"light": "#ffffff", "dark": "#1e1e1e"},
-            "fg": {"light": "#000000", "dark": "#e6e6e6"},
+            "fg": {"light": "#0f1927", "dark": "#f2f5fa"},
+            "app_bg": {"light": "#eef2f7", "dark": "#0f141d"},
+            "surface": {"light": "#ffffff", "dark": "#1b2332"},
+            "surface_alt": {"light": "#f5f8fc", "dark": "#222b3d"},
+            "sidebar_bg": {"light": "#f3f6fb", "dark": "#181f2c"},
+            "border": {"light": "#d2d9e6", "dark": "#2c3547"},
+            "heading": {"light": "#0f1927", "dark": "#f5f8ff"},
+            "muted": {"light": "#5a6a7d", "dark": "#aebad1"},
+            "muted_alt": {"light": "#72829a", "dark": "#90a0bb"},
+            "accent": {"light": "#0f4c81", "dark": "#3f8cff"},
+            "accent_hover": {"light": "#0d3e6a", "dark": "#306ed6"},
+            "accent_subtle": {"light": "#d6e4f8", "dark": "#1f2f47"},
+            "button_text": {"light": "#ffffff", "dark": "#ffffff"},
             # Dra-og-slipp felt
-            "dnd_bg": {"light": "#f5f6f7", "dark": "#2b2b2b"},
-            "dnd_border": {"light": "#a8b1bb", "dark": "#4a4f55"},
+            "dnd_bg": {"light": "#e1e7f2", "dark": "#263247"},
+            "dnd_border": {"light": "#9fb0c9", "dark": "#3b4962"},
             # Tabellfarger
             "table_bg": {"light": "#ffffff", "dark": "#1e1e1e"},
             "table_fg": {"light": "#000000", "dark": "#e6e6e6"},
@@ -59,16 +75,18 @@ class Style:
             raise KeyError(f"Ukjent fargenavn: {name}") from e
 
     # Skrifttyper
-    FONT_FAMILY: str = "Helvetica"
+    FONT_FAMILY: str = "Segoe UI"
     # Skrifttyper (initialiseres lazily)
     FONT_TITLE: Optional[object] = None
     FONT_BODY: Optional[object] = None
     FONT_TITLE_LITE: Optional[object] = None
     FONT_TITLE_LARGE: Optional[object] = None
     FONT_TITLE_SMALL: Optional[object] = None
+    FONT_TITLE_HERO: Optional[object] = None
     FONT_BODY_BOLD: Optional[object] = None
     FONT_SMALL: Optional[object] = None
     FONT_SMALL_ITALIC: Optional[object] = None
+    FONT_CAPTION: Optional[object] = None
 
     # Standard spacing
     PAD_XL: int = 14

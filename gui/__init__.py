@@ -61,6 +61,9 @@ def create_button(master, **kwargs):
         "hover_color": style.BTN_HOVER,
         "font": style.FONT_BODY,
         "corner_radius": style.BTN_RADIUS,
+        "text_color": style.get_color("button_text"),
+        "border_width": 1,
+        "border_color": style.get_color("border"),
     }
     options.update(kwargs)
     return ctk.CTkButton(master, **options)
@@ -161,12 +164,16 @@ class App:
             s.FONT_TITLE_LARGE = ctk.CTkFont(size=18, weight="bold", **kwargs)
         if s.FONT_TITLE_SMALL is None:
             s.FONT_TITLE_SMALL = ctk.CTkFont(size=15, weight="bold", **kwargs)
+        if s.FONT_TITLE_HERO is None:
+            s.FONT_TITLE_HERO = ctk.CTkFont(size=22, weight="bold", **kwargs)
         if s.FONT_BODY_BOLD is None:
             s.FONT_BODY_BOLD = ctk.CTkFont(size=14, weight="bold", **kwargs)
         if s.FONT_SMALL is None:
             s.FONT_SMALL = ctk.CTkFont(size=13, **kwargs)
         if s.FONT_SMALL_ITALIC is None:
             s.FONT_SMALL_ITALIC = ctk.CTkFont(size=12, slant="italic", **kwargs)
+        if s.FONT_CAPTION is None:
+            s.FONT_CAPTION = ctk.CTkFont(size=12, **kwargs)
 
     def _ensure_helpers(self):
         """Importer tunge hjelpefunksjoner fra ``helpers`` ved første behov."""
@@ -227,6 +234,7 @@ class App:
         self.sidebar = build_sidebar(self)
         self.sample_size_var.set("")
         self.year_var.set("")
+        self.refresh_theme_colors()
 
     def _build_main(self):
         from .mainview import build_main
@@ -235,6 +243,7 @@ class App:
         if self.gl_df is not None:
             self.after(0, self._build_ledger_widgets)
         self.render()
+        self.refresh_theme_colors()
 
     def _build_ledger_widgets(self):
         from .mainview import build_ledger_widgets
@@ -299,6 +308,86 @@ class App:
             ctk.set_window_scaling(scale)
         self._theme_initialized = True
 
+    def refresh_theme_colors(self):
+        def _configure(widget, **kwargs):
+            if not widget:
+                return
+            try:
+                widget.configure(**kwargs)
+            except TclError as exc:
+                logger.debug(f"Kunne ikke oppdatere widget: {exc}")
+
+        def _set_text(widget, color):
+            _configure(widget, text_color=color)
+
+        _configure(self, fg_color=style.get_color("app_bg"))
+        _configure(
+            getattr(self, "main_panel", None),
+            fg_color=style.get_color("surface"),
+            border_color=style.get_color("border"),
+        )
+        _configure(
+            getattr(self, "sidebar", None),
+            fg_color=style.get_color("sidebar_bg"),
+            border_color=style.get_color("border"),
+        )
+
+        for attr in ("sidebar_card", "sources_card", "sample_card", "assignment_card", "status_card"):
+            _configure(getattr(self, attr, None), fg_color=style.get_color("surface"), border_color=style.get_color("border"))
+
+        for widget, color_name in getattr(self, "sidebar_labels", []):
+            _set_text(widget, style.get_color(color_name))
+
+        for attr in ("inv_drop", "gl_drop"):
+            drop = getattr(self, attr, None)
+            if hasattr(drop, "refresh_theme"):
+                drop.refresh_theme()
+
+        _configure(getattr(self, "header_frame", None), fg_color=style.get_color("surface"), border_color=style.get_color("border"))
+        _configure(getattr(self, "header_accent", None), fg_color=style.get_color("accent"))
+        _set_text(getattr(self, "header_title", None), style.get_color("heading"))
+        _set_text(getattr(self, "header_tagline", None), style.get_color("muted"))
+        _set_text(getattr(self, "lbl_count", None), style.get_color("heading"))
+        _set_text(getattr(self, "lbl_status_label", None), style.get_color("muted"))
+        _set_text(getattr(self, "lbl_status", None), style.get_color("heading"))
+        _set_text(getattr(self, "lbl_invoice", None), style.get_color("muted"))
+        _set_text(getattr(self, "copy_feedback", None), style.get_color("accent"))
+        _set_text(getattr(self, "inline_status", None), style.get_color("success"))
+        _set_text(getattr(self, "theme_label", None), style.get_color("muted"))
+        _set_text(getattr(self, "lbl_filecount", None), style.get_color("heading"))
+
+        _configure(getattr(self, "action_frame", None), fg_color=style.get_color("surface"), border_color=style.get_color("border"))
+        _configure(getattr(self, "detail_frame", None), fg_color=style.get_color("surface"), border_color=style.get_color("border"))
+        _configure(getattr(self, "right_frame", None), fg_color=style.get_color("surface"), border_color=style.get_color("border"))
+        _set_text(getattr(self, "comment_box", None), style.get_color("fg"))
+
+        if getattr(self, "detail_box", None):
+            _configure(self.detail_box, fg_color=style.get_color("surface_alt"), text_color=style.get_color("fg"))
+        if getattr(self, "comment_box", None):
+            _configure(self.comment_box, fg_color=style.get_color("surface_alt"), text_color=style.get_color("fg"))
+
+        for name in (
+            "lbl_st_sum_kontrollert",
+            "lbl_st_sum_alle",
+            "lbl_st_pct",
+            "lbl_st_godkjent",
+            "lbl_st_ikkegodkjent",
+            "lbl_st_gjen",
+        ):
+            _set_text(getattr(self, name, None), style.get_color("muted"))
+
+        _configure(getattr(self, "bottom_frame", None), fg_color=style.get_color("surface"), border_color=style.get_color("border"))
+        _set_text(getattr(self, "status_label", None), style.get_color("muted"))
+        if getattr(self, "progress_bar", None):
+            _configure(
+                self.progress_bar,
+                fg_color=style.get_color("surface_alt"),
+                progress_color=style.get_color("success"),
+            )
+            self.progress_bar.grid(**getattr(self, "progress_bar_grid", {}))
+
+        _set_text(getattr(self, "ledger_sum", None), style.get_color("muted"))
+
     def _switch_theme(self, mode):
         ctk = _ctk()
         self._init_theme()
@@ -314,6 +403,7 @@ class App:
 
         apply_treeview_theme(self)
         update_treeview_stripes(self)
+        self.refresh_theme_colors()
         self.render()
 
     def _update_icon(self):
@@ -353,6 +443,11 @@ class App:
                 self.logo_img = ctk.CTkImage(light_image=img, size=(32, 32))
             except TypeError:
                 self.logo_img = ctk.CTkImage(img, size=(32, 32))
+            if getattr(self, "header_logo", None):
+                try:
+                    self.header_logo.configure(image=self.logo_img)
+                except TclError as exc:
+                    logger.debug(f"Kunne ikke oppdatere topp-logo: {exc}")
         except (ImportError, OSError) as e:
             logger.error(f"Kunne ikke laste logo: {e}")
             self.logo_img = None
