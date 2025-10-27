@@ -12,8 +12,8 @@ class Style:
     """Samler felles stilkonfigurasjon for GUI."""
 
     # Knappestil
-    BTN_FG: str = "#1f6aa5"
-    BTN_HOVER: str = "#185a8b"
+    BTN_FG: str = "#1f4e79"
+    BTN_HOVER: str = "#163d5f"
     BTN_RADIUS: int = 8
 
     # Farger per tema
@@ -26,6 +26,15 @@ class Style:
             # Generelle farger
             "bg": {"light": "#ffffff", "dark": "#1e1e1e"},
             "fg": {"light": "#000000", "dark": "#e6e6e6"},
+            "muted_fg": {"light": "#4c566a", "dark": "#cdd1d8"},
+            "surface": {"light": "#f4f7fb", "dark": "#10131a"},
+            "surface_alt": {"light": "#e8eef5", "dark": "#171b23"},
+            "card_bg": {"light": "#ffffff", "dark": "#1b1f27"},
+            "card_border": {"light": "#d6dde6", "dark": "#2c313d"},
+            "accent": {"light": "#1f4e79", "dark": "#4da3ff"},
+            "accent_hover": {"light": "#163d5f", "dark": "#3b82d6"},
+            "accent_soft": {"light": "#d8e6f5", "dark": "#142131"},
+            "accent_fg": {"light": "#14324d", "dark": "#c7e3ff"},
             # Dra-og-slipp felt
             "dnd_bg": {"light": "#f5f6f7", "dark": "#2b2b2b"},
             "dnd_border": {"light": "#a8b1bb", "dark": "#4a4f55"},
@@ -59,7 +68,7 @@ class Style:
             raise KeyError(f"Ukjent fargenavn: {name}") from e
 
     # Skrifttyper
-    FONT_FAMILY: str = "Helvetica"
+    FONT_FAMILY: str = "Segoe UI"
     # Skrifttyper (initialiseres lazily)
     FONT_TITLE: Optional[object] = None
     FONT_BODY: Optional[object] = None
@@ -69,6 +78,8 @@ class Style:
     FONT_BODY_BOLD: Optional[object] = None
     FONT_SMALL: Optional[object] = None
     FONT_SMALL_ITALIC: Optional[object] = None
+    FONT_DISPLAY: Optional[object] = None
+    FONT_CAPTION: Optional[object] = None
 
     # Standard spacing
     PAD_XL: int = 14

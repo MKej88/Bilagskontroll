@@ -9,59 +9,179 @@ def build_header(app):
     import customtkinter as ctk
 
     panel = app.main_panel
-    head = ctk.CTkFrame(panel)
+    head = ctk.CTkFrame(
+        panel,
+        corner_radius=20,
+        fg_color=style.get_color("card_bg"),
+        border_width=1,
+        border_color=style.get_color("card_border"),
+    )
     head.grid(row=0, column=0, sticky="ew", padx=style.PAD_LG, pady=style.PAD_MD)
-    head.grid_columnconfigure(6, weight=1)
+    head.grid_columnconfigure(0, weight=1)
 
-    head_font = style.FONT_TITLE_LITE
+    accent = ctk.CTkFrame(head, height=6, fg_color=style.get_color("accent"))
+    accent.grid(row=0, column=0, sticky="ew")
+    accent.grid_propagate(False)
 
-    app.lbl_count = ctk.CTkLabel(head, text="Bilag: –/–", font=style.FONT_TITLE)
-    status_frame = ctk.CTkFrame(head, fg_color="transparent")
-    status_frame.grid(row=0, column=1, padx=style.PAD_MD, sticky="w")
-    app.lbl_status_label = ctk.CTkLabel(status_frame, text="Status:", font=head_font)
-    app.lbl_status_label.grid(row=0, column=0, padx=(0, style.PAD_XXS))
-    app.lbl_status = ctk.CTkLabel(
-        status_frame,
-        text="–",
-        font=head_font,
-        text_color=style.get_color("fg"),
+    content = ctk.CTkFrame(head, fg_color="transparent")
+    content.grid(
+        row=1,
+        column=0,
+        sticky="ew",
+        padx=style.PAD_XL,
+        pady=(style.PAD_LG, style.PAD_LG),
     )
-    app.lbl_status.grid(row=0, column=1)
-    app.lbl_invoice = ctk.CTkLabel(head, text="Fakturanr: –", font=head_font)
-    app.lbl_count.grid(row=0, column=0, padx=(style.PAD_XS, style.PAD_LG))
-    app.lbl_invoice.grid(row=0, column=2, padx=style.PAD_MD)
-    create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(style.PAD_MD,0))
-    app.copy_feedback = ctk.CTkLabel(
-        head,
-        text="",
-        text_color=style.get_color("success"),
+    content.grid_columnconfigure(0, weight=1)
+    content.grid_columnconfigure(1, weight=0)
+
+    title_block = ctk.CTkFrame(content, fg_color="transparent")
+    title_block.grid(row=0, column=0, sticky="w")
+    ctk.CTkLabel(
+        title_block,
+        text="Bilagskontroll",
+        font=style.FONT_DISPLAY,
+        text_color=style.get_color("accent"),
+    ).grid(row=0, column=0, sticky="w")
+    ctk.CTkLabel(
+        title_block,
+        text="Revisjonsoversikt for leverandørfakturaer",
         font=style.FONT_BODY,
-    )
-    app.copy_feedback.grid(row=0, column=4, padx=style.PAD_MD, sticky="w")
+        text_color=style.get_color("muted_fg"),
+    ).grid(row=1, column=0, sticky="w", pady=(style.PAD_XXS, 0))
 
-    app.inline_status = ctk.CTkLabel(
-        head,
-        text="",
-        text_color=style.get_color("success"),
-        font=style.FONT_BODY,
+    controls = ctk.CTkFrame(
+        content,
+        fg_color=style.get_color("surface_alt"),
+        corner_radius=style.BTN_RADIUS,
     )
-    app.inline_status.grid(row=0, column=5, padx=style.PAD_MD, sticky="e")
+    controls.grid(row=0, column=1, sticky="ne", padx=(style.PAD_LG, 0))
+    controls.grid_columnconfigure(0, weight=1)
 
-    ctk.CTkLabel(head, text="Temavalg", font=style.FONT_BODY).grid(
-        row=0,
-        column=7,
-        padx=(style.PAD_MD, style.PAD_XS),
-    )
+    ctk.CTkLabel(
+        controls,
+        text="Temamodus",
+        font=style.FONT_CAPTION,
+        text_color=style.get_color("muted_fg"),
+    ).grid(row=0, column=0, sticky="w", padx=(style.PAD_MD, style.PAD_MD), pady=(style.PAD_MD, 0))
     default_theme_label = DEFAULT_APPEARANCE_MODE.title()
     app.theme_var = ctk.StringVar(value=default_theme_label)
     app.theme_menu = ctk.CTkOptionMenu(
-        head,
+        controls,
         variable=app.theme_var,
         values=["Light", "Dark"],
         command=app._switch_theme,
     )
-    app.theme_menu.grid(row=0, column=8, padx=(0, style.PAD_MD))
+    app.theme_menu.grid(
+        row=1,
+        column=0,
+        sticky="ew",
+        padx=(style.PAD_MD, style.PAD_MD),
+        pady=(style.PAD_XS, 0),
+    )
     app.theme_menu.set(default_theme_label)
+
+    create_button(controls, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(
+        row=2,
+        column=0,
+        sticky="ew",
+        padx=(style.PAD_MD, style.PAD_MD),
+        pady=(style.PAD_SM, 0),
+    )
+    app.copy_feedback = ctk.CTkLabel(
+        controls,
+        text="",
+        text_color=style.get_color("success"),
+        font=style.FONT_SMALL,
+    )
+    app.copy_feedback.grid(
+        row=3,
+        column=0,
+        sticky="w",
+        padx=(style.PAD_MD, style.PAD_MD),
+        pady=(style.PAD_XXS, style.PAD_MD),
+    )
+
+    metrics = ctk.CTkFrame(
+        content,
+        fg_color=style.get_color("surface_alt"),
+        corner_radius=style.BTN_RADIUS,
+        border_width=1,
+        border_color=style.get_color("card_border"),
+    )
+    metrics.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(style.PAD_MD, 0))
+    metrics.grid_columnconfigure((0, 1, 2), weight=1)
+
+    def _metric(column: int, title: str, attr: str, default: str, emphasize: bool = False):
+        container = ctk.CTkFrame(metrics, fg_color="transparent")
+        container.grid(
+            row=0,
+            column=column,
+            sticky="ew",
+            padx=style.PAD_MD,
+            pady=(style.PAD_MD, style.PAD_MD),
+        )
+        ctk.CTkLabel(
+            container,
+            text=title,
+            font=style.FONT_CAPTION,
+            text_color=style.get_color("muted_fg"),
+        ).grid(row=0, column=0, sticky="w")
+        label_kwargs = {
+            "font": style.FONT_TITLE_SMALL,
+            "text_color": style.get_color("fg"),
+        }
+        if emphasize:
+            label_kwargs.update(
+                font=style.FONT_TITLE_LARGE,
+                text_color=style.get_color("accent"),
+            )
+        value = ctk.CTkLabel(container, text=default, **label_kwargs)
+        value.grid(row=1, column=0, sticky="w", pady=(style.PAD_XXS, 0))
+        setattr(app, attr, value)
+        return value
+
+    _metric(0, "Bilag", "lbl_count", "–/–", emphasize=True)
+    _metric(1, "Fakturanummer", "lbl_invoice", "–")
+
+    status_container = ctk.CTkFrame(metrics, fg_color="transparent")
+    status_container.grid(
+        row=0,
+        column=2,
+        sticky="ew",
+        padx=style.PAD_MD,
+        pady=(style.PAD_MD, style.PAD_MD),
+    )
+    ctk.CTkLabel(
+        status_container,
+        text="Status",
+        font=style.FONT_CAPTION,
+        text_color=style.get_color("muted_fg"),
+    ).grid(row=0, column=0, sticky="w")
+    app.lbl_status = ctk.CTkLabel(
+        status_container,
+        text="–",
+        font=style.FONT_BODY_BOLD,
+        text_color=style.get_color("accent_fg"),
+        fg_color=style.get_color("accent_soft"),
+        corner_radius=style.BTN_RADIUS,
+        padx=style.PAD_MD,
+        pady=style.PAD_XXS,
+    )
+    app.lbl_status.grid(row=1, column=0, sticky="w", pady=(style.PAD_XXS, 0))
+
+    app.inline_status = ctk.CTkLabel(
+        content,
+        text="",
+        text_color=style.get_color("success"),
+        font=style.FONT_BODY_BOLD,
+    )
+    app.inline_status.grid(
+        row=2,
+        column=0,
+        columnspan=2,
+        sticky="w",
+        pady=(style.PAD_SM, 0),
+    )
 
     return head
 
@@ -72,9 +192,29 @@ def build_action_buttons(app):
     import customtkinter as ctk
 
     panel = app.main_panel
-    btns = ctk.CTkFrame(panel)
-    btns.grid(row=1, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_XS))
+    btns = ctk.CTkFrame(
+        panel,
+        corner_radius=18,
+        fg_color=style.get_color("card_bg"),
+        border_width=1,
+        border_color=style.get_color("card_border"),
+    )
+    btns.grid(row=1, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_SM))
     btns.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
+
+    ctk.CTkLabel(
+        btns,
+        text="Handlinger",
+        font=style.FONT_CAPTION,
+        text_color=style.get_color("muted_fg"),
+    ).grid(
+        row=0,
+        column=0,
+        columnspan=5,
+        sticky="w",
+        padx=style.PAD_XL,
+        pady=(style.PAD_LG, style.PAD_XS),
+    )
 
     create_button(
         btns,
@@ -82,19 +222,25 @@ def build_action_buttons(app):
         fg_color=style.get_color("success"),
         hover_color=style.get_color("success_hover"),
         command=lambda: app.set_decision_and_next("Godkjent"),
-    ).grid(row=0, column=0, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
+    ).grid(row=1, column=0, padx=style.PAD_SM, pady=(0, style.PAD_LG), sticky="ew")
     create_button(
         btns,
         text="⛔ Ikke godkjent",
         fg_color=style.get_color("error"),
         hover_color=style.get_color("error_hover"),
         command=lambda: app.set_decision_and_next("Ikke godkjent"),
-    ).grid(row=0, column=1, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
-    create_button(btns, text="🔗 Åpne PowerOffice", command=app.open_in_po).grid(row=0, column=2, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
+    ).grid(row=1, column=1, padx=style.PAD_SM, pady=(0, style.PAD_LG), sticky="ew")
+    create_button(btns, text="🔗 Åpne PowerOffice", command=app.open_in_po).grid(
+        row=1,
+        column=2,
+        padx=style.PAD_SM,
+        pady=(0, style.PAD_LG),
+        sticky="ew",
+    )
     app.btn_prev = create_button(btns, text="⬅ Forrige", command=app.prev)
-    app.btn_prev.grid(row=0, column=3, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
+    app.btn_prev.grid(row=1, column=3, padx=style.PAD_SM, pady=(0, style.PAD_LG), sticky="ew")
     app.btn_next = create_button(btns, text="➡ Neste", command=app.next)
-    app.btn_next.grid(row=0, column=4, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
+    app.btn_next.grid(row=1, column=4, padx=style.PAD_SM, pady=(0, style.PAD_LG), sticky="ew")
 
     return btns
 
@@ -105,41 +251,84 @@ def build_panes(app):
     import customtkinter as ctk
 
     panel = app.main_panel
-    paned = ctk.CTkFrame(panel)
-    paned.grid(row=2, column=0, sticky="nsew", padx=style.PAD_LG, pady=(style.PAD_XS, style.PAD_SM))
+    paned = ctk.CTkFrame(panel, fg_color="transparent")
+    paned.grid(
+        row=2,
+        column=0,
+        sticky="nsew",
+        padx=style.PAD_LG,
+        pady=(style.PAD_SM, style.PAD_SM),
+    )
     paned.grid_columnconfigure((0, 1), weight=1, minsize=400)
     paned.grid_rowconfigure(0, weight=1)
 
-    left = ctk.CTkFrame(paned)
-    right = ctk.CTkFrame(paned)
-    left.grid(row=0, column=0, sticky="nsew")
-    right.grid(row=0, column=1, sticky="nsew")
+    left = ctk.CTkFrame(
+        paned,
+        corner_radius=18,
+        fg_color=style.get_color("card_bg"),
+        border_width=1,
+        border_color=style.get_color("card_border"),
+    )
+    right = ctk.CTkFrame(
+        paned,
+        corner_radius=18,
+        fg_color=style.get_color("card_bg"),
+        border_width=1,
+        border_color=style.get_color("card_border"),
+    )
+    left.grid(row=0, column=0, sticky="nsew", padx=(0, style.PAD_SM))
+    right.grid(row=0, column=1, sticky="nsew", padx=(style.PAD_SM, 0))
     app.right_frame = right
 
-    ctk.CTkLabel(left, text="Detaljer for bilag", font=style.FONT_TITLE_SMALL)\
-        .grid(row=0, column=0, sticky="w", padx=style.PAD_MD, pady=(style.PAD_XS, style.PAD_XS))
+    ctk.CTkLabel(
+        left,
+        text="Detaljer for bilag",
+        font=style.FONT_TITLE_SMALL,
+        text_color=style.get_color("muted_fg"),
+    ).grid(row=0, column=0, sticky="w", padx=style.PAD_LG, pady=(style.PAD_LG, style.PAD_SM))
     left.grid_columnconfigure(0, weight=1)
     left.grid_rowconfigure(1, weight=1, minsize=120)
     app.detail_box = ctk.CTkTextbox(left, height=360, font=style.FONT_BODY)
-    app.detail_box.grid(row=1, column=0, sticky="nsew", padx=(style.PAD_MD, style.PAD_SM), pady=(0, style.PAD_MD))
+    app.detail_box.grid(
+        row=1,
+        column=0,
+        sticky="nsew",
+        padx=(style.PAD_LG, style.PAD_LG),
+        pady=(0, style.PAD_LG),
+    )
 
-    ctk.CTkLabel(right, text="Hovedbok (bilagslinjer)", font=style.FONT_TITLE_SMALL)\
-        .grid(row=0, column=0, sticky="w", padx=style.PAD_MD, pady=(style.PAD_XS, style.PAD_XS))
+    ctk.CTkLabel(
+        right,
+        text="Hovedbok (bilagslinjer)",
+        font=style.FONT_TITLE_SMALL,
+        text_color=style.get_color("muted_fg"),
+    ).grid(row=0, column=0, sticky="w", padx=style.PAD_LG, pady=(style.PAD_LG, style.PAD_SM))
     right.grid_columnconfigure(0, weight=1)
     right.grid_columnconfigure(1, weight=0)
     right.grid_rowconfigure(1, weight=3, minsize=150)
     right.grid_rowconfigure(5, weight=1, minsize=120)
 
-    ctk.CTkLabel(right, text="Kommentar", font=style.FONT_TITLE_SMALL)\
-        .grid(row=4, column=0, columnspan=2, sticky="w", padx=(style.PAD_MD, style.PAD_SM), pady=(style.PAD_MD, style.PAD_XS))
+    ctk.CTkLabel(
+        right,
+        text="Kommentar",
+        font=style.FONT_TITLE_SMALL,
+        text_color=style.get_color("muted_fg"),
+    ).grid(
+        row=4,
+        column=0,
+        columnspan=2,
+        sticky="w",
+        padx=(style.PAD_LG, style.PAD_SM),
+        pady=(style.PAD_MD, style.PAD_XS),
+    )
     app.comment_box = ctk.CTkTextbox(right, font=style.FONT_SMALL)
     app.comment_box.grid(
         row=5,
         column=0,
         columnspan=2,
         sticky="nsew",
-        padx=(style.PAD_MD, style.PAD_SM),
-        pady=(0, style.PAD_MD),
+        padx=(style.PAD_LG, style.PAD_LG),
+        pady=(0, style.PAD_LG),
     )
 
     return paned
@@ -151,7 +340,13 @@ def build_bottom(app):
     import customtkinter as ctk
 
     panel = app.main_panel
-    bottom = ctk.CTkFrame(panel)
+    bottom = ctk.CTkFrame(
+        panel,
+        corner_radius=18,
+        fg_color=style.get_color("card_bg"),
+        border_width=1,
+        border_color=style.get_color("card_border"),
+    )
     bottom.grid(row=3, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_MD))
     bottom.grid_columnconfigure(1, weight=1)
     app.bottom_frame = bottom
@@ -179,19 +374,38 @@ def build_bottom(app):
         bottom, text="📄 Eksporter PDF rapport", command=_export_pdf
     )
     export_btn.grid(
-        row=0,
+        row=1,
         column=0,
-        padx=(style.PAD_MD, style.PAD_SM),
-        pady=style.PAD_SM,
+        padx=(style.PAD_LG, style.PAD_SM),
+        pady=(0, style.PAD_MD),
         sticky="w",
     )
 
-    app.status_label = ctk.CTkLabel(bottom, text="", font=style.FONT_BODY)
-    app.status_label.grid(
+    ctk.CTkLabel(
+        bottom,
+        text="Rapportering",
+        font=style.FONT_CAPTION,
+        text_color=style.get_color("muted_fg"),
+    ).grid(
         row=0,
+        column=0,
+        columnspan=3,
+        sticky="w",
+        padx=style.PAD_LG,
+        pady=(style.PAD_LG, style.PAD_XS),
+    )
+
+    app.status_label = ctk.CTkLabel(
+        bottom,
+        text="",
+        font=style.FONT_BODY,
+        text_color=style.get_color("muted_fg"),
+    )
+    app.status_label.grid(
+        row=1,
         column=1,
         padx=style.PAD_SM,
-        pady=style.PAD_SM,
+        pady=(0, style.PAD_MD),
         sticky="ew",
     )
 
@@ -199,14 +413,14 @@ def build_bottom(app):
         bottom,
         width=120,
         progress_color=style.get_color("success"),
-        fg_color=style.get_color("bg"),
+        fg_color=style.get_color("surface_alt"),
     )
     app.progress_bar.set(0)
     app.progress_bar_grid = {
-        "row": 0,
+        "row": 1,
         "column": 2,
         "padx": style.PAD_SM,
-        "pady": style.PAD_SM,
+        "pady": (0, style.PAD_MD),
         "sticky": "e",
     }
 
@@ -218,12 +432,17 @@ def build_main(app):
 
     import customtkinter as ctk
 
-    panel = ctk.CTkFrame(app, corner_radius=16)
+    panel = ctk.CTkFrame(
+        app,
+        corner_radius=16,
+        fg_color=style.get_color("surface"),
+    )
     panel.grid(row=0, column=1, sticky="nsew", padx=(0, style.PAD_XL), pady=style.PAD_XL)
     panel.grid_columnconfigure(0, weight=1)
     panel.grid_rowconfigure(2, weight=1, minsize=300)
 
     app.main_panel = panel
+    app.configure(fg_color=style.get_color("surface"))
 
     build_header(app)
     build_action_buttons(app)
