@@ -6,16 +6,14 @@ from .style import style
 from .qt import qt_modules
 
 
-class DropZone:
+QtCore, _, QtWidgets = qt_modules()
+
+
+class DropZone(QtWidgets.QFrame):
     """Dra-og-slipp-felt for filer."""
 
     def __init__(self, text: str, drop_callback: Callable[[list[str]], None], parent=None):
-        QtCore, QtGui, QtWidgets = qt_modules()
-        self.__class__ = type(self.__class__.__name__, (QtWidgets.QFrame, self.__class__), {})
-        QtWidgets.QFrame.__init__(self, parent)
-        self.QtCore = QtCore
-        self.QtGui = QtGui
-        self.QtWidgets = QtWidgets
+        super().__init__(parent)
         self.setAcceptDrops(True)
         self.drop_callback = drop_callback
         self.setMinimumHeight(70)
