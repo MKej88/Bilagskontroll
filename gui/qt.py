@@ -3,7 +3,11 @@ from __future__ import annotations
 import os
 from typing import Tuple
 
-os.environ.setdefault("QT_QPA_PLATFORM", os.environ.get("QT_QPA_PLATFORM", "offscreen"))
+platform = os.environ.get("QT_QPA_PLATFORM")
+if platform is None and not any(
+    os.environ.get(var) for var in ("DISPLAY", "WAYLAND_DISPLAY")
+):
+    os.environ["QT_QPA_PLATFORM"] = "offscreen"
 os.environ.setdefault("QT_OPENGL", "software")
 
 QtCore = None
