@@ -19,6 +19,8 @@ from .sidebar import SidebarWidgets, build_sidebar, update_file_labels
 from .style import style
 from .qt import qt_modules
 
+QtCore, QtGui, QtWidgets = qt_modules()
+
 APP_TITLE = "Bilagskontroll"
 OPEN_PO_URL = "https://go.poweroffice.net/#reports/purchases/invoice?"
 MAX_APP_WIDTH = 1600
@@ -50,14 +52,13 @@ def _ensure_qapp():
     return app
 
 
-class App:
+class App(QtWidgets.QMainWindow):
     """Hovedapplikasjon for Bilagskontroll basert på PySide6."""
 
     def __init__(self) -> None:
-        QtCore, QtGui, QtWidgets = qt_modules()
         self._qapp = _ensure_qapp()
-        self.__class__ = type(self.__class__.__name__, (QtWidgets.QMainWindow, self.__class__), {})
-        QtWidgets.QMainWindow.__init__(self)
+        QtCore, QtGui, QtWidgets = qt_modules()
+        super().__init__()
         self.QtCore = QtCore
         self.QtGui = QtGui
         self.QtWidgets = QtWidgets
