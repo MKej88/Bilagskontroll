@@ -27,15 +27,36 @@ def _toggle_sample_btn(app, *_):
 def build_sidebar(app):
     import customtkinter as ctk
 
-    card = ctk.CTkFrame(app, corner_radius=16)
+    card = ctk.CTkFrame(
+        app,
+        corner_radius=style.CARD_RADIUS,
+        fg_color=style.get_color("surface_card"),
+        border_width=1,
+        border_color=style.get_color("surface_border"),
+    )
     card.grid(row=0, column=0, sticky="nsw", padx=style.PAD_XL, pady=style.PAD_XL)
 
-    ctk.CTkLabel(card, text="⚙️ Datautvalg", font=style.FONT_TITLE_LARGE)\
-        .grid(row=0, column=0, padx=style.PAD_XL, pady=(style.PAD_XL, style.PAD_SM), sticky="w")
+    header = ctk.CTkFrame(card, fg_color="transparent")
+    header.grid(row=0, column=0, padx=style.PAD_XL, pady=(style.PAD_XL, style.PAD_SM), sticky="ew")
+    header.grid_columnconfigure(0, weight=1)
+    ctk.CTkLabel(header, text="⚙️ Datautvalg", font=style.FONT_TITLE_LARGE).grid(
+        row=0,
+        column=0,
+        sticky="w",
+    )
+    ctk.CTkLabel(
+        header,
+        text="Last opp og tilpass grunnlaget for kontrollen.",
+        font=style.FONT_SMALL,
+        text_color=style.get_color("muted"),
+    ).grid(row=1, column=0, sticky="w", pady=(style.PAD_XXS, 0))
 
     app.file_path_var = ctk.StringVar(master=app, value="")
-    create_button(card, text="Velg leverandørfakturaer (Excel)…", command=app.choose_file)\
-        .grid(row=1, column=0, padx=style.PAD_XL, pady=(style.PAD_XS, style.PAD_XXS), sticky="ew")
+    create_button(
+        card,
+        text="Velg leverandørfakturaer (Excel)…",
+        command=app.choose_file,
+    ).grid(row=1, column=0, padx=style.PAD_XL, pady=(style.PAD_XS, style.PAD_XXS), sticky="ew")
     def _drop_invoice(event):
         path = parse_dropped_path(event)
         if not path:
@@ -55,8 +76,11 @@ def build_sidebar(app):
     ).grid(row=3, column=0, padx=style.PAD_XL, pady=(0, style.PAD_SM), sticky="ew")
 
     app.gl_path_var = ctk.StringVar(master=app, value="")
-    create_button(card, text="Velg hovedbok (Excel)…", command=app.choose_gl_file)\
-        .grid(row=4, column=0, padx=style.PAD_XL, pady=(style.PAD_XXS, style.PAD_XXS), sticky="ew")
+    create_button(
+        card,
+        text="Velg hovedbok (Excel)…",
+        command=app.choose_gl_file,
+    ).grid(row=4, column=0, padx=style.PAD_XL, pady=(style.PAD_XXS, style.PAD_XXS), sticky="ew")
 
     def _drop_gl(event):
         path = parse_dropped_path(event)
@@ -79,7 +103,7 @@ def build_sidebar(app):
     app.add_drop_target(app.inv_drop, app.inv_drop.on_drop)
     app.add_drop_target(app.gl_drop, app.gl_drop.on_drop)
 
-    row_utv = ctk.CTkFrame(card)
+    row_utv = ctk.CTkFrame(card, fg_color="transparent")
     row_utv.grid(row=7, column=0, padx=style.PAD_XL, pady=(style.PAD_XS, 0), sticky="ew")
     ctk.CTkLabel(row_utv, text="Antall tilfeldig utvalg", font=style.FONT_BODY).grid(
         row=0, column=0, padx=(style.PAD_MD, 0), sticky="w"
@@ -117,7 +141,12 @@ def build_sidebar(app):
     )
     app.year_combo.grid(row=1, column=1, padx=(style.PAD_MD, 0), pady=(style.PAD_SM, 0))
 
-    app.sample_btn = create_button(card, text="🎲 Lag utvalg", command=app.make_sample, state="disabled")
+    app.sample_btn = create_button(
+        card,
+        text="🎲 Lag utvalg",
+        command=app.make_sample,
+        state="disabled",
+    )
     app.sample_btn.grid(row=8, column=0, padx=style.PAD_XL, pady=(style.PAD_MD, style.PAD_SM), sticky="ew")
 
     app.sample_size_var.trace_add("write", lambda *_: _toggle_sample_btn(app))
@@ -126,9 +155,18 @@ def build_sidebar(app):
     app.lbl_filecount = ctk.CTkLabel(card, text="Antall bilag: –", font=style.FONT_TITLE)
     app.lbl_filecount.grid(row=9, column=0, padx=style.PAD_XL, pady=(style.PAD_XXS, style.PAD_XXS), sticky="w")
 
-    ctk.CTkLabel(card, text="Oppdragsinfo", font=style.FONT_BODY_BOLD)\
-        .grid(row=10, column=0, padx=style.PAD_XL, pady=(style.PAD_MD, style.PAD_XXS), sticky="w")
-    opp = ctk.CTkFrame(card, corner_radius=8)
+    ctk.CTkLabel(card, text="Oppdragsinfo", font=style.FONT_BODY_BOLD).grid(
+        row=10,
+        column=0,
+        padx=style.PAD_XL,
+        pady=(style.PAD_MD, style.PAD_XXS),
+        sticky="w",
+    )
+    opp = ctk.CTkFrame(
+        card,
+        corner_radius=style.BTN_RADIUS,
+        fg_color=style.get_color("surface_muted"),
+    )
     opp.grid(row=11, column=0, padx=style.PAD_XL, pady=(0, style.PAD_MD), sticky="ew")
     opp.grid_columnconfigure(0, weight=0)
     opp.grid_columnconfigure(1, weight=1)
@@ -163,15 +201,27 @@ def build_sidebar(app):
         opp,
         text="Kundenavn hentes automatisk",
         font=style.FONT_SMALL_ITALIC,
+        text_color=style.get_color("muted"),
         anchor="w",
         justify="left",
         wraplength=240,
     )
-    info_lbl.grid(row=2, column=0, columnspan=2, padx=(style.PAD_MD, style.PAD_MD), pady=(0, style.PAD_MD), sticky="w")
+    info_lbl.grid(
+        row=2,
+        column=0,
+        columnspan=2,
+        padx=(style.PAD_MD, style.PAD_MD),
+        pady=(0, style.PAD_MD),
+        sticky="w",
+    )
 
     card.grid_rowconfigure(20, weight=1)
 
-    status_card = ctk.CTkFrame(card, corner_radius=12)
+    status_card = ctk.CTkFrame(
+        card,
+        corner_radius=style.CARD_RADIUS,
+        fg_color=style.get_color("accent_soft"),
+    )
     status_card.grid(
         row=100,
         column=0,
@@ -184,19 +234,48 @@ def build_sidebar(app):
     title_font = style.FONT_TITLE_LARGE
     body_font = style.FONT_BODY
 
-    ctk.CTkLabel(status_card, text="Status", font=title_font, anchor="center", justify="center")\
-        .grid(row=0, column=0, sticky="ew", pady=(PADDING_Y, style.PAD_SM))
+    ctk.CTkLabel(
+        status_card,
+        text="Status",
+        font=title_font,
+        anchor="center",
+        justify="center",
+    ).grid(row=0, column=0, sticky="ew", pady=(PADDING_Y, style.PAD_SM))
 
-    app.lbl_st_sum_kontrollert = ctk.CTkLabel(status_card, text="Sum kontrollert: –", font=body_font, anchor="center", justify="center")
+    app.lbl_st_sum_kontrollert = ctk.CTkLabel(
+        status_card,
+        text="Sum kontrollert: –",
+        font=body_font,
+        anchor="center",
+        justify="center",
+    )
     app.lbl_st_sum_kontrollert.grid(row=1, column=0, sticky="ew", pady=(0, style.PAD_XXS))
 
-    app.lbl_st_sum_alle = ctk.CTkLabel(status_card, text="Sum alle bilag: –", font=body_font, anchor="center", justify="center")
+    app.lbl_st_sum_alle = ctk.CTkLabel(
+        status_card,
+        text="Sum alle bilag: –",
+        font=body_font,
+        anchor="center",
+        justify="center",
+    )
     app.lbl_st_sum_alle.grid(row=2, column=0, sticky="ew", pady=(0, style.PAD_XXS))
 
-    app.lbl_st_pct = ctk.CTkLabel(status_card, text="% kontrollert av sum: –", font=body_font, anchor="center", justify="center")
+    app.lbl_st_pct = ctk.CTkLabel(
+        status_card,
+        text="% kontrollert av sum: –",
+        font=body_font,
+        anchor="center",
+        justify="center",
+    )
     app.lbl_st_pct.grid(row=3, column=0, sticky="ew", pady=(0, style.PAD_MD))
 
-    app.lbl_st_godkjent = ctk.CTkLabel(status_card, text="Godkjent: –", font=body_font, anchor="center", justify="center")
+    app.lbl_st_godkjent = ctk.CTkLabel(
+        status_card,
+        text="Godkjent: –",
+        font=body_font,
+        anchor="center",
+        justify="center",
+    )
     app.lbl_st_godkjent.grid(row=4, column=0, sticky="ew", pady=(0, style.PAD_XXS))
 
     app.lbl_st_ikkegodkjent = ctk.CTkLabel(status_card, text="Ikke godkjent: –", font=body_font, anchor="center", justify="center")

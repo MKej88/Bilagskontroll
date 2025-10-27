@@ -12,9 +12,10 @@ class Style:
     """Samler felles stilkonfigurasjon for GUI."""
 
     # Knappestil
-    BTN_FG: str = "#1f6aa5"
-    BTN_HOVER: str = "#185a8b"
+    BTN_FG: str = "#2467c9"
+    BTN_HOVER: str = "#1b55a3"
     BTN_RADIUS: int = 8
+    CARD_RADIUS: int = 14
 
     # Farger per tema
     COLORS: Dict[str, Dict[str, str]] = field(
@@ -37,6 +38,13 @@ class Style:
             "table_sel_fg": {"light": "#000000", "dark": "#ffffff"},
             "table_row_odd": {"light": "#f6f6f6", "dark": "#232323"},
             "table_row_even": {"light": "#ffffff", "dark": "#1e1e1e"},
+            # Flater
+            "surface_card": {"light": "#f9fafc", "dark": "#23242a"},
+            "surface_muted": {"light": "#eef2f7", "dark": "#2c2f36"},
+            "surface_border": {"light": "#d5dbe7", "dark": "#3b3f47"},
+            "muted": {"light": "#5f6b7a", "dark": "#b0b5c0"},
+            "accent": {"light": "#2467c9", "dark": "#7aa8ff"},
+            "accent_soft": {"light": "#d9e5fb", "dark": "#2d3c55"},
         }
     )
 
@@ -69,6 +77,7 @@ class Style:
     FONT_BODY_BOLD: Optional[object] = None
     FONT_SMALL: Optional[object] = None
     FONT_SMALL_ITALIC: Optional[object] = None
+    FONT_DISPLAY: Optional[object] = None
 
     # Standard spacing
     PAD_XL: int = 14

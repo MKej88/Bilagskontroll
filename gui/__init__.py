@@ -158,7 +158,7 @@ class App:
         if s.FONT_TITLE_LITE is None:
             s.FONT_TITLE_LITE = ctk.CTkFont(size=16, **kwargs)
         if s.FONT_TITLE_LARGE is None:
-            s.FONT_TITLE_LARGE = ctk.CTkFont(size=18, weight="bold", **kwargs)
+            s.FONT_TITLE_LARGE = ctk.CTkFont(size=19, weight="bold", **kwargs)
         if s.FONT_TITLE_SMALL is None:
             s.FONT_TITLE_SMALL = ctk.CTkFont(size=15, weight="bold", **kwargs)
         if s.FONT_BODY_BOLD is None:
@@ -167,6 +167,8 @@ class App:
             s.FONT_SMALL = ctk.CTkFont(size=13, **kwargs)
         if s.FONT_SMALL_ITALIC is None:
             s.FONT_SMALL_ITALIC = ctk.CTkFont(size=12, slant="italic", **kwargs)
+        if s.FONT_DISPLAY is None:
+            s.FONT_DISPLAY = ctk.CTkFont(size=22, weight="bold", **kwargs)
 
     def _ensure_helpers(self):
         """Importer tunge hjelpefunksjoner fra ``helpers`` ved første behov."""

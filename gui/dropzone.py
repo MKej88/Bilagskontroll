@@ -8,9 +8,9 @@ class DropZone(ctk.CTkFrame):
     """En ramme for dra-og-slipp med fargeendring ved drag hendelser."""
 
     def __init__(self, parent, text: str, drop_callback):
-        dnd_bg = style.get_color_pair("dnd_bg")
-        dnd_border = style.get_color_pair("dnd_border")
-        highlight = style.get_color_pair("success")
+        dnd_bg = style.get_color_pair("accent_soft")
+        dnd_border = style.get_color_pair("accent")
+        highlight = style.get_color_pair("accent")
 
         super().__init__(
             parent,
@@ -42,7 +42,7 @@ class DropZone(ctk.CTkFrame):
 
     def _on_drag_enter(self, _):
         self.configure(fg_color=self._highlight, border_color=self._highlight)
-        self.label.configure(text_color=style.get_color_pair("fg"))
+        self.label.configure(text_color=style.get_color_pair("bg"))
 
     def reset_colors(self, _=None):
         self.configure(fg_color=self._dnd_bg, border_color=self._dnd_border)
