@@ -27,15 +27,44 @@ def _toggle_sample_btn(app, *_):
 def build_sidebar(app):
     import customtkinter as ctk
 
-    card = ctk.CTkFrame(app, corner_radius=16)
+    card = ctk.CTkFrame(
+        app,
+        corner_radius=style.CARD_RADIUS,
+        fg_color=style.get_color("card_bg"),
+        border_width=1,
+        border_color=style.get_color("card_border"),
+    )
     card.grid(row=0, column=0, sticky="nsw", padx=style.PAD_XL, pady=style.PAD_XL)
+    card.grid_columnconfigure(0, weight=1)
+    card.grid_rowconfigure(1, weight=1)
 
-    ctk.CTkLabel(card, text="⚙️ Datautvalg", font=style.FONT_TITLE_LARGE)\
-        .grid(row=0, column=0, padx=style.PAD_XL, pady=(style.PAD_XL, style.PAD_SM), sticky="w")
+    accent = ctk.CTkFrame(card, height=6, fg_color=style.get_color("accent"))
+    accent.grid(row=0, column=0, sticky="ew")
+    accent.grid_propagate(False)
+
+    content = ctk.CTkFrame(card, fg_color="transparent")
+    content.grid(
+        row=1,
+        column=0,
+        sticky="nsew",
+        padx=style.PAD_LG,
+        pady=(style.PAD_MD, style.PAD_LG),
+    )
+    content.grid_columnconfigure(0, weight=1)
+
+    ctk.CTkLabel(content, text="⚙️ Datautvalg", font=style.FONT_TITLE_LARGE).grid(
+        row=0,
+        column=0,
+        sticky="w",
+        pady=(0, style.PAD_SM),
+    )
 
     app.file_path_var = ctk.StringVar(master=app, value="")
-    create_button(card, text="Velg leverandørfakturaer (Excel)…", command=app.choose_file)\
-        .grid(row=1, column=0, padx=style.PAD_XL, pady=(style.PAD_XS, style.PAD_XXS), sticky="ew")
+    create_button(
+        content,
+        text="Velg leverandørfakturaer (Excel)…",
+        command=app.choose_file,
+    ).grid(row=1, column=0, sticky="ew", pady=(0, style.PAD_XXS))
     def _drop_invoice(event):
         path = parse_dropped_path(event)
         if not path:
@@ -43,20 +72,23 @@ def build_sidebar(app):
         app.file_path_var.set(path)
         app._load_excel()
 
-    app.inv_drop = DropZone(card, "Dra og slipp fakturaliste her", _drop_invoice)
-    app.inv_drop.grid(row=2, column=0, padx=style.PAD_XL, pady=(0, style.PAD_XXS), sticky="ew")
+    app.inv_drop = DropZone(content, "Dra og slipp fakturaliste her", _drop_invoice)
+    app.inv_drop.grid(row=2, column=0, sticky="ew", pady=(0, style.PAD_XXS))
     ctk.CTkLabel(
-        card,
+        content,
         textvariable=app.file_path_var,
         wraplength=260,
         anchor="w",
         justify="left",
         font=style.FONT_BODY,
-    ).grid(row=3, column=0, padx=style.PAD_XL, pady=(0, style.PAD_SM), sticky="ew")
+    ).grid(row=3, column=0, sticky="ew", pady=(0, style.PAD_SM))
 
     app.gl_path_var = ctk.StringVar(master=app, value="")
-    create_button(card, text="Velg hovedbok (Excel)…", command=app.choose_gl_file)\
-        .grid(row=4, column=0, padx=style.PAD_XL, pady=(style.PAD_XXS, style.PAD_XXS), sticky="ew")
+    create_button(
+        content,
+        text="Velg hovedbok (Excel)…",
+        command=app.choose_gl_file,
+    ).grid(row=4, column=0, sticky="ew", pady=(0, style.PAD_XXS))
 
     def _drop_gl(event):
         path = parse_dropped_path(event)
@@ -65,22 +97,22 @@ def build_sidebar(app):
         app.gl_path_var.set(path)
         app._load_gl_excel()
 
-    app.gl_drop = DropZone(card, "Dra og slipp hovedbok her", _drop_gl)
-    app.gl_drop.grid(row=5, column=0, padx=style.PAD_XL, pady=(0, style.PAD_XXS), sticky="ew")
+    app.gl_drop = DropZone(content, "Dra og slipp hovedbok her", _drop_gl)
+    app.gl_drop.grid(row=5, column=0, sticky="ew", pady=(0, style.PAD_XXS))
     ctk.CTkLabel(
-        card,
+        content,
         textvariable=app.gl_path_var,
         wraplength=260,
         anchor="w",
         justify="left",
         font=style.FONT_BODY,
-    ).grid(row=6, column=0, padx=style.PAD_XL, pady=(0, style.PAD_SM), sticky="ew")
+    ).grid(row=6, column=0, sticky="ew", pady=(0, style.PAD_SM))
 
     app.add_drop_target(app.inv_drop, app.inv_drop.on_drop)
     app.add_drop_target(app.gl_drop, app.gl_drop.on_drop)
 
-    row_utv = ctk.CTkFrame(card)
-    row_utv.grid(row=7, column=0, padx=style.PAD_XL, pady=(style.PAD_XS, 0), sticky="ew")
+    row_utv = ctk.CTkFrame(content, fg_color="transparent")
+    row_utv.grid(row=7, column=0, sticky="ew", pady=(style.PAD_XS, 0))
     ctk.CTkLabel(row_utv, text="Antall tilfeldig utvalg", font=style.FONT_BODY).grid(
         row=0, column=0, padx=(style.PAD_MD, 0), sticky="w"
     )
@@ -117,19 +149,34 @@ def build_sidebar(app):
     )
     app.year_combo.grid(row=1, column=1, padx=(style.PAD_MD, 0), pady=(style.PAD_SM, 0))
 
-    app.sample_btn = create_button(card, text="🎲 Lag utvalg", command=app.make_sample, state="disabled")
-    app.sample_btn.grid(row=8, column=0, padx=style.PAD_XL, pady=(style.PAD_MD, style.PAD_SM), sticky="ew")
+    app.sample_btn = create_button(
+        content,
+        text="🎲 Lag utvalg",
+        command=app.make_sample,
+        state="disabled",
+    )
+    app.sample_btn.grid(row=8, column=0, sticky="ew", pady=(style.PAD_MD, style.PAD_SM))
 
     app.sample_size_var.trace_add("write", lambda *_: _toggle_sample_btn(app))
     app._update_year_options()
 
-    app.lbl_filecount = ctk.CTkLabel(card, text="Antall bilag: –", font=style.FONT_TITLE)
-    app.lbl_filecount.grid(row=9, column=0, padx=style.PAD_XL, pady=(style.PAD_XXS, style.PAD_XXS), sticky="w")
+    app.lbl_filecount = ctk.CTkLabel(content, text="Antall bilag: –", font=style.FONT_TITLE)
+    app.lbl_filecount.grid(row=9, column=0, sticky="w", pady=(style.PAD_XXS, style.PAD_XXS))
 
-    ctk.CTkLabel(card, text="Oppdragsinfo", font=style.FONT_BODY_BOLD)\
-        .grid(row=10, column=0, padx=style.PAD_XL, pady=(style.PAD_MD, style.PAD_XXS), sticky="w")
-    opp = ctk.CTkFrame(card, corner_radius=8)
-    opp.grid(row=11, column=0, padx=style.PAD_XL, pady=(0, style.PAD_MD), sticky="ew")
+    ctk.CTkLabel(content, text="Oppdragsinfo", font=style.FONT_BODY_BOLD).grid(
+        row=10,
+        column=0,
+        sticky="w",
+        pady=(style.PAD_MD, style.PAD_XXS),
+    )
+    opp = ctk.CTkFrame(
+        content,
+        corner_radius=12,
+        fg_color=style.get_color("card_bg"),
+        border_width=1,
+        border_color=style.get_color("card_border"),
+    )
+    opp.grid(row=11, column=0, sticky="ew", pady=(0, style.PAD_MD))
     opp.grid_columnconfigure(0, weight=0)
     opp.grid_columnconfigure(1, weight=1)
 
@@ -169,15 +216,20 @@ def build_sidebar(app):
     )
     info_lbl.grid(row=2, column=0, columnspan=2, padx=(style.PAD_MD, style.PAD_MD), pady=(0, style.PAD_MD), sticky="w")
 
-    card.grid_rowconfigure(20, weight=1)
+    content.grid_rowconfigure(40, weight=1)
 
-    status_card = ctk.CTkFrame(card, corner_radius=12)
+    status_card = ctk.CTkFrame(
+        content,
+        corner_radius=12,
+        fg_color=style.get_color("card_bg"),
+        border_width=1,
+        border_color=style.get_color("card_border"),
+    )
     status_card.grid(
         row=100,
         column=0,
-        padx=style.PAD_XL,
-        pady=(style.PAD_MD, PADDING_Y),
         sticky="ew",
+        pady=(style.PAD_MD, PADDING_Y),
     )
     status_card.grid_columnconfigure(0, weight=1)
 

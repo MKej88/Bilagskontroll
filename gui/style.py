@@ -37,6 +37,10 @@ class Style:
             "table_sel_fg": {"light": "#000000", "dark": "#ffffff"},
             "table_row_odd": {"light": "#f6f6f6", "dark": "#232323"},
             "table_row_even": {"light": "#ffffff", "dark": "#1e1e1e"},
+            # Kort og paneler
+            "card_bg": {"light": "#f8fafc", "dark": "#252a30"},
+            "card_border": {"light": "#d9e0e7", "dark": "#3a4048"},
+            "accent": {"light": "#3c8dff", "dark": "#7aa2ff"},
         }
     )
 
@@ -77,6 +81,9 @@ class Style:
     PAD_SM: int = 6
     PAD_XS: int = 4
     PAD_XXS: int = 2
+
+    # Layout
+    CARD_RADIUS: int = 18
 
 
 style = Style()
