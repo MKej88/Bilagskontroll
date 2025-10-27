@@ -12,9 +12,9 @@ def build_header(app):
     head = ctk.CTkFrame(
         panel,
         corner_radius=style.CARD_RADIUS,
-        fg_color=style.get_color("surface_card"),
+        fg_color=style.get_color_pair("surface_card"),
         border_width=1,
-        border_color=style.get_color("surface_border"),
+        border_color=style.get_color_pair("surface_border"),
     )
     head.grid(row=0, column=0, sticky="ew", padx=style.PAD_LG, pady=style.PAD_MD)
     head.grid_columnconfigure(1, weight=1)
@@ -22,7 +22,7 @@ def build_header(app):
     accent = ctk.CTkFrame(
         head,
         width=style.PAD_MD,
-        fg_color=style.get_color("accent"),
+        fg_color=style.get_color_pair("accent"),
         corner_radius=style.CARD_RADIUS,
     )
     accent.grid(
@@ -51,13 +51,13 @@ def build_header(app):
         title_row,
         text="Profesjonell oversikt over bilagskontroll og status.",
         font=style.FONT_SMALL,
-        text_color=style.get_color("muted"),
+        text_color=style.get_color_pair("muted"),
     ).grid(row=1, column=0, sticky="w", pady=(style.PAD_XXS, 0))
 
     metrics = ctk.CTkFrame(
         content,
         corner_radius=style.BTN_RADIUS,
-        fg_color=style.get_color("surface_muted"),
+        fg_color=style.get_color_pair("surface_muted"),
     )
     metrics.grid(
         row=1,
@@ -81,7 +81,7 @@ def build_header(app):
             wrapper,
             text=label,
             font=style.FONT_SMALL,
-            text_color=style.get_color("muted"),
+            text_color=style.get_color_pair("muted"),
         )
         caption.grid(row=0, column=0, sticky="w")
         value_lbl = ctk.CTkLabel(wrapper, text=default, font=style.FONT_TITLE_LITE)
@@ -113,7 +113,7 @@ def build_header(app):
     app.copy_feedback = ctk.CTkLabel(
         feedback_row,
         text="",
-        text_color=style.get_color("success"),
+        text_color=style.get_color_pair("success"),
         font=style.FONT_SMALL,
     )
     app.copy_feedback.grid(row=0, column=1, padx=(0, style.PAD_SM), sticky="w")
@@ -121,7 +121,7 @@ def build_header(app):
     app.inline_status = ctk.CTkLabel(
         feedback_row,
         text="",
-        text_color=style.get_color("success"),
+        text_color=style.get_color_pair("success"),
         font=style.FONT_SMALL,
     )
     app.inline_status.grid(row=0, column=2, sticky="e")
@@ -138,7 +138,7 @@ def build_header(app):
         theme,
         text="Tema",
         font=style.FONT_SMALL,
-        text_color=style.get_color("muted"),
+        text_color=style.get_color_pair("muted"),
     ).grid(row=0, column=0, sticky="w", pady=(0, style.PAD_XXS))
     default_theme_label = DEFAULT_APPEARANCE_MODE.title()
     app.theme_var = ctk.StringVar(value=default_theme_label)
@@ -147,9 +147,9 @@ def build_header(app):
         variable=app.theme_var,
         values=["Light", "Dark"],
         command=app._switch_theme,
-        fg_color=style.get_color("surface_muted"),
-        button_color=style.get_color("accent"),
-        button_hover_color=style.get_color("accent"),
+        fg_color=style.get_color_pair("surface_muted"),
+        button_color=style.get_color_pair("accent"),
+        button_hover_color=style.get_color_pair("accent"),
     )
     app.theme_menu.grid(row=1, column=0, sticky="ew")
     app.theme_menu.set(default_theme_label)
@@ -166,9 +166,9 @@ def build_action_buttons(app):
     card = ctk.CTkFrame(
         panel,
         corner_radius=style.CARD_RADIUS,
-        fg_color=style.get_color("surface_card"),
+        fg_color=style.get_color_pair("surface_card"),
         border_width=1,
-        border_color=style.get_color("surface_border"),
+        border_color=style.get_color_pair("surface_border"),
     )
     card.grid(row=1, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_XS))
     card.grid_columnconfigure(0, weight=1)
@@ -184,7 +184,7 @@ def build_action_buttons(app):
         card,
         text="Velg ønsket handling for neste bilag.",
         font=style.FONT_SMALL,
-        text_color=style.get_color("muted"),
+        text_color=style.get_color_pair("muted"),
     ).grid(row=1, column=0, sticky="w", padx=style.PAD_LG, pady=(0, style.PAD_SM))
 
     btns = ctk.CTkFrame(card, fg_color="transparent")
@@ -194,15 +194,15 @@ def build_action_buttons(app):
     create_button(
         btns,
         text="✅ Godkjent",
-        fg_color=style.get_color("success"),
-        hover_color=style.get_color("success_hover"),
+        fg_color=style.get_color_pair("success"),
+        hover_color=style.get_color_pair("success_hover"),
         command=lambda: app.set_decision_and_next("Godkjent"),
     ).grid(row=0, column=0, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
     create_button(
         btns,
         text="⛔ Ikke godkjent",
-        fg_color=style.get_color("error"),
-        hover_color=style.get_color("error_hover"),
+        fg_color=style.get_color_pair("error"),
+        hover_color=style.get_color_pair("error_hover"),
         command=lambda: app.set_decision_and_next("Ikke godkjent"),
     ).grid(row=0, column=1, padx=style.PAD_SM, pady=style.PAD_SM, sticky="ew")
     create_button(
@@ -232,16 +232,16 @@ def build_panes(app):
     left = ctk.CTkFrame(
         paned,
         corner_radius=style.CARD_RADIUS,
-        fg_color=style.get_color("surface_card"),
+        fg_color=style.get_color_pair("surface_card"),
         border_width=1,
-        border_color=style.get_color("surface_border"),
+        border_color=style.get_color_pair("surface_border"),
     )
     right = ctk.CTkFrame(
         paned,
         corner_radius=style.CARD_RADIUS,
-        fg_color=style.get_color("surface_card"),
+        fg_color=style.get_color_pair("surface_card"),
         border_width=1,
-        border_color=style.get_color("surface_border"),
+        border_color=style.get_color_pair("surface_border"),
     )
     left.grid(row=0, column=0, sticky="nsew", padx=(0, style.PAD_SM))
     right.grid(row=0, column=1, sticky="nsew", padx=(style.PAD_SM, 0))
@@ -261,8 +261,8 @@ def build_panes(app):
         left,
         height=360,
         font=style.FONT_BODY,
-        fg_color=style.get_color("surface_muted"),
-        text_color=style.get_color("fg"),
+        fg_color=style.get_color_pair("surface_muted"),
+        text_color=style.get_color_pair("fg"),
         corner_radius=style.BTN_RADIUS,
         border_width=0,
     )
@@ -302,8 +302,8 @@ def build_panes(app):
     app.comment_box = ctk.CTkTextbox(
         right,
         font=style.FONT_SMALL,
-        fg_color=style.get_color("surface_muted"),
-        text_color=style.get_color("fg"),
+        fg_color=style.get_color_pair("surface_muted"),
+        text_color=style.get_color_pair("fg"),
         corner_radius=style.BTN_RADIUS,
         border_width=0,
     )
@@ -333,9 +333,9 @@ def build_bottom(app):
     card = ctk.CTkFrame(
         bottom,
         corner_radius=style.CARD_RADIUS,
-        fg_color=style.get_color("surface_card"),
+        fg_color=style.get_color_pair("surface_card"),
         border_width=1,
-        border_color=style.get_color("surface_border"),
+        border_color=style.get_color_pair("surface_border"),
     )
     card.grid(row=0, column=0, sticky="ew")
     card.grid_columnconfigure(2, weight=1)
@@ -374,7 +374,7 @@ def build_bottom(app):
         card,
         text="",
         font=style.FONT_SMALL,
-        text_color=style.get_color("muted"),
+        text_color=style.get_color_pair("muted"),
     )
     app.status_label.grid(
         row=0,
@@ -387,8 +387,8 @@ def build_bottom(app):
     app.progress_bar = ctk.CTkProgressBar(
         card,
         width=160,
-        progress_color=style.get_color("success"),
-        fg_color=style.get_color("surface_muted"),
+        progress_color=style.get_color_pair("success"),
+        fg_color=style.get_color_pair("surface_muted"),
     )
     app.progress_bar.set(0)
     app.progress_bar_grid = {
@@ -410,7 +410,7 @@ def build_main(app):
     panel = ctk.CTkFrame(
         app,
         corner_radius=style.CARD_RADIUS,
-        fg_color=style.get_color("surface_muted"),
+        fg_color=style.get_color_pair("surface_muted"),
     )
     panel.grid(row=0, column=1, sticky="nsew", padx=(0, style.PAD_XL), pady=style.PAD_XL)
     panel.grid_columnconfigure(0, weight=1)
@@ -461,7 +461,7 @@ def build_ledger_widgets(app):
     table_container = ctk.CTkFrame(
         right,
         corner_radius=style.BTN_RADIUS,
-        fg_color=style.get_color("surface_muted"),
+        fg_color=style.get_color_pair("surface_muted"),
     )
     table_container.grid(
         row=1,
@@ -522,7 +522,7 @@ def build_ledger_widgets(app):
         anchor="e",
         justify="right",
         font=style.FONT_BODY,
-        text_color=style.get_color("muted"),
+        text_color=style.get_color_pair("muted"),
     )
     app.ledger_sum.grid(
         row=3,
