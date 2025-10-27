@@ -15,10 +15,10 @@ class DropZone(ctk.CTkFrame):
         super().__init__(
             parent,
             height=70,
-            corner_radius=style.BTN_RADIUS,
+            corner_radius=style.CARD_RADIUS,
             fg_color=dnd_bg,
             border_color=dnd_border,
-            border_width=2,
+            border_width=style.CARD_BORDER_WIDTH + 1,
         )
 
         self._dnd_bg = dnd_bg

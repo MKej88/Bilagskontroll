@@ -12,9 +12,18 @@ class Style:
     """Samler felles stilkonfigurasjon for GUI."""
 
     # Knappestil
-    BTN_FG: str = "#1f6aa5"
-    BTN_HOVER: str = "#185a8b"
-    BTN_RADIUS: int = 8
+    BTN_FG: Tuple[str, str] = field(
+        default_factory=lambda: ("#134168", "#4b97ff")
+    )
+    BTN_HOVER: Tuple[str, str] = field(
+        default_factory=lambda: ("#0f3656", "#357edc")
+    )
+    BTN_TEXT: Tuple[str, str] = field(
+        default_factory=lambda: ("#ffffff", "#0b1624")
+    )
+    BTN_RADIUS: int = 12
+    CARD_RADIUS: int = 18
+    CARD_BORDER_WIDTH: int = 1
 
     # Farger per tema
     COLORS: Dict[str, Dict[str, str]] = field(
@@ -26,6 +35,19 @@ class Style:
             # Generelle farger
             "bg": {"light": "#ffffff", "dark": "#1e1e1e"},
             "fg": {"light": "#000000", "dark": "#e6e6e6"},
+            "muted": {"light": "#5b6b7f", "dark": "#c2cad8"},
+            "accent": {"light": "#0f4c81", "dark": "#63a9ff"},
+            "accent_soft": {"light": "#dae6f5", "dark": "#233142"},
+            "accent_border": {"light": "#adc4e1", "dark": "#32425a"},
+            "card_bg": {"light": "#f5f7fb", "dark": "#1f2430"},
+            "card_inner": {"light": "#ffffff", "dark": "#232a37"},
+            "card_border": {"light": "#d7deeb", "dark": "#313a4d"},
+            "pill_bg": {"light": "#e5eef9", "dark": "#283549"},
+            "pill_border": {"light": "#bfd1ea", "dark": "#36445b"},
+            "pill_text": {"light": "#0f4c81", "dark": "#95c5ff"},
+            "btn_text": {"light": "#ffffff", "dark": "#0b1624"},
+            "sidebar_bg": {"light": "#ffffff", "dark": "#212733"},
+            "sidebar_border": {"light": "#dce2ed", "dark": "#323a4b"},
             # Dra-og-slipp felt
             "dnd_bg": {"light": "#f5f6f7", "dark": "#2b2b2b"},
             "dnd_border": {"light": "#a8b1bb", "dark": "#4a4f55"},

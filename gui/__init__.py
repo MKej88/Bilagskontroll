@@ -59,8 +59,10 @@ def create_button(master, **kwargs):
     options = {
         "fg_color": style.BTN_FG,
         "hover_color": style.BTN_HOVER,
+        "text_color": style.BTN_TEXT,
         "font": style.FONT_BODY,
         "corner_radius": style.BTN_RADIUS,
+        "border_width": 0,
     }
     options.update(kwargs)
     return ctk.CTkButton(master, **options)
