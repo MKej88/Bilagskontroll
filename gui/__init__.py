@@ -61,6 +61,8 @@ def create_button(master, **kwargs):
         "hover_color": style.BTN_HOVER,
         "font": style.FONT_BODY,
         "corner_radius": style.BTN_RADIUS,
+        "text_color": style.get_color("button_text"),
+        "text_color_disabled": style.get_color("muted"),
     }
     options.update(kwargs)
     return ctk.CTkButton(master, **options)
@@ -152,19 +154,19 @@ class App:
         s = style
         kwargs = {"family": s.FONT_FAMILY}
         if s.FONT_TITLE is None:
-            s.FONT_TITLE = ctk.CTkFont(size=16, weight="bold", **kwargs)
+            s.FONT_TITLE = ctk.CTkFont(size=17, weight="bold", **kwargs)
         if s.FONT_BODY is None:
             s.FONT_BODY = ctk.CTkFont(size=14, **kwargs)
         if s.FONT_TITLE_LITE is None:
             s.FONT_TITLE_LITE = ctk.CTkFont(size=16, **kwargs)
         if s.FONT_TITLE_LARGE is None:
-            s.FONT_TITLE_LARGE = ctk.CTkFont(size=18, weight="bold", **kwargs)
+            s.FONT_TITLE_LARGE = ctk.CTkFont(size=20, weight="bold", **kwargs)
         if s.FONT_TITLE_SMALL is None:
             s.FONT_TITLE_SMALL = ctk.CTkFont(size=15, weight="bold", **kwargs)
         if s.FONT_BODY_BOLD is None:
             s.FONT_BODY_BOLD = ctk.CTkFont(size=14, weight="bold", **kwargs)
         if s.FONT_SMALL is None:
-            s.FONT_SMALL = ctk.CTkFont(size=13, **kwargs)
+            s.FONT_SMALL = ctk.CTkFont(size=12, **kwargs)
         if s.FONT_SMALL_ITALIC is None:
             s.FONT_SMALL_ITALIC = ctk.CTkFont(size=12, slant="italic", **kwargs)
 
@@ -214,6 +216,7 @@ class App:
         self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
+        self.configure(fg_color=style.get_color("background"))
 
         self.bind("<Left>", lambda e: self.prev())
         self.bind("<Right>", lambda e: self.next())

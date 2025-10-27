@@ -9,16 +9,32 @@ def build_header(app):
     import customtkinter as ctk
 
     panel = app.main_panel
-    head = ctk.CTkFrame(panel)
+    head = ctk.CTkFrame(
+        panel,
+        corner_radius=style.SECTION_RADIUS,
+        fg_color=style.get_color("surface"),
+        border_color=style.get_color("border"),
+        border_width=style.OUTLINE_WIDTH,
+    )
     head.grid(row=0, column=0, sticky="ew", padx=style.PAD_LG, pady=style.PAD_MD)
     head.grid_columnconfigure(6, weight=1)
 
     head_font = style.FONT_TITLE_LITE
 
-    app.lbl_count = ctk.CTkLabel(head, text="Bilag: –/–", font=style.FONT_TITLE)
+    app.lbl_count = ctk.CTkLabel(
+        head,
+        text="Bilag: –/–",
+        font=style.FONT_TITLE,
+        text_color=style.get_color("fg"),
+    )
     status_frame = ctk.CTkFrame(head, fg_color="transparent")
     status_frame.grid(row=0, column=1, padx=style.PAD_MD, sticky="w")
-    app.lbl_status_label = ctk.CTkLabel(status_frame, text="Status:", font=head_font)
+    app.lbl_status_label = ctk.CTkLabel(
+        status_frame,
+        text="Status:",
+        font=head_font,
+        text_color=style.get_color("muted"),
+    )
     app.lbl_status_label.grid(row=0, column=0, padx=(0, style.PAD_XXS))
     app.lbl_status = ctk.CTkLabel(
         status_frame,
@@ -27,10 +43,17 @@ def build_header(app):
         text_color=style.get_color("fg"),
     )
     app.lbl_status.grid(row=0, column=1)
-    app.lbl_invoice = ctk.CTkLabel(head, text="Fakturanr: –", font=head_font)
+    app.lbl_invoice = ctk.CTkLabel(
+        head,
+        text="Fakturanr: –",
+        font=head_font,
+        text_color=style.get_color("muted"),
+    )
     app.lbl_count.grid(row=0, column=0, padx=(style.PAD_XS, style.PAD_LG))
     app.lbl_invoice.grid(row=0, column=2, padx=style.PAD_MD)
-    create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(row=0, column=3, padx=(style.PAD_MD,0))
+    create_button(head, text="📋 Kopier fakturanr", command=app.copy_invoice).grid(
+        row=0, column=3, padx=(style.PAD_MD, 0)
+    )
     app.copy_feedback = ctk.CTkLabel(
         head,
         text="",
@@ -47,7 +70,12 @@ def build_header(app):
     )
     app.inline_status.grid(row=0, column=5, padx=style.PAD_MD, sticky="e")
 
-    ctk.CTkLabel(head, text="Temavalg", font=style.FONT_BODY).grid(
+    ctk.CTkLabel(
+        head,
+        text="Temavalg",
+        font=style.FONT_BODY,
+        text_color=style.get_color("muted"),
+    ).grid(
         row=0,
         column=7,
         padx=(style.PAD_MD, style.PAD_XS),
@@ -72,8 +100,14 @@ def build_action_buttons(app):
     import customtkinter as ctk
 
     panel = app.main_panel
-    btns = ctk.CTkFrame(panel)
-    btns.grid(row=1, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_XS))
+    btns = ctk.CTkFrame(
+        panel,
+        corner_radius=style.SECTION_RADIUS,
+        fg_color=style.get_color("surface"),
+        border_color=style.get_color("border"),
+        border_width=style.OUTLINE_WIDTH,
+    )
+    btns.grid(row=1, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_SM))
     btns.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
 
     create_button(
@@ -105,34 +139,93 @@ def build_panes(app):
     import customtkinter as ctk
 
     panel = app.main_panel
-    paned = ctk.CTkFrame(panel)
-    paned.grid(row=2, column=0, sticky="nsew", padx=style.PAD_LG, pady=(style.PAD_XS, style.PAD_SM))
+    paned = ctk.CTkFrame(
+        panel,
+        fg_color="transparent",
+    )
+    paned.grid(
+        row=2,
+        column=0,
+        sticky="nsew",
+        padx=style.PAD_LG,
+        pady=(style.PAD_XS, style.PAD_SM),
+    )
     paned.grid_columnconfigure((0, 1), weight=1, minsize=400)
     paned.grid_rowconfigure(0, weight=1)
 
-    left = ctk.CTkFrame(paned)
-    right = ctk.CTkFrame(paned)
-    left.grid(row=0, column=0, sticky="nsew")
-    right.grid(row=0, column=1, sticky="nsew")
+    left = ctk.CTkFrame(
+        paned,
+        corner_radius=style.CARD_RADIUS,
+        fg_color=style.get_color("surface"),
+        border_color=style.get_color("border"),
+        border_width=style.OUTLINE_WIDTH,
+    )
+    right = ctk.CTkFrame(
+        paned,
+        corner_radius=style.CARD_RADIUS,
+        fg_color=style.get_color("surface"),
+        border_color=style.get_color("border"),
+        border_width=style.OUTLINE_WIDTH,
+    )
+    left.grid(row=0, column=0, sticky="nsew", padx=(0, style.PAD_SM))
+    right.grid(row=0, column=1, sticky="nsew", padx=(style.PAD_SM, 0))
     app.right_frame = right
 
-    ctk.CTkLabel(left, text="Detaljer for bilag", font=style.FONT_TITLE_SMALL)\
-        .grid(row=0, column=0, sticky="w", padx=style.PAD_MD, pady=(style.PAD_XS, style.PAD_XS))
+    ctk.CTkLabel(
+        left,
+        text="Detaljer for bilag",
+        font=style.FONT_TITLE_SMALL,
+        text_color=style.get_color("muted"),
+    ).grid(row=0, column=0, sticky="w", padx=style.PAD_MD, pady=(style.PAD_XS, style.PAD_XS))
     left.grid_columnconfigure(0, weight=1)
     left.grid_rowconfigure(1, weight=1, minsize=120)
-    app.detail_box = ctk.CTkTextbox(left, height=360, font=style.FONT_BODY)
-    app.detail_box.grid(row=1, column=0, sticky="nsew", padx=(style.PAD_MD, style.PAD_SM), pady=(0, style.PAD_MD))
+    app.detail_box = ctk.CTkTextbox(
+        left,
+        height=360,
+        font=style.FONT_BODY,
+        fg_color=style.get_color("surface_alt"),
+        text_color=style.get_color("fg"),
+        corner_radius=style.SECTION_RADIUS,
+    )
+    app.detail_box.grid(
+        row=1,
+        column=0,
+        sticky="nsew",
+        padx=(style.PAD_MD, style.PAD_SM),
+        pady=(0, style.PAD_MD),
+    )
 
-    ctk.CTkLabel(right, text="Hovedbok (bilagslinjer)", font=style.FONT_TITLE_SMALL)\
-        .grid(row=0, column=0, sticky="w", padx=style.PAD_MD, pady=(style.PAD_XS, style.PAD_XS))
+    ctk.CTkLabel(
+        right,
+        text="Hovedbok (bilagslinjer)",
+        font=style.FONT_TITLE_SMALL,
+        text_color=style.get_color("muted"),
+    ).grid(row=0, column=0, sticky="w", padx=style.PAD_MD, pady=(style.PAD_XS, style.PAD_XS))
     right.grid_columnconfigure(0, weight=1)
     right.grid_columnconfigure(1, weight=0)
     right.grid_rowconfigure(1, weight=3, minsize=150)
     right.grid_rowconfigure(5, weight=1, minsize=120)
 
-    ctk.CTkLabel(right, text="Kommentar", font=style.FONT_TITLE_SMALL)\
-        .grid(row=4, column=0, columnspan=2, sticky="w", padx=(style.PAD_MD, style.PAD_SM), pady=(style.PAD_MD, style.PAD_XS))
-    app.comment_box = ctk.CTkTextbox(right, font=style.FONT_SMALL)
+    ctk.CTkLabel(
+        right,
+        text="Kommentar",
+        font=style.FONT_TITLE_SMALL,
+        text_color=style.get_color("muted"),
+    ).grid(
+        row=4,
+        column=0,
+        columnspan=2,
+        sticky="w",
+        padx=(style.PAD_MD, style.PAD_SM),
+        pady=(style.PAD_MD, style.PAD_XS),
+    )
+    app.comment_box = ctk.CTkTextbox(
+        right,
+        font=style.FONT_SMALL,
+        fg_color=style.get_color("surface_alt"),
+        text_color=style.get_color("fg"),
+        corner_radius=style.SECTION_RADIUS,
+    )
     app.comment_box.grid(
         row=5,
         column=0,
@@ -151,7 +244,13 @@ def build_bottom(app):
     import customtkinter as ctk
 
     panel = app.main_panel
-    bottom = ctk.CTkFrame(panel)
+    bottom = ctk.CTkFrame(
+        panel,
+        corner_radius=style.SECTION_RADIUS,
+        fg_color=style.get_color("surface"),
+        border_color=style.get_color("border"),
+        border_width=style.OUTLINE_WIDTH,
+    )
     bottom.grid(row=3, column=0, sticky="ew", padx=style.PAD_LG, pady=(0, style.PAD_MD))
     bottom.grid_columnconfigure(1, weight=1)
     app.bottom_frame = bottom
@@ -186,7 +285,12 @@ def build_bottom(app):
         sticky="w",
     )
 
-    app.status_label = ctk.CTkLabel(bottom, text="", font=style.FONT_BODY)
+    app.status_label = ctk.CTkLabel(
+        bottom,
+        text="",
+        font=style.FONT_BODY,
+        text_color=style.get_color("muted"),
+    )
     app.status_label.grid(
         row=0,
         column=1,
@@ -218,8 +322,20 @@ def build_main(app):
 
     import customtkinter as ctk
 
-    panel = ctk.CTkFrame(app, corner_radius=16)
-    panel.grid(row=0, column=1, sticky="nsew", padx=(0, style.PAD_XL), pady=style.PAD_XL)
+    panel = ctk.CTkFrame(
+        app,
+        corner_radius=style.CARD_RADIUS,
+        fg_color=style.get_color("surface_alt"),
+        border_color=style.get_color("border"),
+        border_width=style.OUTLINE_WIDTH,
+    )
+    panel.grid(
+        row=0,
+        column=1,
+        sticky="nsew",
+        padx=(0, style.PAD_XL),
+        pady=style.PAD_XL,
+    )
     panel.grid_columnconfigure(0, weight=1)
     panel.grid_rowconfigure(2, weight=1, minsize=300)
 
@@ -306,6 +422,7 @@ def build_ledger_widgets(app):
         anchor="e",
         justify="right",
         font=style.FONT_BODY,
+        text_color=style.get_color("muted"),
     )
     app.ledger_sum.grid(
         row=3,

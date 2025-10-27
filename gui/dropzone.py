@@ -10,15 +10,15 @@ class DropZone(ctk.CTkFrame):
     def __init__(self, parent, text: str, drop_callback):
         dnd_bg = style.get_color_pair("dnd_bg")
         dnd_border = style.get_color_pair("dnd_border")
-        highlight = style.get_color_pair("success")
+        highlight = style.get_color_pair("accent")
 
         super().__init__(
             parent,
             height=70,
-            corner_radius=style.BTN_RADIUS,
+            corner_radius=style.CARD_RADIUS,
             fg_color=dnd_bg,
             border_color=dnd_border,
-            border_width=2,
+            border_width=style.OUTLINE_WIDTH,
         )
 
         self._dnd_bg = dnd_bg
@@ -32,6 +32,7 @@ class DropZone(ctk.CTkFrame):
             text=text,
             anchor="center",
             text_color=self._label_text_color,
+            font=style.FONT_BODY,
         )
         self.label.pack(expand=True, fill="both", padx=style.PAD_MD, pady=style.PAD_SM)
 
