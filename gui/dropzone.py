@@ -1,54 +1,77 @@
-from . import _ctk
+from __future__ import annotations
+
+from typing import Callable
+
 from .style import style
+from .qt import qt_modules
 
-ctk = _ctk()
 
+class DropZone:
+    """Dra-og-slipp-felt for filer."""
 
-class DropZone(ctk.CTkFrame):
-    """En ramme for dra-og-slipp med fargeendring ved drag hendelser."""
-
-    def __init__(self, parent, text: str, drop_callback):
-        dnd_bg = style.get_color_pair("dnd_bg")
-        dnd_border = style.get_color_pair("dnd_border")
-        highlight = style.get_color_pair("success")
-
-        super().__init__(
-            parent,
-            height=70,
-            corner_radius=style.BTN_RADIUS,
-            fg_color=dnd_bg,
-            border_color=dnd_border,
-            border_width=2,
-        )
-
-        self._dnd_bg = dnd_bg
-        self._dnd_border = dnd_border
-        self._highlight = highlight
+    def __init__(self, text: str, drop_callback: Callable[[list[str]], None], parent=None):
+        QtCore, QtGui, QtWidgets = qt_modules()
+        self.__class__ = type(self.__class__.__name__, (QtWidgets.QFrame, self.__class__), {})
+        QtWidgets.QFrame.__init__(self, parent)
+        self.QtCore = QtCore
+        self.QtGui = QtGui
+        self.QtWidgets = QtWidgets
+        self.setAcceptDrops(True)
         self.drop_callback = drop_callback
-        self._label_text_color = dnd_border
+        self.setMinimumHeight(70)
+        self.setObjectName("drop_zone")
 
-        self.label = ctk.CTkLabel(
-            self,
-            text=text,
-            anchor="center",
-            text_color=self._label_text_color,
+        light, dark = style.get_color_pair("dnd_bg")
+        border_light, border_dark = style.get_color_pair("dnd_border")
+        self._bg_normal = light if style.mode == "light" else dark
+        self._border_normal = border_light if style.mode == "light" else border_dark
+
+        success_light, success_dark = style.get_color_pair("success")
+        self._bg_highlight = success_light if style.mode == "light" else success_dark
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(style.PAD_MD, style.PAD_MD, style.PAD_MD, style.PAD_MD)
+        layout.setSpacing(style.PAD_SM)
+
+        self.label = QtWidgets.QLabel(text, self)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        layout.addWidget(self.label)
+
+        self._apply_colors(self._bg_normal, self._border_normal)
+
+    def _apply_colors(self, bg: str, border: str) -> None:
+        self.setStyleSheet(
+            (
+                f"QFrame#drop_zone {{"
+                f"background-color: {bg};"
+                f"border: 2px dashed {border};"
+                f"border-radius: {style.BTN_RADIUS}px;"
+                f"}}"
+            )
         )
-        self.label.pack(expand=True, fill="both", padx=style.PAD_MD, pady=style.PAD_SM)
 
-        for evt in ("<<DragEnter>>", "<<DropEnter>>"):
-            self.dnd_bind(evt, self._on_drag_enter)
-        for evt in ("<<DragLeave>>", "<<DropLeave>>"):
-            self.dnd_bind(evt, self.reset_colors)
+    def dragEnterEvent(self, event) -> None:  # noqa: N802
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+            self._apply_colors(self._bg_highlight, self._bg_highlight)
+        else:
+            event.ignore()
 
-    def _on_drag_enter(self, _):
-        self.configure(fg_color=self._highlight, border_color=self._highlight)
-        self.label.configure(text_color=style.get_color_pair("fg"))
+    def dragLeaveEvent(self, event) -> None:  # noqa: N802
+        del event
+        self._apply_colors(self._bg_normal, self._border_normal)
 
-    def reset_colors(self, _=None):
-        self.configure(fg_color=self._dnd_bg, border_color=self._dnd_border)
-        self.label.configure(text_color=self._label_text_color)
+    def dropEvent(self, event) -> None:  # noqa: N802
+        self._apply_colors(self._bg_normal, self._border_normal)
+        if not event.mimeData().hasUrls():
+            event.ignore()
+            return
+        paths = []
+        for url in event.mimeData().urls():
+            local_path = url.toLocalFile()
+            if local_path:
+                paths.append(local_path)
+        if paths and self.drop_callback:
+            self.drop_callback(paths)
+        event.acceptProposedAction()
 
-    def on_drop(self, event):
-        self.reset_colors()
-        if self.drop_callback:
-            return self.drop_callback(event)

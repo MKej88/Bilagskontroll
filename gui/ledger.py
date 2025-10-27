@@ -1,106 +1,36 @@
-LEDGER_COLS = ["Kontonr", "Konto", "Beskrivelse", "MVA", "MVA-beløp", "Beløp", "Postert av"]
+from __future__ import annotations
 
+import re
 from decimal import Decimal
+from typing import List
 
+from helpers import fmt_money, only_digits, parse_amount, to_str
 
-def apply_treeview_theme(app):
-    from tkinter import ttk, TclError
-    import customtkinter as ctk
-    from .style import style
-
-    ttk_style = ttk.Style()
-    try:
-        ttk_style.theme_use("clam")
-    except TclError:
-        pass
-    font = (
-        app.detail_box.cget("font")
-        if hasattr(app, "detail_box")
-        else ctk.CTkFont(size=14, family=style.FONT_FAMILY)
-    )
-    bg = style.get_color("table_bg")
-    fg = style.get_color("table_fg")
-    hb = style.get_color("table_header_bg")
-    sel_bg = style.get_color("table_sel_bg")
-    sel_fg = style.get_color("table_sel_fg")
-    ttk_style.configure(
-        "Custom.Treeview",
-        background=bg,
-        fieldbackground=bg,
-        foreground=fg,
-        rowheight=24,
-        borderwidth=0,
-        font=font,
-    )
-    ttk_style.configure(
-        "Custom.Treeview.Heading",
-        background=hb,
-        foreground=fg,
-        borderwidth=0,
-    )
-    ttk_style.map(
-        "Custom.Treeview",
-        background=[("selected", sel_bg)],
-        foreground=[("selected", sel_fg)],
-    )
-    app.ledger_tree.configure(style="Custom.Treeview")
-
-
-def update_treeview_stripes(app):
-    from .style import style
-
-    odd = style.get_color("table_row_odd")
-    even = style.get_color("table_row_even")
-    app.ledger_tree.tag_configure("odd", background=odd)
-    app.ledger_tree.tag_configure("even", background=even)
-
-
-def sort_treeview(tree, col, reverse, app):
-    """Sorter rader i ``tree`` etter valgt kolonne."""
-    from helpers import parse_amount
-
-    data = []
-    for iid in tree.get_children(""):
-        cell = tree.set(iid, col)
-        num = parse_amount(cell)
-        sort_val = num if num is not None else str(cell).lower()
-        data.append((sort_val, iid))
-    data.sort(reverse=reverse)
-    for idx, (_, iid) in enumerate(data):
-        tree.move(iid, "", idx)
-    for idx, iid in enumerate(tree.get_children("")):
-        tag = "even" if idx % 2 == 0 else "odd"
-        tree.item(iid, tags=(tag,))
-    arrow = "↓" if reverse else "↑"
-    for c in LEDGER_COLS:
-        if c == col:
-            tree.heading(
-                c,
-                text=f"{c} {arrow}",
-                command=lambda c=c: sort_treeview(tree, c, not reverse, app),
-            )
-        else:
-            tree.heading(
-                c, text=c, command=lambda c=c: sort_treeview(tree, c, False, app)
-            )
-    update_treeview_stripes(app)
+LEDGER_COLS: List[str] = [
+    "Kontonr",
+    "Konto",
+    "Beskrivelse",
+    "MVA",
+    "MVA-beløp",
+    "Beløp",
+    "Postert av",
+]
 
 
 def ledger_rows(app, invoice_value: str):
     """Hent bilagslinjer for gitt bilagsnummer uten å endre ``gl_df``."""
-    import re
-    from helpers import to_str, only_digits, parse_amount, fmt_money
 
     if app.gl_df is None or not hasattr(app, "gl_index"):
         return []
+
     key = only_digits(invoice_value)
     if not key:
         return []
+
     idxs = app.gl_index.get(key)
     if idxs is None or len(idxs) == 0:
         return []
-    # ``groupby().indices`` returnerer numpy-arrays; ``len`` fungerer for å
-    # sjekke tomme treff uten å utløse "ambiguous truth value".
+
     hits = app.gl_df.loc[idxs]
     rows = []
     for _, r in hits.iterrows():
@@ -131,74 +61,16 @@ def ledger_rows(app, invoice_value: str):
             )
         belop_str = fmt_money(belop)
         postert_av = to_str(r.get(app.gl_postedby_col, ""))
-        rows.append({
-            "Kontonr": konto_nr,
-            "Konto": konto_navn,
-            "Beskrivelse": beskr,
-            "MVA": mva_code,
-            "MVA-beløp": mva_belop,
-            "Beløp": belop_str,
-            "Postert av": postert_av,
-        })
+        rows.append(
+            {
+                "Kontonr": konto_nr,
+                "Konto": konto_navn,
+                "Beskrivelse": beskr,
+                "MVA": mva_code,
+                "MVA-beløp": mva_belop,
+                "Beløp": belop_str,
+                "Postert av": postert_av,
+            }
+        )
     return rows
 
-
-def autofit_tree_columns(tree, cols, total_width=None):
-    import tkinter.font as tkfont
-    from tkinter import ttk
-    from .style import PADDING_X
-
-    if total_width is None:
-        tree.update_idletasks()
-        total_width = tree.winfo_width()
-
-    ttk_style = ttk.Style()
-    font_name = ttk_style.lookup(tree.cget("style"), "font") or "TkDefaultFont"
-    body_font = tkfont.nametofont(font_name)
-    head_font_name = ttk_style.lookup(f"{tree.cget('style')}.Heading", "font")
-    head_font = tkfont.nametofont(head_font_name) if head_font_name else body_font
-
-    widths: list[int] = []
-    MIN_COL_WIDTH = PADDING_X * 4
-    for col in cols:
-        max_px = head_font.measure(col)
-        for iid in tree.get_children(""):
-            txt = str(tree.set(iid, col))
-            px = body_font.measure(txt)
-            if px > max_px:
-                max_px = px
-        max_px += PADDING_X * 4
-        max_px = max(MIN_COL_WIDTH, min(max_px, 500))
-        widths.append(int(max_px))
-
-    total_content = sum(widths)
-    if total_width and total_content:
-        if total_content > total_width:
-            ratio = total_width / total_content
-            widths = [max(int(w * ratio), MIN_COL_WIDTH) for w in widths]
-        elif total_content < total_width:
-            extra = (total_width - total_content) // len(widths)
-            widths = [w + extra for w in widths]
-
-    for col, w in zip(cols, widths):
-        tree.column(col, width=w, minwidth=w)
-
-
-def populate_ledger_table(app, invoice_value: str):
-    from helpers import parse_amount, fmt_money
-
-    for item in app.ledger_tree.get_children():
-        app.ledger_tree.delete(item)
-    rows = ledger_rows(app, invoice_value)
-    if not rows:
-        msg = "Ingen hovedbok lastet." if app.gl_df is None else "Ingen bilagslinjer for dette bilagsnummeret."
-        app.ledger_sum.configure(text=msg)
-        return
-    total = Decimal("0")
-    for i, r in enumerate(rows):
-        tags = ["even" if i % 2 == 0 else "odd"]
-        v = parse_amount(r["Beløp"])
-        total += (v if v is not None else Decimal("0"))
-        app.ledger_tree.insert("", "end", values=[r[c] for c in app.ledger_cols], tags=tags)
-    autofit_tree_columns(app.ledger_tree, app.ledger_cols)
-    app.ledger_sum.configure(text=f"Sum beløp: {fmt_money(total)}   •   Linjer: {len(rows)}")

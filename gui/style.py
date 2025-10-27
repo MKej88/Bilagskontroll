@@ -40,18 +40,22 @@ class Style:
         }
     )
 
+    mode: str = "light"
+
+    def set_mode(self, mode: str) -> None:
+        mode = (mode or "light").strip().lower()
+        self.mode = "dark" if mode == "dark" else "light"
+
     def get_color(self, name: str) -> str:
         """Returner farge tilpasset valgt tema."""
-        import customtkinter as ctk
 
-        mode = ctk.get_appearance_mode().lower()
         try:
-            return self.COLORS[name]["dark" if mode == "dark" else "light"]
+            return self.COLORS[name]["dark" if self.mode == "dark" else "light"]
         except KeyError as e:
             raise KeyError(f"Ukjent fargenavn: {name}") from e
 
     def get_color_pair(self, name: str) -> Tuple[str, str]:
-        """Returner (lys, mørk) fargepar for CustomTkinter-komponenter."""
+        """Returner (lys, mørk) fargepar som kan brukes for Qt-paletter."""
         try:
             col = self.COLORS[name]
             return col["light"], col["dark"]

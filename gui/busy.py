@@ -1,47 +1,53 @@
+from __future__ import annotations
+
 import threading
-from tkinter import TclError
 
 from helpers import logger
-from . import _ctk
+
 from .style import PADDING_X, PADDING_Y
+from .qt import qt_modules
 
 
 def run_in_thread(func, *args):
-    """Start ``func`` i en bakgrunnstråd og returner trådobjektet."""
+    """Start ``func`` i bakgrunnstråd."""
+
     thread = threading.Thread(target=func, args=args, daemon=True)
     thread.start()
     return thread
 
 
 def show_busy(app, message: str):
-    """Vis en modal ventedialog med en spinner og tekst."""
-    ctk = _ctk()
-    win = ctk.CTkToplevel(app)
-    win.title("")
-    win.resizable(False, False)
-    win.transient(app)
-    win.grab_set()
+    QtCore, QtGui, QtWidgets = qt_modules()
+    dialog = QtWidgets.QDialog(app)
+    dialog.setWindowModality(QtCore.Qt.ApplicationModal)
+    dialog.setWindowTitle("")
+    dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+    dialog.setFixedWidth(320)
 
-    progress = ctk.CTkProgressBar(win, mode="indeterminate")
-    progress.pack(padx=PADDING_X * 2, pady=(PADDING_Y * 2, PADDING_Y), fill="x")
-    progress.start()
-    ctk.CTkLabel(win, text=message).pack(padx=PADDING_X * 2, pady=(0, PADDING_Y * 2))
+    layout = QtWidgets.QVBoxLayout(dialog)
+    layout.setContentsMargins(PADDING_X * 2, PADDING_Y * 2, PADDING_X * 2, PADDING_Y * 2)
+    layout.setSpacing(PADDING_Y)
 
-    app._busy_win = win
-    win.update_idletasks()
-    x = app.winfo_x() + app.winfo_width() // 2 - win.winfo_width() // 2
-    y = app.winfo_y() + app.winfo_height() // 2 - win.winfo_height() // 2
-    win.geometry(f"+{x}+{y}")
-    return win
+    progress = QtWidgets.QProgressBar(dialog)
+    progress.setRange(0, 0)
+    layout.addWidget(progress)
+
+    layout.addWidget(QtWidgets.QLabel(message, dialog))
+
+    dialog.show()
+    dialog.activateWindow()
+
+    app._busy_dialog = dialog
+    return dialog
 
 
-def hide_busy(app):
-    """Lukk ventedialogen hvis den er åpen."""
-    win = getattr(app, "_busy_win", None)
-    if win is not None:
+def hide_busy(app) -> None:
+    dialog = getattr(app, "_busy_dialog", None)
+    if dialog is not None:
         try:
-            win.grab_release()
-        except TclError:
-            logger.debug("Kunne ikke frigjøre vinduets grab")
-        win.destroy()
-        app._busy_win = None
+            dialog.close()
+        except Exception as exc:  # pragma: no cover - Qt-specifikke feil
+            logger.debug(f"Kunne ikke lukke ventedialog: {exc}")
+        finally:
+            app._busy_dialog = None
+
