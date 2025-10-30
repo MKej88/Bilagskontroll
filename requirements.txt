@@ -1,0 +1,7 @@
+customtkinter
+openpyxl
+pandas
+Pillow
+pytest
+reportlab
+tkinterdnd2
