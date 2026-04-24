@@ -67,6 +67,7 @@ def create_info_table(app, now):
 
 
 def create_status_table(app, body):
+    total_bilag = len(app.sample_df.index)
     approved = sum(1 for d in app.decisions if d == "Godkjent")
     rejected = sum(1 for d in app.decisions if d == "Ikke godkjent")
     remaining = sum(1 for d in app.decisions if d is None)
@@ -93,6 +94,7 @@ def create_status_table(app, body):
         Paragraph(
             (
                 "<b>Status</b>:<br/>"
+                f"Antall bilag: {total_bilag}<br/>"
                 f"Sum kontrollert: {fmt_money(sum_k)} kr<br/>"
                 f"Sum alle bilag: {fmt_money(sum_a)} kr<br/>"
                 f"% kontrollert: {fmt_pct(pct)}"
@@ -275,4 +277,3 @@ def export_pdf(app):
         app._show_inline(f"Feil ved PDF-generering: {e}", ok=False)
     finally:
         app._set_status("")
-

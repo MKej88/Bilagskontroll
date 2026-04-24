@@ -1,4 +1,5 @@
 import os
+import re
 
 from . import create_button
 from .style import style, PADDING_Y
@@ -22,6 +23,51 @@ def parse_dropped_path(event):
 def _toggle_sample_btn(app, *_):
     state = "normal" if app.sample_size_var.get() and app.year_var.get() else "disabled"
     app.sample_btn.configure(state=state)
+
+
+def _format_user_name(raw_name: str) -> str:
+    """Gjør brukernavn mer lesbart, f.eks. ``MadsKristensen`` -> ``Mads Kristensen``."""
+    text = (raw_name or "").strip()
+    if not text:
+        return ""
+
+    text = re.sub(r"[._-]+", " ", text)
+    text = re.sub(r"([a-zæøå])([A-ZÆØÅ])", r"\1 \2", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text.title()
+
+
+def _load_sidebar_logo(app, card):
+    import customtkinter as ctk
+
+    try:
+        from PIL import Image
+        from helpers_path import resource_path
+
+        img_light = Image.open(resource_path("icons/borev_logo_lightmode.png"))
+        img_dark = Image.open(resource_path("icons/borev_logo_darkmode.png"))
+
+        w, h = img_light.size
+        scaled_h = int(h * (SIDEBAR_LOGO_WIDTH / w))
+        app.sidebar_logo_img = ctk.CTkImage(
+            light_image=img_light,
+            dark_image=img_dark,
+            size=(SIDEBAR_LOGO_WIDTH, scaled_h),
+        )
+        ctk.CTkLabel(
+            card,
+            text="",
+            image=app.sidebar_logo_img,
+            font=style.FONT_BODY,
+        ).grid(
+            row=101,
+            column=0,
+            padx=style.PAD_XL,
+            pady=(0, PADDING_Y),
+            sticky="ew",
+        )
+    except (ImportError, OSError):
+        logger.exception("Kunne ikke laste sidebar-logo")
 
 
 def build_sidebar(app):
@@ -134,7 +180,9 @@ def build_sidebar(app):
     opp.grid_columnconfigure(1, weight=1)
 
     app.kunde_var = ctk.StringVar(master=app, value="")
-    default_user = os.environ.get("USERNAME") or os.environ.get("USER") or ""
+    default_user = _format_user_name(
+        os.environ.get("USERNAME") or os.environ.get("USER") or ""
+    )
     app.utfort_av_var = ctk.StringVar(master=app, value=default_user)
 
     ctk.CTkLabel(opp, text="Kunde", font=style.FONT_BODY).grid(
@@ -205,33 +253,6 @@ def build_sidebar(app):
     app.lbl_st_gjen = ctk.CTkLabel(status_card, text="Gjenstår å kontrollere: –", font=body_font, anchor="center", justify="center")
     app.lbl_st_gjen.grid(row=6, column=0, sticky="ew", pady=(style.PAD_SM, PADDING_Y))
 
-    try:
-        from PIL import Image
-        from helpers_path import resource_path
-
-        img_light = Image.open(resource_path("icons/borev_logo_lightmode.png"))
-        img_dark = Image.open(resource_path("icons/borev_logo_darkmode.png"))
-
-        w, h = img_light.size
-        scaled_h = int(h * (SIDEBAR_LOGO_WIDTH / w))
-        app.sidebar_logo_img = ctk.CTkImage(
-            light_image=img_light,
-            dark_image=img_dark,
-            size=(SIDEBAR_LOGO_WIDTH, scaled_h),
-        )
-        ctk.CTkLabel(
-            card,
-            text="",
-            image=app.sidebar_logo_img,
-            font=style.FONT_BODY,
-        ).grid(
-            row=101,
-            column=0,
-            padx=style.PAD_XL,
-            pady=(0, PADDING_Y),
-            sticky="ew",
-        )
-    except (ImportError, OSError):
-        logger.exception("Kunne ikke laste sidebar-logo")
+    app.after(10, lambda: _load_sidebar_logo(app, card))
 
     return card
