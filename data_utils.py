@@ -27,17 +27,20 @@ def load_invoice_df(path: str, header_idx: int = 4) -> tuple[pd.DataFrame, Optio
     """Leser fakturalisten fra Excel og henter også kundenavn.
 
     Returnerer en tupel med ``DataFrame`` og eventuelt kundenavn hvis dette
-    finnes i de øverste radene av filen.
+    finnes i de øverste radene av filen. ``openpyxl``-radene bygges direkte
+    om til en dataramme. Det unngår den ekstra konverteringen i
+    ``pandas.read_excel``, som er merkbar for store fakturalister.
     """
     logger.info(f"Laster fakturaliste fra {path}")
     pd = _pd()
-    raw = pd.read_excel(
-        path,
-        engine="openpyxl",
-        header=None,
-        dtype=str,
-        engine_kwargs={"read_only": True},
-    )
+    from openpyxl import load_workbook
+
+    workbook = load_workbook(path, read_only=True, data_only=True)
+    try:
+        raw = pd.DataFrame(workbook.active.values, dtype=str)
+    finally:
+        workbook.close()
+
     kunde = extract_customer_from_invoice_file(df=raw)
     df = raw.iloc[header_idx + 1 :].reset_index(drop=True)
     df.columns = raw.iloc[header_idx]
