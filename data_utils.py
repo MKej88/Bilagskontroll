@@ -187,20 +187,29 @@ def calc_sum_kontrollert(sample_df: Optional[pd.DataFrame], decisions: list) -> 
 
 def calc_sum_net_all(df: Optional[pd.DataFrame], skip_last: bool = True) -> Decimal:
     """Summer netto-beløp for alle rader i ``df``."""
-    if df is None or df.dropna(how="all").empty or "_netto_float" not in df.columns:
+    if df is None or "_netto_float" not in df.columns:
         return Decimal("0")
-    df_eff = df.dropna(how="all").copy()
+    pd = _pd()
+    df_eff = df.dropna(how="all")
+    if df_eff.empty:
+        return Decimal("0")
     sum_pattern = re.compile(r"\bsum\b", re.IGNORECASE)
     if skip_last and len(df_eff) > 0:
         last_row = df_eff.iloc[-1].astype(str)
         if last_row.str.contains(sum_pattern).any():
             df_eff = df_eff.iloc[:-1]
-    mask = ~(
-        df_eff.fillna("").astype(str)
-        .stack()
-        .str.contains(sum_pattern)
-        .groupby(level=0)
-        .any()
-    )
-    vals = df_eff.loc[mask, "_netto_float"].dropna().tolist()
-    return sum(vals, Decimal("0"))
+
+    # Sjekk kolonnene fortløpende. Den tidligere stack-operasjonen laget en
+    # stor, midlertidig serie med alle cellene og forsinket visning av innlest
+    # innhold merkbart for store fakturalister.
+    has_sum = pd.Series(False, index=df_eff.index)
+    for column in df_eff.columns:
+        has_sum |= (
+            df_eff[column]
+            .fillna("")
+            .astype(str)
+            .str.contains(sum_pattern, na=False)
+        )
+
+    values = df_eff.loc[~has_sum, "_netto_float"].dropna()
+    return sum(values, Decimal("0"))
