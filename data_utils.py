@@ -156,22 +156,6 @@ def extract_customer_from_invoice_file(
     return None
 
 
-
-
-def _net_amount_from_row(row: pd.Series, net_amount_col: Optional[str]) -> Optional[Decimal]:
-    """Hent netto beløp fra raden ved å sjekke prioriterte kolonner."""
-    cols = []
-    if net_amount_col:
-        cols.append(net_amount_col)
-    cols.extend(c for c in FALLBACK_NET_COLUMNS if c != net_amount_col)
-    for col in cols:
-        if col in row:
-            val = parse_amount(row.get(col))
-            if val is not None:
-                return val
-    return None
-
-
 def calculate_net_amounts(
     df: pd.DataFrame, net_amount_col: Optional[str]
 ) -> pd.Series:
