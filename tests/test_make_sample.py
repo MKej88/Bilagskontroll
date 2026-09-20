@@ -21,6 +21,7 @@ class FakeApp:
         )
         self.sample_size_var = DummyVar("3")
         self.year_var = DummyVar("2025")
+        self._pdf_prompt_shown = True
 
     def _ensure_helpers(self):
         pass
@@ -35,3 +36,11 @@ def test_make_sample_bare_inneholder_valgt_aar():
     App.make_sample(app)
 
     assert set(app.sample_df["Fakturadato"]) == {"02.01.2025", "03.01.2025"}
+
+
+def test_make_sample_tillater_pdf_sporsmal_for_nytt_utvalg():
+    app = FakeApp()
+
+    App.make_sample(app)
+
+    assert app._pdf_prompt_shown is False
