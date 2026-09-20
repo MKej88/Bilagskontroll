@@ -1,5 +1,6 @@
 import pandas as pd
 from decimal import Decimal
+import threading
 import gui
 import data_utils
 from gui import App
@@ -79,3 +80,44 @@ def test_status_card_uses_cached_total(monkeypatch):
     App._update_status_card(app)
 
     assert app.lbl_st_sum_alle.cfg["text"] == "Sum alle bilag: 100 kr"
+
+
+def test_automatisk_pdf_eksport_kjorer_pa_hovedtraden(monkeypatch):
+    app = FakeApp()
+    app.decisions = ["Godkjent"]
+    app._sum_net_all = Decimal("100")
+    app._pdf_prompt_shown = False
+    app.lbl_st_sum_kontrollert = DummyWidget()
+    app.lbl_st_sum_alle = DummyWidget()
+    app.lbl_st_pct = DummyWidget()
+    app.lbl_st_godkjent = DummyWidget()
+    app.lbl_st_ikkegodkjent = DummyWidget()
+    app.lbl_st_gjen = DummyWidget()
+    app._show_inline = lambda *_args, **_kwargs: None
+    app._set_status = lambda *_args, **_kwargs: None
+    app._start_progress = lambda *_args, **_kwargs: None
+    app._finish_progress = lambda: None
+    app.after = lambda _delay, callback: callback()
+    monkeypatch.setattr(gui, "fmt_money", str, raising=False)
+    monkeypatch.setattr(gui, "fmt_pct", str, raising=False)
+    monkeypatch.setattr("tkinter.messagebox.askyesno", lambda *_args: True)
+    monkeypatch.setattr("gui.busy.show_busy", lambda *_args: None)
+    monkeypatch.setattr("gui.busy.hide_busy", lambda *_args: None)
+
+    export_thread_ids = []
+    export_finished = threading.Event()
+
+    def record_export_thread(_app):
+        export_thread_ids.append(threading.get_ident())
+        export_finished.set()
+
+    monkeypatch.setattr(
+        "report.export_pdf",
+        record_export_thread,
+    )
+
+    main_thread_id = threading.get_ident()
+    App._update_status_card(app)
+
+    assert export_finished.wait(timeout=1)
+    assert export_thread_ids == [main_thread_id]

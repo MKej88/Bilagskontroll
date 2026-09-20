@@ -747,24 +747,17 @@ class App:
             if remaining == 0 and not self._pdf_prompt_shown:
                 from tkinter import messagebox
                 from report import export_pdf
-                from .busy import show_busy, hide_busy, run_in_thread
+                from .busy import show_busy, hide_busy
 
                 self._pdf_prompt_shown = True
                 if messagebox.askyesno(APP_TITLE, "Ønsker du å eksportere PDF rapport?"):
                     show_busy(self, "Eksporterer rapport...")
-
-                    def finalize():
+                    self._start_progress("Eksporterer rapport...")
+                    try:
+                        export_pdf(self)
+                    finally:
                         self._finish_progress()
                         hide_busy(self)
-
-                    def worker():
-                        self.after(0, lambda: self._start_progress("Eksporterer rapport..."))
-                        try:
-                            export_pdf(self)
-                        finally:
-                            self.after(0, finalize)
-
-                    run_in_thread(worker)
         else:
             self.lbl_st_godkjent.configure(text="Godkjent: –")
             self.lbl_st_ikkegodkjent.configure(text="Ikke godkjent: –")
