@@ -23,7 +23,7 @@ Bilagskontroll er et skrivebordverktøy skrevet i ren Python for å kontrollere 
 
 ## Teknologier og avhengigheter
 
-- Python 3.9 eller nyere
+- Python 3.10 eller nyere
 - [pandas](https://pypi.org/project/pandas/) – lesing og filtrering av Excel-data
 - [openpyxl](https://pypi.org/project/openpyxl/) – effektiv filsupport for Excel
 - [customtkinter](https://pypi.org/project/customtkinter/) – moderne GUI-komponenter
@@ -101,6 +101,10 @@ pytest
 ```
 
 Testene dekker blant annet lasting av hovedbok, summering av netto-beløp, statuskort-logikk og logging.
+
+GitHub Actions kjører automatisk de samme testene med Python 3.10 og 3.13 ved
+hver endring og pull request. Dermed oppdages testfeil og problemer med støttede
+Python-versjoner før en endring blir slått sammen.
 
 ## Versjonsnotater
 
