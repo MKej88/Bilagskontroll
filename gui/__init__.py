@@ -634,11 +634,26 @@ class App:
         except ValueError:
             messagebox.showinfo(APP_TITLE, "Oppgi antall og år.")
             return
-        n = max(1, min(n, len(self.df)))
+        if "Fakturadato" not in self.df.columns:
+            messagebox.showinfo(
+                APP_TITLE, "Finner ikke kolonnen Fakturadato i fakturalisten."
+            )
+            return
+        year_pattern = rf"(?<!\d){year}(?!\d)"
+        year_mask = (
+            self.df["Fakturadato"]
+            .astype(str)
+            .str.contains(year_pattern, regex=True, na=False)
+        )
+        invoices_for_year = self.df.loc[year_mask]
+        if invoices_for_year.empty:
+            messagebox.showinfo(APP_TITLE, f"Fant ingen bilag for år {year}.")
+            return
+        n = max(1, min(n, len(invoices_for_year)))
         logger.info(f"Trekker utvalg på {n} bilag for år {year}")
         try:
             self.sample_df = (
-                self.df.sample(n=n, random_state=year)
+                invoices_for_year.sample(n=n, random_state=year)
                 .reset_index(drop=True)
                 .copy()
             )
