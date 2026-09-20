@@ -530,17 +530,23 @@ class App:
                 self.antall_bilag = len(df.dropna(how="all"))
                 self.df = df
                 self._sum_net_all = sum_net_all
+                self.invoice_col = invoice_col
+                self.net_amount_col = net_amount_col
+                self.sample_df = None
+                self.decisions = []
+                self.comments = []
+                self.idx = 0
                 if cust:
                     self.kunde_var.set(cust)
                     if hasattr(self, "kunde_entry"):
                         self.kunde_entry.configure(state="disabled")
                 if self.df is None or self.df.dropna(how="all").empty:
                     messagebox.showwarning(APP_TITLE, "Excel-filen ser tom ut.")
+                    self._update_counts_labels()
+                    self.render()
+                    self._update_year_options()
                     finalize()
                     return
-                self.invoice_col = invoice_col
-                self.net_amount_col = net_amount_col
-                self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
                 self._update_counts_labels()
                 self.render()
                 self._update_year_options()
