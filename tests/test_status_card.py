@@ -1,6 +1,7 @@
 import pandas as pd
 from decimal import Decimal
 import gui
+import data_utils
 from gui import App
 
 class DummyWidget:
@@ -55,3 +56,26 @@ def test_status_card_updates_after_sample():
     app = FakeApp()
     App.render(app)
     assert app.status_card_called is True
+
+
+def test_status_card_uses_cached_total(monkeypatch):
+    app = FakeApp()
+    app._sum_net_all = Decimal("100")
+    app._pdf_prompt_shown = False
+    app.lbl_st_sum_kontrollert = DummyWidget()
+    app.lbl_st_sum_alle = DummyWidget()
+    app.lbl_st_pct = DummyWidget()
+    app.lbl_st_godkjent = DummyWidget()
+    app.lbl_st_ikkegodkjent = DummyWidget()
+    app.lbl_st_gjen = DummyWidget()
+    monkeypatch.setattr(gui, "fmt_money", str, raising=False)
+    monkeypatch.setattr(gui, "fmt_pct", str, raising=False)
+
+    def fail_if_recalculated(_df):
+        raise AssertionError("Totalsummen ble beregnet på nytt")
+
+    monkeypatch.setattr(data_utils, "calc_sum_net_all", fail_if_recalculated)
+
+    App._update_status_card(app)
+
+    assert app.lbl_st_sum_alle.cfg["text"] == "Sum alle bilag: 100 kr"
