@@ -31,3 +31,11 @@ def test_calculate_net_amounts_preserves_index_and_missing_values():
 
     assert result.index.tolist() == [4, 9]
     assert result.isna().all()
+
+
+def test_calculate_net_amounts_beholder_norske_tusenskilletegn():
+    df = pd.DataFrame({"Nettobeløp": ["1.234,56", "2.000,00"]})
+
+    result = calculate_net_amounts(df, "Nettobeløp")
+
+    assert result.tolist() == [Decimal("1234.56"), Decimal("2000.00")]

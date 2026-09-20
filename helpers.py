@@ -110,7 +110,17 @@ def parse_amount(x):
     s = to_str(x).replace(" ", "").replace("\xa0", "")
     if not s or s.lower() == "nan":
         return None
-    s = s.replace(",", ".")
+    if "," in s and "." in s:
+        decimal_separator = "," if s.rfind(",") > s.rfind(".") else "."
+        thousands_separator = "." if decimal_separator == "," else ","
+        unsigned = s.removeprefix("-").removeprefix("+").strip("()")
+        grouped_number = rf"\d{{1,3}}(?:\{thousands_separator}\d{{3}})+"
+        if not re.fullmatch(rf"{grouped_number}\{decimal_separator}\d+", unsigned):
+            return None
+        s = s.replace(thousands_separator, "")
+        s = s.replace(decimal_separator, ".")
+    else:
+        s = s.replace(",", ".")
     if s.startswith("(") and s.endswith(")"):
         inner = s[1:-1]
         if inner.replace(".", "", 1).isdigit():
