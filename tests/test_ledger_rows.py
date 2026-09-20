@@ -103,6 +103,22 @@ def test_ledger_rows_beregner_belop_nar_belopskolonnen_mangler():
     assert rows[0]["Postert av"] == ""
 
 
+def test_ledger_rows_uten_fakturanummer_viser_ingen_hovedbokslinjer():
+    app = FakeApp(
+        [
+            {
+                "Fakturanr": None,
+                "Kontonr": "4000",
+                "Kontonavn": "Varekjøp",
+                "Debet": "100,00",
+                "Kredit": None,
+            }
+        ]
+    )
+
+    assert ledger_rows(app, "") == []
+
+
 def test_sort_treeview_handterer_bade_belop_og_tomme_felt():
     tree = FakeTree()
 
