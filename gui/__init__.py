@@ -661,6 +661,7 @@ class App:
             logger.error(f"Feil ved trekking av utvalg: {e}")
             messagebox.showerror(APP_TITLE, f"Feil ved trekking av utvalg:\n{e}"); return
         self.decisions = [None]*len(self.sample_df); self.comments=[""]*len(self.sample_df); self.idx=0
+        self._pdf_prompt_shown = False
         self.render()
 
     def _current_row_dict(self):
