@@ -47,3 +47,16 @@ def test_calc_sum_net_all_med_sum_i_annen_kolonne():
     })
     df['_netto_float'] = df['netto']
     assert calc_sum_net_all(df) == Decimal('100')
+
+
+def test_calc_sum_net_all_beholder_indeks_ved_tomme_rader():
+    df = pd.DataFrame(
+        {
+            "tekst": ["rad1", None, "sum her", "rad2"],
+            "netto": [Decimal("100"), None, Decimal("999"), Decimal("200")],
+        },
+        index=[10, 20, 30, 40],
+    )
+    df["_netto_float"] = df["netto"]
+
+    assert calc_sum_net_all(df) == Decimal("300")
