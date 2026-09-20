@@ -18,3 +18,7 @@ def test_parse_amount_med_engelsk_tusenskilletegn():
 
 def test_parse_amount_avviser_ugyldig_gruppering():
     assert parse_amount("1.2,3") is None
+
+
+def test_parse_amount_takler_kreditbelop_med_minustegn_bak():
+    assert parse_amount("1 234,50-") == Decimal("-1234.50")
