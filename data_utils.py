@@ -143,6 +143,36 @@ def _net_amount_from_row(row: pd.Series, net_amount_col: Optional[str]) -> Optio
     return None
 
 
+def calculate_net_amounts(
+    df: pd.DataFrame, net_amount_col: Optional[str]
+) -> pd.Series:
+    """Beregn nettobeløp kolonnevis, med samme reservekolonner som før.
+
+    Bare rader som ikke ga et gyldig beløp i en prioritert kolonne sendes
+    videre til neste reservekolonne. Det unngår kostnaden ved å opprette en
+    komplett ``Series`` for hver rad i store fakturalister.
+    """
+    pd = _pd()
+    prioritized_columns = []
+    if net_amount_col:
+        prioritized_columns.append(net_amount_col)
+    prioritized_columns.extend(
+        column
+        for column in FALLBACK_NET_COLUMNS
+        if column not in prioritized_columns
+    )
+
+    amounts = pd.Series(None, index=df.index, dtype=object)
+    for column in prioritized_columns:
+        if column not in df.columns:
+            continue
+        missing = amounts.isna()
+        if not missing.any():
+            break
+        amounts.loc[missing] = df.loc[missing, column].map(parse_amount)
+    return amounts
+
+
 def calc_sum_kontrollert(sample_df: Optional[pd.DataFrame], decisions: list) -> Decimal:
     """Summer netto-beløp for rader som er kontrollert."""
     if sample_df is None or "_netto_float" not in sample_df.columns:
@@ -174,4 +204,3 @@ def calc_sum_net_all(df: Optional[pd.DataFrame], skip_last: bool = True) -> Deci
     )
     vals = df_eff.loc[mask, "_netto_float"].dropna().tolist()
     return sum(vals, Decimal("0"))
-

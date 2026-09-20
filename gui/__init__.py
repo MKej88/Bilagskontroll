@@ -486,7 +486,7 @@ class App:
         from tkinter import messagebox
 
         self._ensure_helpers()
-        from data_utils import load_invoice_df, _net_amount_from_row
+        from data_utils import calculate_net_amounts, load_invoice_df
         from .busy import show_busy, hide_busy, run_in_thread
 
         path = self.file_path_var.get()
@@ -510,10 +510,17 @@ class App:
             self.after(0, lambda: self._start_progress("Laster fakturaliste..."))
             try:
                 df, cust = load_invoice_df(path, header_idx)
+                invoice_col = guess_invoice_col(df.columns)
+                net_amount_col = guess_net_amount_col(df.columns)
             except (OSError, ValueError) as e:
                 logger.error(f"Klarte ikke lese Excel: {e}")
                 self.after(0, lambda: (messagebox.showerror(APP_TITLE, f"Klarte ikke lese Excel:\n{e}"), finalize()))
                 return
+            try:
+                df["_netto_float"] = calculate_net_amounts(df, net_amount_col)
+            except (TypeError, ValueError):
+                logger.exception("Kunne ikke beregne nettobeløp")
+                df["_netto_float"] = None
 
             def success():
                 self.antall_bilag = len(df.dropna(how="all"))
@@ -526,15 +533,8 @@ class App:
                     messagebox.showwarning(APP_TITLE, "Excel-filen ser tom ut.")
                     finalize()
                     return
-                self.invoice_col = guess_invoice_col(self.df.columns)
-                self.net_amount_col = guess_net_amount_col(self.df.columns)
-                try:
-                    self.df["_netto_float"] = self.df.apply(
-                        _net_amount_from_row, axis=1, args=(self.net_amount_col,)
-                    )
-                except (TypeError, ValueError):
-                    logger.exception("Kunne ikke beregne nettobeløp")
-                    self.df["_netto_float"] = None
+                self.invoice_col = invoice_col
+                self.net_amount_col = net_amount_col
                 self.sample_df = None; self.decisions=[]; self.comments=[]; self.idx=0
                 self._update_counts_labels()
                 self.render()
