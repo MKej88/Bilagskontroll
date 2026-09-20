@@ -58,6 +58,20 @@ Bilagskontroll er et skrivebordverktøy skrevet i ren Python for å kontrollere 
 5. Gå gjennom hvert bilag, marker status og legg inn eventuelle kommentarer.
 6. Eksporter PDF-rapport når kontrollen er ferdig.
 
+### Bygge Windows-program
+
+GitHub Actions kan bygge en ferdig `Bilagskontroll.exe` uten at Python må være
+installert på Windows-maskinen som skal bruke programmet:
+
+1. Åpne fanen **Actions** i GitHub.
+2. Velg arbeidsflyten **Build Windows EXE**.
+3. Trykk **Run workflow** og vent til byggingen er ferdig.
+4. Last ned `Bilagskontroll-Windows` under **Artifacts** på den fullførte
+   kjøringen. ZIP-filen inneholder `Bilagskontroll.exe`.
+
+Arbeidsflyten kjører også automatisk når det opprettes en Git-tag som begynner
+med `v`, for eksempel `v1.0.0`. Byggeresultatet er tilgjengelig i 14 dager.
+
 ### Konfigurasjon
 
 - **`settings.py`** kan brukes til å overstyre standardinnstillinger, f.eks. `UI_SCALING` for å endre skalering på høyoppløselige skjermer.
