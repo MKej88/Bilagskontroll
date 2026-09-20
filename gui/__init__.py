@@ -121,6 +121,7 @@ class App:
         self.invoice_col = None
         self.net_amount_col = None
         self.antall_bilag = 0
+        self._sum_net_all = None
 
         # GL
         self.gl_df = None
@@ -486,7 +487,7 @@ class App:
         from tkinter import messagebox
 
         self._ensure_helpers()
-        from data_utils import calculate_net_amounts, load_invoice_df
+        from data_utils import calc_sum_net_all, calculate_net_amounts, load_invoice_df
         from .busy import show_busy, hide_busy, run_in_thread
 
         path = self.file_path_var.get()
@@ -521,10 +522,14 @@ class App:
             except (TypeError, ValueError):
                 logger.exception("Kunne ikke beregne nettobeløp")
                 df["_netto_float"] = None
+            # Summeringen går gjennom hele fakturalisten. Beregn den én gang i
+            # arbeidstråden, i stedet for på UI-tråden ved hver navigering.
+            sum_net_all = calc_sum_net_all(df)
 
             def success():
                 self.antall_bilag = len(df.dropna(how="all"))
                 self.df = df
+                self._sum_net_all = sum_net_all
                 if cust:
                     self.kunde_var.set(cust)
                     if hasattr(self, "kunde_entry"):
@@ -717,7 +722,11 @@ class App:
         self._ensure_helpers()
         from data_utils import calc_sum_kontrollert, calc_sum_net_all
         sum_k = calc_sum_kontrollert(self.sample_df, self.decisions)
-        sum_a = calc_sum_net_all(self.df)
+        sum_a = getattr(self, "_sum_net_all", None)
+        if sum_a is None:
+            # Behold støtte for App-lignende testobjekter og data satt utenom
+            # den vanlige innlastingsflyten.
+            sum_a = calc_sum_net_all(self.df)
         pct = (sum_k / sum_a * Decimal("100")) if sum_a else Decimal("0")
         self.lbl_st_sum_kontrollert.configure(text=f"Sum kontrollert: {fmt_money(sum_k)} kr")
         self.lbl_st_sum_alle.configure(text=f"Sum alle bilag: {fmt_money(sum_a)} kr")
