@@ -47,32 +47,58 @@ def load_invoice_df(path: str, header_idx: int = 4) -> tuple[pd.DataFrame, Optio
 def load_gl_df(path: str, nrows: int = 10) -> pd.DataFrame:
     """Leser hovedboken fra Excel.
 
-    Leser et lite antall rader med ``openpyxl`` for å finne riktig header og
-    leser deretter hele filen én gang med ``pandas``.
+    Leser arbeidsarket én gang og finner riktig header blant de første radene.
+
+    Tidligere åpnet vi samme arbeidsbok først med ``openpyxl`` for å finne
+    headeren og deretter på nytt med ``pandas``. Åpning og tolking av en stor
+    Excel-fil er en vesentlig del av ventetiden, så headeren oppdages nå i den
+    allerede innleste datarammen.
     """
     logger.info(f"Laster hovedbok fra {path}")
-    import openpyxl
-
-    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
-    ws = wb.active
-    header_idx = 0
-    for i, row in enumerate(ws.iter_rows(min_row=1, max_row=nrows, values_only=True)):
-        if not row:
-            continue
-        non_empty = sum(1 for c in row if c not in (None, ""))
-        if non_empty > len(row) / 2:
-            header_idx = i
-            break
-    wb.close()
-
     pd = _pd()
-    return pd.read_excel(
+    raw = pd.read_excel(
         path,
         engine="openpyxl",
-        header=header_idx,
+        header=None,
         dtype=str,
         engine_kwargs={"read_only": True},
     )
+
+    header_idx = 0
+    for i in range(min(nrows, len(raw))):
+        row = raw.iloc[i]
+        if row.notna().sum() > len(row) / 2:
+            header_idx = i
+            break
+
+    columns = _excel_column_names(raw.iloc[header_idx].tolist())
+    df = raw.iloc[header_idx + 1 :].reset_index(drop=True)
+    df.columns = columns
+    return df
+
+
+def _excel_column_names(values: list) -> list[str]:
+    """Lag samme type unike kolonnenavn som ``read_excel(header=...)``."""
+    pd = _pd()
+    names = [
+        f"Unnamed: {index}" if pd.isna(value) else str(value)
+        for index, value in enumerate(values)
+    ]
+    reserved = set(names)
+    result: list[str] = []
+    occurrences: dict[str, int] = {}
+    for name in names:
+        occurrence = occurrences.get(name, 0)
+        candidate = name
+        while candidate in result:
+            occurrence += 1
+            candidate = f"{name}.{occurrence}"
+            while candidate in reserved:
+                occurrence += 1
+                candidate = f"{name}.{occurrence}"
+        occurrences[name] = occurrence
+        result.append(candidate)
+    return result
 
 
 def extract_customer_from_invoice_file(
