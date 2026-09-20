@@ -63,7 +63,7 @@ def sort_treeview(tree, col, reverse, app):
     for iid in tree.get_children(""):
         cell = tree.set(iid, col)
         num = parse_amount(cell)
-        sort_val = num if num is not None else str(cell).lower()
+        sort_val = (0, num) if num is not None else (1, str(cell).lower())
         data.append((sort_val, iid))
     data.sort(reverse=reverse)
     for idx, (_, iid) in enumerate(data):
