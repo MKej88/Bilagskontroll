@@ -67,7 +67,24 @@ installert på Windows-maskinen som skal bruke programmet:
 2. Velg arbeidsflyten **Build Windows EXE**.
 3. Trykk **Run workflow** og vent til byggingen er ferdig.
 4. Last ned `Bilagskontroll-Windows` under **Artifacts** på den fullførte
-   kjøringen. ZIP-filen inneholder `Bilagskontroll.exe`.
+   kjøringen. ZIP-filen inneholder `Bilagskontroll.exe` og støttemappen `_internal`.
+5. Velg **Pakk ut alle** og legg hele innholdet i en fast mappe på PC-en.
+6. Start `Bilagskontroll.exe` fra den utpakkede mappen. Du kan opprette en
+   snarvei til EXE-filen på skrivebordet.
+
+**Behold `_internal` ved siden av EXE-filen.** Ikke flytt bare EXE-filen eller
+start den direkte fra ZIP-filen. Ved oppdatering pakkes hele den nye ZIP-filen
+ut i en ny mappe, og eventuell snarvei oppdateres.
+
+Programmet bygges som en programmappe (`--onedir`) for raskere oppstart.
+Tidligere ble det bygget som én selvutpakkende fil (`--onefile`), som måtte
+pakke ut støttefilene til en midlertidig mappe ved hver start. Denne utpakkingen
+unngås nå. Faktisk oppstartstid avhenger fortsatt av PC, lagringssted og antivirus.
+Se [PyInstallers beskrivelse av pakkemetodene](https://pyinstaller.org/en/stable/operating-mode.html#how-the-one-file-program-works).
+
+Byggingen kontrollerer at EXE-filen viser et vindu og fortsetter å kjøre.
+Tid til første vindu vises i kjøringens oppsummering i GitHub Actions; dette er
+en måling på byggemaskinen, ikke en garanti for oppstartstiden på din PC.
 
 Arbeidsflyten kjører også automatisk når det opprettes en Git-tag som begynner
 med `v`, for eksempel `v1.0.0`. Byggeresultatet er tilgjengelig i 14 dager.

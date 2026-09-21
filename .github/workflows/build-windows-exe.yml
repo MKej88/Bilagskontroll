@@ -2,6 +2,9 @@ name: Build Windows EXE
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/build-windows-exe.yml"
   push:
     tags:
       - "v*"
@@ -37,18 +40,48 @@ jobs:
           python -m PyInstaller
           --noconfirm
           --clean
-          --onefile
+          --onedir
           --windowed
           --name Bilagskontroll
           --icon icons/bilagskontroll_logo_all.ico
           --add-data "icons;icons"
+          --collect-data customtkinter
           --collect-data tkinterdnd2
           bilagskontroll.py
+
+      - name: Kontroller at Windows-programmet starter
+        shell: pwsh
+        run: |
+          $timer = [System.Diagnostics.Stopwatch]::StartNew()
+          $app = Start-Process -FilePath "dist/Bilagskontroll/Bilagskontroll.exe" -PassThru
+          try {
+            do {
+              Start-Sleep -Milliseconds 100
+              $app.Refresh()
+              if ($app.HasExited) {
+                throw "Programmet avsluttet før vinduet ble vist (kode $($app.ExitCode))."
+              }
+            } while ($app.MainWindowHandle -eq 0 -and $timer.Elapsed.TotalSeconds -lt 30)
+            if ($app.MainWindowHandle -eq 0) {
+              throw "Programvinduet ble ikke vist innen 30 sekunder."
+            }
+            $seconds = [Math]::Round($timer.Elapsed.TotalSeconds, 2)
+            "Tid til første vindu på byggemaskinen: $seconds sekunder." >> $env:GITHUB_STEP_SUMMARY
+            Start-Sleep -Seconds 3
+            $app.Refresh()
+            if ($app.HasExited) {
+              throw "Programmet avsluttet rett etter oppstart (kode $($app.ExitCode))."
+            }
+          } finally {
+            if (-not $app.HasExited) {
+              Stop-Process -Id $app.Id -Force
+            }
+          }
 
       - name: Last opp ferdig program
         uses: actions/upload-artifact@v6
         with:
           name: Bilagskontroll-Windows
-          path: dist/Bilagskontroll.exe
+          path: dist/Bilagskontroll/
           if-no-files-found: error
           retention-days: 14
