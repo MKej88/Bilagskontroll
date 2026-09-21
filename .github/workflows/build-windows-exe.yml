@@ -41,6 +41,7 @@ jobs:
           --noconfirm
           --clean
           --onedir
+          --noupx
           --windowed
           --name Bilagskontroll
           --icon icons/bilagskontroll_logo_all.ico
@@ -48,6 +49,49 @@ jobs:
           --collect-data customtkinter
           --collect-data tkinterdnd2
           bilagskontroll.py
+
+      - name: Skann programmet med Microsoft Defender
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $ErrorActionPreference = "Stop"
+          $scanner = Get-ChildItem "$env:ProgramData\Microsoft\Windows Defender\Platform\*\MpCmdRun.exe" -ErrorAction SilentlyContinue |
+            Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $scanner) {
+            $scanner = "$env:ProgramFiles\Windows Defender\MpCmdRun.exe"
+          }
+          if (-not (Test-Path $scanner)) {
+            throw "Microsoft Defender mangler. Pakken publiseres ikke uten skanning."
+          }
+          & $scanner -SignatureUpdate
+          if ($LASTEXITCODE -ne 0) {
+            throw "Kunne ikke oppdatere Defender-signaturene."
+          }
+          $program = (Resolve-Path "dist/Bilagskontroll").Path
+          & $scanner -Scan -ScanType 3 -File $program -DisableRemediation
+          if ($LASTEXITCODE -ne 0) {
+            throw "Defender fant en trussel eller skanningen feilet. Se loggen."
+          }
+          if (-not (Test-Path "$program/Bilagskontroll.exe")) {
+            throw "EXE-filen mangler etter skanningen."
+          }
+          $status = Get-MpComputerStatus
+          $hash = (Get-FileHash "$program/Bilagskontroll.exe" -Algorithm SHA256).Hash
+          @(
+            "Microsoft Defender: skanning fullført uten funn."
+            "Signaturversjon: $($status.AntivirusSignatureVersion)"
+            "Kildekode: $env:GITHUB_SHA"
+            "EXE SHA256: $hash"
+            "Dette er ikke en godkjenning fra Chrome/Safe Browsing."
+          ) | Tee-Object -FilePath "defender-resultat.txt" | Add-Content $env:GITHUB_STEP_SUMMARY
+
+      - name: Last opp skanneresultat
+        uses: actions/upload-artifact@v6
+        with:
+          name: Bilagskontroll-skanneresultat
+          path: defender-resultat.txt
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Kontroller at Windows-programmet starter
         shell: pwsh
