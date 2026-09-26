@@ -91,7 +91,7 @@ jobs:
           name: Bilagskontroll-skanneresultat
           path: defender-resultat.txt
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
 
       - name: Kontroller at Windows-programmet starter
         shell: pwsh
@@ -123,9 +123,10 @@ jobs:
           }
 
       - name: Last opp ferdig program
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v6
         with:
           name: Bilagskontroll-Windows
           path: dist/Bilagskontroll/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
